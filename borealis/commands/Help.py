@@ -18,7 +18,12 @@ class commandHelp(BorealisCommand):
 			reply = "{0} reporting in!\nI am here to link an SS13 server to Discord. I am very horribly coded, but with enough duct tape, anything will hold. Anyways, here are my commands:\n".format(bot.user.name)
 			reply += "---------------------\n"
 
+			sorted_list = []
+
 			for command_name in bot.commands:
+				sorted_list.append(command_name)
+
+			for command_name in sorted(sorted_list, key = str.lower)
 				command = bot.commands[command_name]
 				reply += "{0}{1} {2}\n".format(bot.configValue("prefix"), command.getName(), command.getParams())
 
