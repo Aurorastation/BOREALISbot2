@@ -1,0 +1,11 @@
+APIAuth: ""
+API: ""
+
+listen_nudges: true
+
+prefix: "?"
+
+token: ""
+
+nudge_host: "127.0.0.1"
+nudge_port: 1200
