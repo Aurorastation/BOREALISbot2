@@ -83,7 +83,14 @@ class Nudge():
 		if message_id == 0:
 			return
 
-		response = self.bot.queryAPI("/nudge/receive", "get", ["channel", "content"], {"message_id" : message_id})
-		self.bot.forwardMessage(response["channel"], response["content"])
+		response = self.bot.queryAPI("/nudge/receive", "get", ["nudge"], {"message_id" : message_id})
+
+		if len(response) == 0:
+			return
+
+		response = response["nudge"]
+
+		for message_key in response:
+			self.bot.forwardMessage(response[message_key]["content"], response[message_key]["channel"])
 
 		return
