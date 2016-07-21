@@ -63,9 +63,8 @@ class BotBorealis(discord.Client):
 
 		self.logger.info("Bot starting.")
 
-		if self.configValue("receive_nudges") == True:
-			self.logger.info("Starting nudge.")
-			self.nudge_thread = _thread.start_new_thread(self.nudge.start, ())
+		self.logger.info("Starting nudge.")
+		self.nudge_thread = _thread.start_new_thread(self.nudge.start, ())
 
 		self.config.updateUsers(0, False)
 

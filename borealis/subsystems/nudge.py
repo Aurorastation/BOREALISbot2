@@ -1,5 +1,6 @@
 import socket
 import requests
+import asyncio
 
 class Nudge():
 	"""Meant to be run in a separate thread, to receive nudges."""
@@ -48,9 +49,11 @@ class Nudge():
 			data = client.recv(size)
 			client.close()
 
-			self.receive_nudge(data)
+			loop = asyncio.new_event_loop()
+			loop.run_until_complete(self.receive_nudge(data))
+			loop.close()
 
-	def receive_nudge(self, data):
+	async def receive_nudge(self, data):
 		data = data.decode("utf-8")
 
 		#Expel messages that do not match format.
@@ -71,7 +74,7 @@ class Nudge():
 				return
 
 			if value_array[0] == "auth_key":
-				if value_array[1] != self.config.getValue["APIAuth"]:
+				if value_array[1] != self.config.getValue("APIAuth"):
 					return
 
 			elif value_array[0] == "message_id":
@@ -88,9 +91,7 @@ class Nudge():
 		if len(response) == 0:
 			return
 
-		response = response["nudge"]
-
 		for message_key in response:
-			self.bot.forwardMessage(response[message_key]["content"], response[message_key]["channel"])
+			await self.bot.forwardMessage(response[message_key]["content"], response[message_key]["channel"])
 
 		return
