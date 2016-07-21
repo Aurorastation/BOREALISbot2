@@ -67,12 +67,17 @@ class Config():
 		if channel_group not in self.channels:
 			return []
 
-		return self.channels[channel_group]
+		channel_objs = []
+		for id in self.channels[channel_group]:
+			channel_objs.append(self.bot.get_channel(str(id)))
+
+		return channel_objs
 
 	def updateChannels(self):
 		self.logger.info("Update channels.")
 
-		temporary_channels = self.bot.queryAPI("/channels", "get", ["channels"])["channels"]
+		temporary_channels = self.bot.queryAPI("/channels", "get", ["channels"])
+		temporary_channels = temporary_channels["channels"]
 
 		self.channels = {"channel_admin" : [], "channel_cciaa" : [], "channel_announce" : [], "channel_log" : []}
 
@@ -83,13 +88,7 @@ class Config():
 			if group not in self.channels:
 				continue
 
-			for channel_id in group:
-				channel_obj = self.bot.get_channel(channel_id)
-
-				if channel_obj == None:
-					continue
-
-				self.channels[group].append(channel_obj)
+			self.channels[group].append(channel_obj)
 
 		return True
 
@@ -98,7 +97,6 @@ class Config():
 		response = self.bot.queryAPI("/channels", "delete", ["error", "error_msg"], additional_data = data, hold_payload = True)
 
 		if not response:
-			print("Bad status.")
 			self.logger.error("Config error removing channel. Bad status code.")
 			return False
 
@@ -106,6 +104,5 @@ class Config():
 			self.updateChannels()
 			return True
 
-		print("some other error. {0}".format(response["error_msg"]))
 		self.logger.error("Config error removing channel. {0}".format(response["error_msg"]))
 		return False
