@@ -33,17 +33,11 @@ class Config():
 		with open(self.filepath, 'r') as f:
 			self.config = yaml.load(f)
 
-	def updateUsers(self, interval, initiate_loop = True):
+	def updateUsers(self):
 		"""Starts the config auto-update loop."""
 
 		self.logger.info("Updating users.")
-
 		self.users = self.bot.queryAPI("/users", "get", ["users"])["users"]
-
-		if initiate_loop == True:
-
-			self.bot.config_thread = Timer(interval, self.updateUsers, (interval))
-			self.bot.config_thread.start()
 
 		return
 

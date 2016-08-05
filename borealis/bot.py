@@ -16,7 +16,6 @@ class BotBorealis(discord.Client):
 
 		# borealis.Config instance
 		self.config = Config(config_path)
-		self.config_thread = None
 
 		# borealis.Nudge instance
 		self.nudge = Nudge(self.config)
@@ -24,6 +23,10 @@ class BotBorealis(discord.Client):
 
 		# Commands dictionary
 		self.commands = {}
+
+		# borealis.subsystems.Scheduler instance
+		self.scheduler = None
+		self.scheduler_thread = None
 
 		# logging.Logger instance
 		# Using discord.py's own logger
@@ -44,15 +47,21 @@ class BotBorealis(discord.Client):
 			self.logger.info("Setting up config.")
 			self.config.setup(self, self.logger)
 		except RuntimeError as e:
-			self.logger.critical("Runtime error during config initialization: {0}".format(e.message))
+			self.logger.critical("Runtime error during config initialization: {0}".format(e))
 			raise RuntimeError("Runtime error during config initialization.")
 
 		try:
 			self.logger.info("Setting up nudge.")
 			self.nudge.setup(self, self.logger)
 		except RuntimeError as e:
-			self.logger.critical("Runtime error during config initialization: {0}".format(e.message))
-			raise RuntimeError("Runtime error during config initialization.")
+			self.logger.critical("Runtime error during nudge initialization: {0}".format(e))
+			raise RuntimeError("Runtime error during nudge initialization.")
+
+		try:
+			self.scheduler = Scheduler(self, self.configValue("scheduler_interval"), self.logger)
+		except RuntimeError as e:
+			self.logger.critical("Runtime error during Scheduler initialization: {0}".format(e))
+			raise RuntimeError("Runtime error during scheduler initialization.")
 
 		self.loadCommands()
 
@@ -63,17 +72,15 @@ class BotBorealis(discord.Client):
 
 		self.logger.info("Bot starting.")
 
-		self.logger.info("Starting nudge.")
+		# Start the nudge listener.
 		self.nudge_thread = _thread.start_new_thread(self.nudge.start, ())
 
-		self.config.updateUsers(0, False)
+		# Initialize the scheduler and populate its events.
+		self.scheduler.add_event(86400, self.config.updateUsers, init_now = True)
+		self.scheduler.add_event(43200, self.config.updateChannels, init_now = True)
+		self.scheduler_thread = _thread.start_new_thread(self.scheduler.start, ())
 
-		self.logger.info("Starting config auto-update.")
-		self.config_thread = Timer(86400.0, self.config.updateUsers, (86400.0))
-		self.config_thread.start()
-
-		self.config.updateChannels()
-
+		# Start the main asyncio loop.
 		self.run(self.configValue("token"))
 
 	async def on_message(self, message):

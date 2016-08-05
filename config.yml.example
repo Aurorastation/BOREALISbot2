@@ -9,3 +9,5 @@ token: ""
 
 nudge_host: "127.0.0.1"
 nudge_port: 1200
+
+scheduler_interval: 600
