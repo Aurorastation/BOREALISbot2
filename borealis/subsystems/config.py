@@ -70,8 +70,7 @@ class Config():
 	def updateChannels(self):
 		self.logger.info("Update channels.")
 
-		temporary_channels = self.bot.queryAPI("/channels", "get", ["channels"])
-		temporary_channels = temporary_channels["channels"]
+		temporary_channels = self.bot.queryAPI("/channels", "get", ["channels"])["channels"]
 
 		self.channels = {"channel_admin" : [], "channel_cciaa" : [], "channel_announce" : [], "channel_log" : []}
 
@@ -82,7 +81,7 @@ class Config():
 			if group not in self.channels:
 				continue
 
-			self.channels[group].append(channel_obj)
+			self.channels[group] = temporary_channels[group]
 
 		return True
 
