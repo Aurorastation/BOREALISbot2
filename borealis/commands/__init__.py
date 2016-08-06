@@ -10,3 +10,4 @@ from borealis.commands.ChannelAdd import commandChannelAdd
 from borealis.commands.ChannelRemove import commandChannelRemove
 from borealis.commands.ChannelUpdate import commandChannelUpdate
 from borealis.commands.Help import commandHelp
+from borealis.commands.DiscordStrike import commandDiscordStrike

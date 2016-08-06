@@ -223,9 +223,7 @@ class BotBorealis(discord.Client):
 		content -- the contents of the message we're creating
 		"""
 
-		if len(self.channels[channel_str]) == 0 and channel_obj == None:
-			return
-		elif channel_obj != None:
+		if channel_obj != None:
 			channel_objects = [channel_obj]
 		else:
 			channel_objects = self.config.getChannels(channel_str)
@@ -271,3 +269,42 @@ class BotBorealis(discord.Client):
 			if inspect.isclass(obj):
 				self.commands[obj.getName().lower()] = obj
 				self.logger.info("Added command: {0}".format(obj.getName()))
+
+	async def log_entry(self, action, author_obj = None, subject_obj = None):
+		if action == None:
+			raise ValueError("No action entered for logging.")
+
+		# Store it in the database just in case. Discord logs can be removed/edited/whatever.
+		# These are much harder to break.
+
+		data = {"auth_key" : self.configValue("APIAuth"), "action" : action}
+
+		str_list = ["**ACTION:** {0}".format(action)]
+
+		if author_obj != None:
+			data["admin_id"] = author_obj.id
+			str_list.append("**AUTHOR:** {0}/{1}".format(author_obj.name, author_obj.id))
+		if subject_obj != None:
+			data["user_id"] = subject_obj.id
+			str_list.append("**SUBJECT:** {0}/{1}".format(subject_obj.name, subject_obj.id))
+
+		self.queryAPI("/log", "put", additional_data = data, hold_payload = True)
+
+		await self.forwardMessage(" || ".join(str_list), "channel_log")
+
+	async def register_ban(self, user_obj, duration, server_obj, author_obj = None):
+		if user_obj == None or duration == None or server_obj == None:
+			raise ValueError("Bad arguments.")
+
+		data = {"auth_key" : self.configValue("APIAuth"), "user_id" : user_obj.id, "user_name" : user_obj.name, "server_id" : server_obj.id, "duration" : duration, "admin_id" : author_obj.id, "admin_name" : author_obj.name}
+
+		response = self.queryAPI("/discord/ban", "put", ["error"], additional_data = data, hold_payload = True)
+
+		if response["error"] == True:
+			raise RuntimeError("Error querying API while logging ban.")
+		else:
+			try:
+				await self.ban(user_obj, 0)
+				await self.log_entry("PLACED BAN | Length: {0}".format(duration), author_obj, user_obj)
+			except Exception as e:
+				raise RuntimeError("Error adding ban: {0}".format(e))
