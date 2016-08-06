@@ -14,8 +14,8 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see http://www.gnu.org/licenses/.
 
-import time
 import logging
+import asyncio
 from datetime import datetime as dt
 
 from .SchedulerTask import SchedulerTask
@@ -37,40 +37,34 @@ class Scheduler():
 		#Obligatory logger!
 		self.logger = logger
 
-	def add_event(self, frequency, event, event_args = [], init_now = False):
+	def add_event(self, frequency, event, event_args = [], init_now = False, is_coro = False):
 		if (frequency < self.interval):
 			return
 
 		if (event == None):
 			return
 
-		task_obj = SchedulerTask(frequency, event, event_args, init_now)
+		task_obj = SchedulerTask(frequency, event, event_args, init_now, is_coro)
 
 		self.events.append(task_obj)
 
 		return
 
-	def start(self):
+	async def cycle_work(self):
 		if self.running == True:
 			raise RuntimeError("RuntimeError from Scheduler: attempted to start Scheduler while it was already running.")
 
 		self.running = True
 
+		await self.bot.wait_until_ready()
+
 		while self.running == True:
-			self.process_cycle()
+			for event in self.events:
+				try:
+					await event.do_work(dt.now())
+				except RuntimeError as e:
+					self.logger.error("RuntimeError from Scheduler: exception from process_cycle(). {0}".format(e))
 
-			time.sleep(self.interval)
-
-		return
-
-	def process_cycle(self):
-		if len(self.events) == 0:
-			return
-
-		for event in self.events:
-			try:
-				event.do_work(dt.now())
-			except RuntimeError as e:
-				self.logger.error("RuntimeError from Scheduler: exception from process_cycle(). {0}".format(e))
+			await asyncio.sleep(self.interval)
 
 		return

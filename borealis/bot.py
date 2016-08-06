@@ -94,7 +94,9 @@ class BotBorealis(discord.Client):
 		# Initialize the scheduler and populate its events.
 		self.scheduler.add_event(86400, self.config.updateUsers, init_now = True)
 		self.scheduler.add_event(43200, self.config.updateChannels, init_now = True)
-		self.scheduler_thread = _thread.start_new_thread(self.scheduler.start, ())
+		self.scheduler.add_event(3600, self.process_temporary_bans, init_now = True, is_coro = True)
+
+		self.loop.create_task(self.scheduler.cycle_work())
 
 		# Start the main asyncio loop.
 		self.run(self.configValue("token"))
@@ -308,3 +310,34 @@ class BotBorealis(discord.Client):
 				await self.log_entry("PLACED BAN | Length: {0}".format(duration), author_obj, user_obj)
 			except Exception as e:
 				raise RuntimeError("Error adding ban: {0}".format(e))
+
+	async def register_unban(self, ban_id, user_id, server_id):
+		if ban_id == None or user_id == None or server_id == None:
+			raise ValueError("Bad arguments.")
+
+		try:
+			user_obj = self.get_member(user_id)
+			if user_obj == None:
+				raise RuntimeError("Error registering unban: member object not found.")
+
+			server_obj = self.get_server(server_id)
+			if server_obj == None:
+				raise RuntimeError("Error registering unban: server object not found.")
+
+			await self.unban(server_obj, user_obj)
+			data = {"auth_key" : self.configValue("APIAuth"), "ban_id" : ban_id}
+			self.queryAPI("/discord/ban", "update", additional_data = data, hold_payload = True)
+		except Exception as e:
+			raise RuntimeError("Error registering unban: {0}".format(e))
+
+	async def process_temporary_bans(self):
+		try:
+			bans = self.queryAPI("/discord/ban", "get")["expired_bans"]
+
+			if len(bans) == 0:
+				return
+
+			for ban_id in bans:
+				await self.register_unban(ban_id, bans[ban_id]['user_id'], bans[band_id]['server_id'])
+		except Exception as e:
+			raise RuntimeError(e)

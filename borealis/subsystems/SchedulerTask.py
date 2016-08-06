@@ -17,7 +17,7 @@
 from datetime import datetime as dt
 
 class SchedulerTask():
-	def __init__(self, frequency, event, event_args = [], init_now = False):
+	def __init__(self, frequency, event, event_args = [], init_now = False, is_coro = False):
 		#The method we're running
 		self.event = event
 
@@ -33,6 +33,9 @@ class SchedulerTask():
 		#If we don't want to run it on the first work cycle (immediately)
 		if init_now == False:
 			self.last_run = dt.now()
+
+		#Are we supposed to await, or simply blast through it all?
+		self.is_coro = is_coro
 
 		#Are we even enabled?
 		self.enabled = True
@@ -51,7 +54,7 @@ class SchedulerTask():
 
 		return message
 
-	def do_work(self, time_now):
+	async def do_work(self, time_now):
 		if self.enabled == False:
 			return
 
@@ -68,7 +71,10 @@ class SchedulerTask():
 			return
 
 		try:
-			self.event(*self.event_args)
+			if self.is_coro == True:
+				await self.event(*self.event_args)
+			else:
+				self.event(*self.event_args)
 		except Exception as e:
 			raise RuntimeError(self.do_failure(e))
 
