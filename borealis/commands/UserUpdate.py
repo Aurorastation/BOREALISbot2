@@ -22,7 +22,7 @@ class commandUserUpdate(BorealisCommand):
 	@classmethod
 	async def doCommand(cls, bot, message, params):
 
-		bot.config.updateUsers(0, False)
+		bot.config.updateUsers()
 		await bot.send_message(message.channel, "{0}, user lists updated.".format(message.author.mention))
 
 		return

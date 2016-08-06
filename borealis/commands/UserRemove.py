@@ -45,7 +45,7 @@ class commandUserRemove(BorealisCommand):
 		await bot.send_message(message.channel, reply)
 
 		if update_users == True:
-			bot.config.updateUsers(0, False)
+			bot.config.updateUsers()
 
 		return
 
