@@ -31,7 +31,7 @@ class CommandHelp(BorealisCommand):
 			else:
 				reply = "{0}, I couldn't find the command!".format(message.author.mention)
 		else:
-			reply = "{0} reporting in!\nI am here to link an SS13 server to Discord. I am very horribly coded, but with enough duct tape, anything will hold. Anyways, here are my commands:\n".format(bot.user.name)
+			reply = "{0} reporting in!\nI am here to link an SS13 server to Discord. I am very horribly coded, but with enough duct tape, anything will hold.\nIf you feel like adding to the code, you can find it here: https://github.com/Aurorastation/BOREALISbot2\nAnyways, here are my commands:\n".format(bot.user.name)
 			reply += "---------------------\n"
 
 			sorted_list = []
