@@ -12,3 +12,4 @@ from borealis.commands.channel_remove import CommandChannelRemove
 from borealis.commands.channel_update import CommandChannelUpdate
 from borealis.commands.help import CommandHelp
 from borealis.commands.discord_strike import CommandDiscordStrike
+from borealis.commands.debug_channel import CommandDebugChannel
