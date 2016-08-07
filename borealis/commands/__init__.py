@@ -2,6 +2,7 @@ from borealis.commands.my_info import CommandMyInfo
 from borealis.commands.user_add import CommandUserAdd
 from borealis.commands.user_remove import CommandUserRemove
 from borealis.commands.user_update import CommandUserUpdate
+from borealis.commands.user_info import CommandUserInfo
 from borealis.commands.player_info import CommandPlayerInfo
 from borealis.commands.player_notes import CommandPlayerNotes
 from borealis.commands.silly_cats import CommandCats
