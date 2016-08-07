@@ -455,9 +455,10 @@ class BotBorealis(discord.Client):
 
 			# Get the discord.User object to unban.
 			user_obj = None
-			for user in self.get_bans(server_obj):
+			banned_users = await self.get_bans(server_obj)
+			for user in banned_users:
 				if user.id == user_id:
-					user_obj
+					user_obj = user
 					break
 
 			# No user. Start complaining.
@@ -470,6 +471,9 @@ class BotBorealis(discord.Client):
 
 			# Update the API.
 			self.query_api("/discord/ban", "update", {"ban_id" : ban_id})
+
+			# Log.
+			await self.log_entry("LIFTED BAN", subject_obj = user_obj)
 		except RuntimeError as e:
 			# API error. Forward as is.
 			raise RuntimeError(e + " Error took place while registering ban.")
