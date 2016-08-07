@@ -24,7 +24,7 @@ import _thread
 import logging
 import sys
 import inspect
-from threading import Timer
+from datetime import datetime as dt
 
 class BotBorealis(discord.Client):
 	def __init__(self, config_path, **kwargs):
@@ -69,6 +69,9 @@ class BotBorealis(discord.Client):
 
 		# Commands dictionary
 		self.commands = {}
+
+		# Command cooldown dictionary
+		self.command_history = {}
 
 		# borealis.subsystems.Scheduler instance
 		self.scheduler = None
@@ -162,8 +165,13 @@ class BotBorealis(discord.Client):
 		# Select the command.
 		command = self.commands[words[0][1:].lower()]
 
+		# Command has a cooldown, check it.
+		if self.check_command_cooldown(command, message.channel) == False:
+			await self.send_message(message.channel, "The command is still on cooldown!")
+			return
+
 		# Check if the user is authorized to use the command.
-		if self.is_authorized(command.get_auths(), message.author.id) == False:
+		if self.check_command_auths(command.get_auths(), message.author.id) == False:
 			self.logger.debug("Bot on_message: command execution halted due to missing auths. Author: '{0}'. Command name: '{1}'. Command auths: '{2}'.".format(message.author, command.get_name(), command.get_auths()))
 			# Is not. Reply properly.
 			if message.channel.is_private == True:
@@ -297,8 +305,7 @@ class BotBorealis(discord.Client):
 
 		return self.config.get_user_auths(user_id)
 
-
-	def is_authorized(self, auth, user_id):
+	def check_command_auths(self, auth, user_id):
 		"""Check a user's authorization to use a command.
 
 		Keyword arguments:
@@ -326,6 +333,34 @@ class BotBorealis(discord.Client):
 
 		# Nothing found. Bye.
 		return False
+
+	def check_command_cooldown(self, command, channel_obj):
+		"""Checks if a command is on its cooldown period for that channel or not."""
+		# Command has no cooldown period.
+		if command.get_cooldown() == 0:
+			return True
+
+		# Cooldowns don't apply to PMs at this time.
+		if channel_obj.is_private == True:
+			return True
+
+		can_use = True
+
+		command_name = command.get_name()
+		channel_id = channel_obj.id
+
+		if channel_id in self.command_history:
+			if  command_name in self.command_history[channel_id]:
+				last_used = self.command_history[channel_id][command_name]
+				can_use = (dt.now() - last_used).total_seconds() >= command.get_cooldown()
+
+		if can_use == True:
+			if channel_id not in self.command_history:
+				self.command_history[channel_id] = {}
+
+			self.command_history[channel_id][command_name] = dt.now()
+
+		return can_use
 
 	async def forward_message(self, content, channel_str = None, channel_obj = None):
 		"""Splits up a message and sends it to all channels in the designated channel group.

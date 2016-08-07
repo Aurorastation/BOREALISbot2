@@ -51,3 +51,7 @@ class CommandPenguins(BorealisCommand):
 	@classmethod
 	def get_auths(cls):
 		return []
+
+	@classmethod
+	def get_cooldown(cls):
+		return 90

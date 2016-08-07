@@ -21,26 +21,37 @@ class BorealisCommand():
 
 	@classmethod
 	def do_command(cls, bot, message, params):
+		"""Runs the actual command."""
 		pass
 
 	@classmethod
 	def get_name(cls):
+		"""Returns the command's name."""
 		return ""
 
 	@classmethod
 	def get_description(cls):
+		"""Returns the command's description."""
 		return ""
 
 	@classmethod
 	def get_params(cls):
+		"""Returns a string to represent arguments for the command."""
 		return ""
 
 	@classmethod
 	def get_auths(cls):
+		"""Returns a list of valid auths required to use the command."""
 		return []
 
 	@classmethod
+	def get_cooldown(cls):
+		"""Returns the cooldown time in seconds."""
+		return 0
+
+	@classmethod
 	def verify_params(cls, params, message, bot):
+		"""Verifies that the command has been given enough parameters to run."""
 		if cls.get_params() == "":
 			return True
 
