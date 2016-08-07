@@ -1,5 +1,5 @@
 #    BOREALISbot2 - a Discord bot to interface between SS13 and discord.
-#    Copyright (C) 2016 - Skull132
+#    Copyright (C) 2016 Skull132
 
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -18,68 +18,68 @@ from datetime import datetime as dt
 
 class SchedulerTask():
 	def __init__(self, frequency, event, event_args = [], init_now = False, is_coro = False):
-		#The method we're running
+		# The method we're running
 		self.event = event
 
-		#Arguments for the method
+		# Arguments for the method
 		self.event_args = event_args
 
-		#How many minutes we wait between each run
+		# How many minutes we wait between each run
 		self.frequency = frequency
 
-		#When the event was last run
+		# When the event was last run
 		self.last_run = None
 
-		#If we don't want to run it on the first work cycle (immediately)
+		# If we don't want to run it on the first work cycle (immediately)
 		if init_now == False:
 			self.last_run = dt.now()
 
-		#Are we supposed to await, or simply blast through it all?
+		# Are we supposed to await, or simply blast through it all?
 		self.is_coro = is_coro
 
-		#Are we even enabled?
+		# Are we even enabled?
 		self.enabled = True
 
-		#Failure count
+		# Failure count
 		self.failures = 0
 
 	def do_failure(self, exception):
+		"""Handles failures, and disables the task at a 3rd failure."""
 		self.failures += 1
-
-		message = "Caught exception while completing task: '{0}'.".format(exception)
 
 		if self.failures >= 3:
 			self.enabled = False
-			message += " Task has failed 3 times and been killed."
-
-		return message
 
 	async def do_work(self, time_now):
+		"""Executes the scheduled task."""
 		if self.enabled == False:
 			return
 
 		work_needed = False
 
+		# Check if we legitimately need to work.
 		if self.last_run == None:
 			work_needed = True
 		else:
 			delta = (time_now - self.last_run).total_seconds()
 			work_needed = delta >= self.frequency
 
-		#We don't need to fire right now.
+		# No, we don't. Be lazy.
 		if work_needed == False:
 			return
 
+		# Attempt to do the task.
 		try:
 			if self.is_coro == True:
 				await self.event(*self.event_args)
 			else:
 				self.event(*self.event_args)
-		except Exception as e:
-			raise RuntimeError(self.do_failure(e))
-
-		self.failures = max(self.failures - 1, 0)
-
-		self.last_run = time_now
-
-		return
+		except RuntimeError as e:
+			# Bad.
+			self.do_failure()
+			raise RuntimeError(e)
+		else:
+			# All done!
+			self.failures = max(self.failures - 1, 0)
+			self.last_run = time_now
+			return

@@ -1,5 +1,5 @@
 #    BOREALISbot2 - a Discord bot to interface between SS13 and discord.
-#    Copyright (C) 2016 - Skull132
+#    Copyright (C) 2016 Skull132
 
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -20,30 +20,30 @@ class BorealisCommand():
 		pass
 
 	@classmethod
-	def doCommand(cls, bot, message, params):
+	def do_command(cls, bot, message, params):
 		pass
 
 	@classmethod
-	def getName(cls):
+	def get_name(cls):
 		return ""
 
 	@classmethod
-	def getDescription(cls):
+	def get_description(cls):
 		return ""
 
 	@classmethod
-	def getParams(cls):
+	def get_params(cls):
 		return ""
 
 	@classmethod
-	def getAuths(cls):
+	def get_auths(cls):
 		return []
 
 	@classmethod
-	def verifyParams(cls, params):
-		if cls.getParams() == "":
+	def verify_params(cls, params, message, bot):
+		if cls.get_params() == "":
 			return True
 
-		params_req = len(cls.getParams().split("> <"))
+		params_req = len(cls.get_params().split("> <"))
 
 		return len(params) == params_req

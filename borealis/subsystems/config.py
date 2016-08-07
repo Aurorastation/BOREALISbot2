@@ -1,5 +1,5 @@
 #    BOREALISbot2 - a Discord bot to interface between SS13 and discord.
-#    Copyright (C) 2016 - Skull132
+#    Copyright (C) 2016 Skull132
 
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -18,46 +18,63 @@ import yaml
 import os.path
 import logging
 import requests
-from threading import Timer
 
 class Config():
-	def __init__(self, config_path):
+	def __init__(self, config_path, bot, logger):
+		if config_path == None:
+			raise ValueError("No config path provided to Config.")
+
+		# The filepath to the yml we want to read.
 		self.filepath = config_path
 
-		self.logger = None
-		self.config = {}
-		self.users = {}
-		self.channels = {"channel_admin" : [], "channel_cciaa" : [], "channel_announce" : [], "channel_log" : []}
-		self.bot = None
-
-	def setup(self, bot, logger):
-		"""Set up the config instance."""
-
 		if logger == None:
-			raise RuntimeError("No logger provided to Config setup().")
+			raise ValueError("No logger provided to Config.")
 
+		# The logger from the bot.
 		self.logger = logger
 
 		if bot == None:
-			raise RuntimeError("No bot provided to Config setup().")
+			raise ValueError("No bot provided to Config.")
 
+		# The bot itself.
 		self.bot = bot
 
+		# The master dictionary with configuration options.
+		self.config = {}
+
+		# User dictionary.
+		self.users = {}
+
+		# Initial channels dictionary.
+		self.channels = {"channel_admin" : [], "channel_cciaa" : [], "channel_announce" : [], "channel_log" : []}
+
+	def setup(self):
+		"""Set up the config instance."""
+
 		if os.path.isfile(self.filepath) == False:
-			raise RuntimeError("Invalid config path.")
+			raise RuntimeError("Config is unable to open configuration file.")
 
 		with open(self.filepath, 'r') as f:
-			self.config = yaml.load(f)
+			try:
+				self.config = yaml.load(f)
+			except yaml.YAMLError as e:
+				raise RuntimeError(e)
 
-	def updateUsers(self):
+	def update_users(self):
 		"""Starts the config auto-update loop."""
 
-		self.logger.info("Updating users.")
-		self.users = self.bot.queryAPI("/users", "get", ["users"])["users"]
+		self.logger.info("Config: updating users.")
+		try:
+			new_users = self.bot.query_api("/users", "get", return_keys = ["users"], enforce_return_keys = True)
+
+			# To stop assignment of malformed data from a failed request.
+			self.users = new_users["users"]
+		except RuntimeError as e:
+			self.logger.error("Config update_users: runtime error during operation.")
 
 		return
 
-	def getValue(self, key):
+	def get_value(self, key):
 		"""Fetch a value from the config dictionary."""
 
 		if key in self.config:
@@ -65,7 +82,7 @@ class Config():
 
 		return None
 
-	def getUserAuths(self, user_id):
+	def get_user_auths(self, user_id):
 		"""Return a list of strings representing a user's permissions."""
 
 		if user_id in self.users:
@@ -73,7 +90,10 @@ class Config():
 
 		return []
 
-	def getChannels(self, channel_group):
+	def get_channels(self, channel_group):
+		"""Get a list of channel objects that are grouped together."""
+		self.logger.debug("Config: getting channels from channel group {0}".format(channel_group))
+
 		if channel_group not in self.channels:
 			return []
 
@@ -83,15 +103,17 @@ class Config():
 
 		return channel_objs
 
-	def updateChannels(self):
-		self.logger.info("Update channels.")
+	def update_channels(self):
+		"""Updates the list of channels stored in the config's datum."""
+		self.logger.info("Config: updating channels.")
 
-		temporary_channels = self.bot.queryAPI("/channels", "get", ["channels"])["channels"]
+		try:
+			temporary_channels = self.bot.query_api("/channels", "get", return_keys = ["channels"], enforce_return_keys = True)["channels"]
+		except RuntimeError as e:
+			# Only one way to crash here. Bad API query.
+			raise RuntimeError(e)
 
 		self.channels = {"channel_admin" : [], "channel_cciaa" : [], "channel_announce" : [], "channel_log" : []}
-
-		if not temporary_channels:
-			return False
 
 		for group in temporary_channels:
 			if group not in self.channels:
@@ -99,19 +121,17 @@ class Config():
 
 			self.channels[group] = temporary_channels[group]
 
-		return True
+	def remove_channel(self, channel_group, channel_id):
+		"""Removes a channel from the global channel listing and updates channels as necessary."""
+		data = {"channel_id" : channel_id, "channel_group" : channel_group}
 
-	def removeChannel(self, channel_group, channel_id):
-		data = {"auth_key" : self.getValue("APIAuth"), "channel_id" : channel_id, "channel_group" : channel_group}
-		response = self.bot.queryAPI("/channels", "delete", ["error", "error_msg"], additional_data = data, hold_payload = True)
+		try:
+			response = self.bot.query_api("/channels", "delete", data, ["action"], enforce_return_keys = True)
 
-		if not response:
-			self.logger.error("Config error removing channel. Bad status code.")
-			return False
+			if response["action"] == "no channel":
+				raise RuntimeError("This channel does not belong to the specified group.")
 
-		if response["error"] == False and "error_msg" not in response:
-			self.updateChannels()
-			return True
-
-		self.logger.error("Config error removing channel. {0}".format(response["error_msg"]))
-		return False
+			self.update_channels()
+		except RuntimeError as e:
+			# Bad query error.
+			raise RuntimeError(e)

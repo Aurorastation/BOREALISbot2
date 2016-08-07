@@ -1,12 +1,20 @@
 from borealis import BotBorealis
 
-bot = BotBorealis("config.yml")
+try:
+	print("Welcome to BOREALIS.")
+	print("Initializing BOREALIS and its subcomponents.")
+	bot = BotBorealis("config.yml")
 
-print("Bot created. Setting up.")
+	print("Initialization completed. Readying subcomponents.")
+	bot.setup()
 
-bot.setup()
+	print("Subcomponents ready. All systems functional.")
+	print("Starting BOREALIS.")
+	bot.start_borealis()
+except Exception as e:
+	print("Danger! Exception caught!")
+	print(e)
+	print("BOREALIS has been shut down.")
+	print("Check the log for further details.")
 
-print("Setup done.")
-print("Running bot.")
-
-bot.start_borealis()
+input("Press Enter to exit.")
