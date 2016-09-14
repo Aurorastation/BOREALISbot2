@@ -505,7 +505,7 @@ class BotBorealis(discord.Client):
 			await self.unban(server_obj, user_obj)
 
 			# Update the API.
-			self.query_api("/discord/ban", "update", {"ban_id" : ban_id})
+			self.query_api("/discord/ban", "delete", {"ban_id" : ban_id})
 
 			# Log.
 			await self.log_entry("LIFTED BAN", subject_obj = user_obj)
