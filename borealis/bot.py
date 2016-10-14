@@ -55,18 +55,6 @@ class BotBorealis(discord.Client):
 
 		self.logger.debug("Creation: passed Config init.")
 
-		# borealis.Nudge instance
-		try:
-			self.nudge = Nudge(self, self.logger)
-			self.nudge_thread = None
-			self.logger.debug("Creation: nudge created.")
-		except ValueError as e:
-			self.logger.debug("Value error during Nudge creation. '{0}'".format(e))
-			raise RuntimeError("Exception caught during creation. Ceasing.")
-		except RuntimeError as e2:
-			self.logger.debug("Runtime error during Nudge creation. '{0}'".format(e2))
-			raise RuntimeError("Exception caught during creation. Ceasing.")
-
 		# Commands dictionary
 		self.commands = {}
 
@@ -89,14 +77,6 @@ class BotBorealis(discord.Client):
 			self.logger.critical("Runtime error during config setup. '{0}'".format(e))
 			raise RuntimeError("Exception caught during setup. Ceasing.")
 
-		# Set up the nudge.
-		try:
-			self.nudge.setup()
-			self.logger.debug("Setup: Nudge setup completed.")
-		except RuntimeError as e:
-			self.logger.critical("Runtime error during nudge setup: '{0}'".format(e))
-			raise RuntimeError("Exception caught during setup. Ceasing.")
-
 		# Create and prepare the Scheduler.
 		try:
 			self.scheduler = Scheduler(self, self.config_value("scheduler_interval"), self.logger)
@@ -112,9 +92,6 @@ class BotBorealis(discord.Client):
 		"""Runs the bot."""
 
 		self.logger.info("Bot starting.")
-
-		# Start the nudge listener.
-		self.nudge_thread = _thread.start_new_thread(self.nudge.start, ())
 
 		# Initialize the scheduler and populate its events.
 		self.scheduler.add_event(86400, self.config.update_users, init_now = True)
