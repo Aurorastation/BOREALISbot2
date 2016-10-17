@@ -33,6 +33,7 @@ class CommandDiscordStrike(BorealisCommand):
 
 		# Deal with the author's message.
 		ban_duration = None
+		ban_type = None
 
 		# Handle the messages and data.
 		author_msg = "Operation successful, strike issued to {0}.".format(user_obj.name)
@@ -44,10 +45,12 @@ class CommandDiscordStrike(BorealisCommand):
 			author_msg += " User has been banned for 2 days."
 			user_msg += " Due to your previous strikes, you will now be banned for 2 days."
 			ban_duration = 2880
+			ban_type = "TEMPBAN"
 		else:
 			author_msg += " User has been permanently banned."
 			user_msg += " Due to your previous strikes, you will now be permanently banned from the Discord server."
 			ban_duration = -1
+			ban_type = "PERMABAN"
 
 		author_msg += " Currently at {0} strikes.".format(response["strike_count"])
 		user_msg += " You currently have {0} active strikes.".format(response["strike_count"])
@@ -59,7 +62,7 @@ class CommandDiscordStrike(BorealisCommand):
 
 		if ban_duration != None:
 			try:
-				await bot.register_ban(user_obj, ban_duration, message.server, author_obj)
+				await bot.register_ban(user_obj, ban_type, ban_duration, message.server, author_obj)
 			except RuntimeError as e:
 				await bot.send_message(message.channel, "{0}, applying an automated ban failed. {1}".format(message.author.mention, e))
 				return

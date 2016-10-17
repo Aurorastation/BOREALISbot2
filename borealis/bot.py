@@ -431,13 +431,13 @@ class BotBorealis(discord.Client):
 
 		await self.forward_message(" || ".join(str_list), "channel_log")
 
-	async def register_ban(self, user_obj, duration, server_obj, author_obj = None):
+	async def register_ban(self, user_obj, ban_type, duration, server_obj, author_obj = None):
 		"""Register a ban for the specified duration on the API, and actually do the banning."""
 		if user_obj == None or duration == None or server_obj == None:
 			self.logger.error("Bot register_ban: attempted to register ban with missing arguments.")
 			raise ValueError("Error registering ban: missing arguments given.")
 
-		data = {"user_id" : user_obj.id, "user_name" : user_obj.name, "server_id" : server_obj.id, "duration" : duration, "admin_id" : author_obj.id, "admin_name" : author_obj.name}
+		data = {"user_id" : user_obj.id, "user_name" : user_obj.name, "server_id" : server_obj.id, "ban_type" : ban_type, "ban_duration" : duration, "admin_id" : author_obj.id, "admin_name" : author_obj.name}
 
 		try:
 			self.query_api("/discord/ban", "put", data)
