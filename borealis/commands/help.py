@@ -49,7 +49,7 @@ class CommandHelp(BorealisCommand):
 			reply += "---------------------\n"
 			reply += "Note that some of these are locked away behind authorization. To get further info about a command, type `{0}Help <command name>`!".format(prefix)
 
-		await bot.send_message("{0}, I've sent the requested information to you in a PM!".format(message.author.mention))
+		await bot.send_message(message.channel, "{0}, I've sent the requested information to you in a PM!".format(message.author.mention))
 		await bot.forward_message(reply, channel_obj = message.author)
 		return
 
