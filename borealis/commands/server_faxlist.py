@@ -16,24 +16,18 @@
 
 from .command import BorealisCommand
 
-class CommandPlayerInfo(BorealisCommand):
-	"""Fetches info about a player from the database."""
+class CommandServerFaxlist(BorealisCommand):
+	"""Sends a command report to the station."""
 
 	@classmethod
 	async def do_command(cls, bot, message, params):
-		uri = '/query/database/playerinfo'
-
 		try:
-			response = bot.query_api(uri, "get", {"ckey" : params[0]}, ["data"], enforce_return_keys = True)
+			data = await bot.query_server("get_faxlist", params = {"faxtype" : params[0].lower()})
 
-			if response["data"]["found"] == False:
-				await bot.send_message(message.channel, "{0}, no such player found.".format(message.author.mention))
-				return
+			reply = "{0}, found the following faxes that were {1} this round:\n".format(message.author.mention, params[0].lower())
 
-			reply = "Information regarding {0}, retreived from the {1}:".format(params[0], params[1].lower())
-
-			for key in response["data"]["sort_order"]:
-				reply += "\n{0}: {1}".format(key, response["data"][key])
+			for i, val in enumerate(data):
+				reply += "{0} - \"{1}\"\n".format(i + 1, val)
 
 		except RuntimeError as e:
 			reply = "{0}, operation failed. {1}".format(message.author.mention, e)
@@ -43,16 +37,26 @@ class CommandPlayerInfo(BorealisCommand):
 
 	@classmethod
 	def get_name(cls):
-		return "PlayerInfo"
+		return "ServerFaxlist"
 
 	@classmethod
 	def get_description(cls):
-		return "Fetches info about a player from the database. Ckey must be entered without spaces."
+		return "Fetches fax indexes and their titles from the current round."
 
 	@classmethod
 	def get_params(cls):
-		return "<ckey>"
+		return "<sent|received>"
 
 	@classmethod
 	def get_auths(cls):
-		return ["R_MOD", "R_ADMIN"]
+		return ["R_ADMIN", "R_CCIAA"]
+
+	@classmethod
+	def verify_params(cls, params, message, bot):
+		if super(CommandServerFaxlist, cls).verify_params(params, message, bot) == False:
+			return False
+
+		if params[0].lower() not in ["sent", "received"]:
+			return False
+
+		return True

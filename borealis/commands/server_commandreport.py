@@ -14,26 +14,24 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see http://www.gnu.org/licenses/.
 
+import re
+
 from .command import BorealisCommand
 
-class CommandPlayerInfo(BorealisCommand):
-	"""Fetches info about a player from the database."""
+class CommandServerCommandReport(BorealisCommand):
+	"""Sends a command report to the station."""
 
 	@classmethod
 	async def do_command(cls, bot, message, params):
-		uri = '/query/database/playerinfo'
-
 		try:
-			response = bot.query_api(uri, "get", {"ckey" : params[0]}, ["data"], enforce_return_keys = True)
+			msg = " ".join(params)
+			found = re.fullmatch(r'.*`(.*)`.*```(.*)```.*', msg, re.DOTALL)
+			await bot.query_server("send_commandreport", params = {"senderkey" : "{0}/{1}".format(message.author.name, message.author.id),
+																   "title" : found.group(1),
+																   "body" : found.group(2),
+																   "announce" : 1})
 
-			if response["data"]["found"] == False:
-				await bot.send_message(message.channel, "{0}, no such player found.".format(message.author.mention))
-				return
-
-			reply = "Information regarding {0}, retreived from the {1}:".format(params[0], params[1].lower())
-
-			for key in response["data"]["sort_order"]:
-				reply += "\n{0}: {1}".format(key, response["data"][key])
+			reply = "Report sent!"
 
 		except RuntimeError as e:
 			reply = "{0}, operation failed. {1}".format(message.author.mention, e)
@@ -43,16 +41,22 @@ class CommandPlayerInfo(BorealisCommand):
 
 	@classmethod
 	def get_name(cls):
-		return "PlayerInfo"
+		return "ServerCommandReport"
 
 	@classmethod
 	def get_description(cls):
-		return "Fetches info about a player from the database. Ckey must be entered without spaces."
+		return "Sends a command report to the station! Use the WI for more complex formatting, though."
 
 	@classmethod
 	def get_params(cls):
-		return "<ckey>"
+		return "`Title` ```Body```"
 
 	@classmethod
 	def get_auths(cls):
-		return ["R_MOD", "R_ADMIN"]
+		return ["R_ADMIN", "R_CCIAA"]
+
+	@classmethod
+	def verify_params(cls, params, message, bot):
+		msg = " ".join(params)
+		found = re.fullmatch(r'.*`(.*)`.*```(.*)```.*', msg, re.DOTALL)
+		return found is not None

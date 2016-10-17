@@ -20,10 +20,11 @@ from borealis.commands import *
 import discord
 import asyncio
 import requests
-import _thread
 import logging
 import sys
 import inspect
+import json
+import struct
 from datetime import datetime as dt
 
 class BotBorealis(discord.Client):
@@ -509,3 +510,65 @@ class BotBorealis(discord.Client):
 		except RuntimeError as e:
 			# From the API or register_unban. Already logged, forward to the scheduler.
 			raise RuntimeError(e)
+
+	async def query_server(self, query, params = None):
+		"""Queries the server specified in the config, and returns the data as a dictionary object."""
+		host = self.config_value("server_host")
+		port = self.config_value("server_port")
+		if host == None or port == None:
+			raise RuntimeError("Server connection information not properly defined in the config.")
+
+		message = {"query": query}
+
+		auth = self.config_value("server_auth")
+		if auth is not None:
+			message["auth"] = auth
+
+		if params is not None:
+			message.update(params)
+
+		message = json.dumps(message, separators = (',', ':'))
+
+
+		try:
+			reader, writer = await asyncio.open_connection(host, port, loop = self.loop)
+
+			query = b'\x00\x83'
+			query += struct.pack('>H', len(message) + 6)
+			query += b'\x00\x00\x00\x00\x00'
+			query += bytes(message, 'utf-8')
+			query += b'\x00'
+
+			writer.write(query)
+
+			data = b''
+			while True:
+				buffer = await reader.read(1024)
+				data += buffer
+				buffer_size = len(buffer)
+				if buffer_size < 1024:
+					break
+
+			writer.close()
+		except Exception as e:
+			raise RuntimeError("Unspecified exception while attempting data transfer with the server. {0}".format(e))
+
+		size_bytes = struct.unpack('>H', data[2:4])
+		size = size_bytes[0] - 1
+
+		index = 5
+		index_end = index + size
+		string = data[5:index_end].decode("utf-8")
+		string = string.replace('\x00', '')
+
+		try:
+			data = json.loads(string)
+		except json.JSONDecodeError as e:
+			raise RuntimeError("JSON was not returned. Error: " + e.msg)
+
+		if data["statuscode"] != 200:
+			error = "Server query error: {0}. Error code: {1}".format(data["response"], data["statuscode"])
+			self.logger.error(error)
+			raise RuntimeError(error)
+
+		return data["data"]

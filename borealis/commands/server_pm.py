@@ -16,24 +16,16 @@
 
 from .command import BorealisCommand
 
-class CommandPlayerInfo(BorealisCommand):
-	"""Fetches info about a player from the database."""
+class CommandServerPM(BorealisCommand):
+	"""Attempts to send a PM to the specified player on the server."""
 
 	@classmethod
 	async def do_command(cls, bot, message, params):
-		uri = '/query/database/playerinfo'
-
 		try:
-			response = bot.query_api(uri, "get", {"ckey" : params[0]}, ["data"], enforce_return_keys = True)
+			msg = " ".join(params[1:])
+			await bot.query_server("send_adminmsg", params = {"ckey" : params[0], "senderkey" : message.author.name, "msg" : msg})
 
-			if response["data"]["found"] == False:
-				await bot.send_message(message.channel, "{0}, no such player found.".format(message.author.mention))
-				return
-
-			reply = "Information regarding {0}, retreived from the {1}:".format(params[0], params[1].lower())
-
-			for key in response["data"]["sort_order"]:
-				reply += "\n{0}: {1}".format(key, response["data"][key])
+			reply = "PM sent!"
 
 		except RuntimeError as e:
 			reply = "{0}, operation failed. {1}".format(message.author.mention, e)
@@ -43,16 +35,20 @@ class CommandPlayerInfo(BorealisCommand):
 
 	@classmethod
 	def get_name(cls):
-		return "PlayerInfo"
+		return "ServerPM"
 
 	@classmethod
 	def get_description(cls):
-		return "Fetches info about a player from the database. Ckey must be entered without spaces."
+		return "Sends an adminPM to the player selected. **Ckey must be written without spaces!**"
 
 	@classmethod
 	def get_params(cls):
-		return "<ckey>"
+		return "<ckey> <message goes here>"
 
 	@classmethod
 	def get_auths(cls):
-		return ["R_MOD", "R_ADMIN"]
+		return ["R_ADMIN", "R_MOD"]
+
+	@classmethod
+	def verify_params(cls, params, message, bot):
+		return len(params) >= len(cls.get_params().split("> <"))

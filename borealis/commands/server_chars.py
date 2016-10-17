@@ -16,43 +16,33 @@
 
 from .command import BorealisCommand
 
-class CommandPlayerInfo(BorealisCommand):
-	"""Fetches info about a player from the database."""
+class CommandServerChars(BorealisCommand):
+	"""Retrieves the list of characters with associated ckeys currently on the server."""
 
 	@classmethod
 	async def do_command(cls, bot, message, params):
-		uri = '/query/database/playerinfo'
-
 		try:
-			response = bot.query_api(uri, "get", {"ckey" : params[0]}, ["data"], enforce_return_keys = True)
+			data = await bot.query_server("get_char_list")
 
-			if response["data"]["found"] == False:
-				await bot.send_message(message.channel, "{0}, no such player found.".format(message.author.mention))
-				return
+			reply = "{0}, here's the current character list:\n".format(message.author.mention)
 
-			reply = "Information regarding {0}, retreived from the {1}:".format(params[0], params[1].lower())
-
-			for key in response["data"]["sort_order"]:
-				reply += "\n{0}: {1}".format(key, response["data"][key])
+			for character in data:
+				reply += "{0} - {1}\n".format(character, data[character])
 
 		except RuntimeError as e:
 			reply = "{0}, operation failed. {1}".format(message.author.mention, e)
 
-		await bot.send_message(message.channel, reply)
+		await bot.forward_message(reply, channel_obj = message.channel)
 		return
 
 	@classmethod
 	def get_name(cls):
-		return "PlayerInfo"
+		return "ServerChars"
 
 	@classmethod
 	def get_description(cls):
-		return "Fetches info about a player from the database. Ckey must be entered without spaces."
-
-	@classmethod
-	def get_params(cls):
-		return "<ckey>"
+		return "Retrieves the list of characters, with ckeys attached, currently on the server."
 
 	@classmethod
 	def get_auths(cls):
-		return ["R_MOD", "R_ADMIN"]
+		return ["R_ADMIN", "R_MOD"]

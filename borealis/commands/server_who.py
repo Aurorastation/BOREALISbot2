@@ -16,43 +16,36 @@
 
 from .command import BorealisCommand
 
-class CommandPlayerInfo(BorealisCommand):
-	"""Fetches info about a player from the database."""
+class CommandServerWho(BorealisCommand):
+	"""Retrieves the list of players currently on the server."""
 
 	@classmethod
 	async def do_command(cls, bot, message, params):
-		uri = '/query/database/playerinfo'
-
 		try:
-			response = bot.query_api(uri, "get", {"ckey" : params[0]}, ["data"], enforce_return_keys = True)
+			data = await bot.query_server("get_player_list", params = {"showadmins" : 0})
 
-			if response["data"]["found"] == False:
-				await bot.send_message(message.channel, "{0}, no such player found.".format(message.author.mention))
-				return
+			if data:
+				private_msg = "Here's the list of players currently on the server:\n"
 
-			reply = "Information regarding {0}, retreived from the {1}:".format(params[0], params[1].lower())
+				for i, val in enumerate(data):
+					private_msg += "{0}\n".format(val)
 
-			for key in response["data"]["sort_order"]:
-				reply += "\n{0}: {1}".format(key, response["data"][key])
+				await bot.send_message(message.channel, "{0}, I've sent the who list to you via PM!".format(message.author.mention))
+				await bot.forward_message(private_msg, channel_obj = message.author)
+			else:
+				await bot.send_message(message.channel, "{0}, there are no players currently on the server :c".format(message.author.mention))
+
+
 
 		except RuntimeError as e:
-			reply = "{0}, operation failed. {1}".format(message.author.mention, e)
+			await bot.send_message(message.channel, "{0}, operation failed. {1}".format(message.author.mention, e))
 
-		await bot.send_message(message.channel, reply)
 		return
 
 	@classmethod
 	def get_name(cls):
-		return "PlayerInfo"
+		return "ServerWho"
 
 	@classmethod
 	def get_description(cls):
-		return "Fetches info about a player from the database. Ckey must be entered without spaces."
-
-	@classmethod
-	def get_params(cls):
-		return "<ckey>"
-
-	@classmethod
-	def get_auths(cls):
-		return ["R_MOD", "R_ADMIN"]
+		return "Retrieves the list of players currently on the server."

@@ -16,24 +16,14 @@
 
 from .command import BorealisCommand
 
-class CommandPlayerInfo(BorealisCommand):
-	"""Fetches info about a player from the database."""
+class CommandServerRestart(BorealisCommand):
+	"""Attempts to force a restart of the server."""
 
 	@classmethod
 	async def do_command(cls, bot, message, params):
-		uri = '/query/database/playerinfo'
-
 		try:
-			response = bot.query_api(uri, "get", {"ckey" : params[0]}, ["data"], enforce_return_keys = True)
-
-			if response["data"]["found"] == False:
-				await bot.send_message(message.channel, "{0}, no such player found.".format(message.author.mention))
-				return
-
-			reply = "Information regarding {0}, retreived from the {1}:".format(params[0], params[1].lower())
-
-			for key in response["data"]["sort_order"]:
-				reply += "\n{0}: {1}".format(key, response["data"][key])
+			await bot.query_server("restart_round", params = {"senderkey" : "{0}/{1}".format(message.author.name, message.author.id)})
+			reply = "{0}, server successfully restarted.".format(message.author.mention)
 
 		except RuntimeError as e:
 			reply = "{0}, operation failed. {1}".format(message.author.mention, e)
@@ -43,16 +33,12 @@ class CommandPlayerInfo(BorealisCommand):
 
 	@classmethod
 	def get_name(cls):
-		return "PlayerInfo"
+		return "ServerRestart"
 
 	@classmethod
 	def get_description(cls):
-		return "Fetches info about a player from the database. Ckey must be entered without spaces."
-
-	@classmethod
-	def get_params(cls):
-		return "<ckey>"
+		return "Restarts the server if possible."
 
 	@classmethod
 	def get_auths(cls):
-		return ["R_MOD", "R_ADMIN"]
+		return ["R_ADMIN"]

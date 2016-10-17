@@ -13,3 +13,13 @@ from borealis.commands.channel_update import CommandChannelUpdate
 from borealis.commands.help import CommandHelp
 from borealis.commands.discord_strike import CommandDiscordStrike
 from borealis.commands.debug_channel import CommandDebugChannel
+from borealis.commands.server_status import CommandServerStatus
+from borealis.commands.server_manifest import CommandServerManifest
+from borealis.commands.server_staff import CommandServerStaff
+from borealis.commands.server_pm import CommandServerPM
+from borealis.commands.server_chars import CommandServerChars
+from borealis.commands.server_commandreport import CommandServerCommandReport
+from borealis.commands.server_faxlist import CommandServerFaxlist
+from borealis.commands.server_getfax import CommandServerGetfax
+from borealis.commands.server_who import CommandServerWho
+from borealis.commands.server_restart import CommandServerRestart

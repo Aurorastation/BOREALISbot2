@@ -1,13 +1,12 @@
 APIAuth: ""
 API: ""
 
-listen_nudges: true
-
 prefix: "?"
 
 token: ""
 
-nudge_host: "127.0.0.1"
-nudge_port: 1200
+server_host: ""
+server_port: 1234
+server_auth: ""
 
 scheduler_interval: 600
