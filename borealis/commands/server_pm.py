@@ -23,7 +23,7 @@ class CommandServerPM(BorealisCommand):
 	async def do_command(cls, bot, message, params):
 		try:
 			msg = " ".join(params[1:])
-			await bot.query_server("send_adminmsg", params = {"ckey" : params[0], "senderkey" : message.author.name, "msg" : msg})
+			await bot.query_server("send_adminmsg", params = {"ckey" : params[0], "senderkey" : bot.config.users[message.author.id]["ckey"], "msg" : msg})
 
 			reply = "PM sent!"
 
