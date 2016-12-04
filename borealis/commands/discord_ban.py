@@ -24,7 +24,7 @@ class CommandDiscordBan(BorealisCommand):
 		user_obj = message.mentions[0]
 		author_obj = message.author
 
-		ban_duration = float(params[1])
+		ban_duration = int(params[1])
 		ban_type = "TEMPBAN"
 
 		if ban_duration < 0:
