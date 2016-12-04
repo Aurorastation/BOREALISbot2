@@ -42,7 +42,8 @@ class CommandUserInfo(BorealisCommand):
 
 		reply += "```"
 
-		await bot.send_message(message.channel, reply)
+		await bot.send_message(message.channel, "{0}, I've sent the requested information to you in a PM!".format(message.author.mention))
+		await bot.forward_message(message.author, reply)
 		return
 
 	@classmethod
