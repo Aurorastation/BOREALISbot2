@@ -489,11 +489,11 @@ class BotBorealis(discord.Client):
 			await self.log_entry("LIFTED BAN", subject_obj = user_obj)
 		except RuntimeError as e:
 			# API error. Forward as is.
-			raise RuntimeError(e + " Error took place while registering ban.")
-		except discord.Forbidden as e1:
+			raise RuntimeError("{0}. Error took place while registering ban.".format(e))
+		except discord.Forbidden:
 			self.logger.error("Bot register_unban: insufficient permissions to lift ban.")
 			raise RuntimeError("Unban error: insufficient permissions to lift ban.")
-		except discord.HTTPException as e2:
+		except discord.HTTPException:
 			self.logger.error("Bot register_unban: HTTP excetion caught while lifting ban.")
 			raise RuntimeError("HTTP excetion caught while lifting ban.")
 
@@ -506,9 +506,10 @@ class BotBorealis(discord.Client):
 				return
 
 			for ban_id in bans["expired_bans"]:
-				await self.register_unban(ban_id, bans[ban_id]['user_id'], bans[band_id]['server_id'])
+				await self.register_unban(ban_id, bans['expired_bans'][ban_id]['user_id'], bans['expired_bans'][ban_id]['server_id'])
 		except RuntimeError as e:
 			# From the API or register_unban. Already logged, forward to the scheduler.
+			self.logger.error(e)
 			raise RuntimeError(e)
 
 	async def query_server(self, query, params = None):
