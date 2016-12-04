@@ -43,7 +43,7 @@ class SchedulerTask():
 		# Failure count
 		self.failures = 0
 
-	def do_failure(self, exception):
+	def do_failure(self):
 		"""Handles failures, and disables the task at a 3rd failure."""
 		self.failures += 1
 

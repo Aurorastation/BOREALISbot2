@@ -87,7 +87,7 @@ class Scheduler():
 					self.logger.error("Error from Scheduler: exception from process_cycle(). {0}".format(e))
 				except Exception as e1:
 					self.logger.error("Unhandled error from Scheduler: {0}".format(e1))
-					event.do_failure(e1)
+					event.do_failure()
 
 			# All done. Sleep now.
 			await asyncio.sleep(self.interval)
