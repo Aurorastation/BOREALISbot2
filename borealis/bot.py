@@ -431,26 +431,26 @@ class BotBorealis(discord.Client):
 
 		await self.forward_message(" || ".join(str_list), "channel_log")
 
-	async def register_ban(self, user_obj, ban_type, duration, server_obj, author_obj = None):
+	async def register_ban(self, user_obj, ban_type, duration, server_obj, author_obj = None, reason = "You have been banned by an administrator"):
 		"""Register a ban for the specified duration on the API, and actually do the banning."""
 		if user_obj == None or duration == None or server_obj == None:
 			self.logger.error("Bot register_ban: attempted to register ban with missing arguments.")
 			raise ValueError("Error registering ban: missing arguments given.")
 
-		data = {"user_id" : user_obj.id, "user_name" : user_obj.name, "server_id" : server_obj.id, "ban_type" : ban_type, "ban_duration" : duration, "admin_id" : author_obj.id, "admin_name" : author_obj.name}
+		data = {"user_id" : user_obj.id, "user_name" : user_obj.name, "server_id" : server_obj.id, "ban_type" : ban_type, "ban_duration" : duration, "admin_id" : author_obj.id, "admin_name" : author_obj.name, "ban_reason" : reason}
 
 		try:
 			self.query_api("/discord/ban", "put", data)
 
 			await self.ban(user_obj, 0)
-			await self.log_entry("PLACED BAN | Length: {0}".format(duration), author_obj, user_obj)
+			await self.log_entry("PLACED BAN | Length: {0} | Reason: {1}".format(duration, reason), author_obj, user_obj)
 		except RuntimeError as e:
 			# API error. Send straight up.
-			raise RuntimeError(e + " Error took place while registering ban.")
-		except discord.Forbidden as e:
+			raise RuntimeError("{0} Error took place while registering ban.".format(e))
+		except discord.Forbidden:
 			self.logger.error("Bot register_ban: insufficient permissions to administer ban.")
 			raise RuntimeError("Banning error: insufficient permissions to administer ban.")
-		except discord.HTTPException as e1:
+		except discord.HTTPException:
 			self.logger.error("Bot register_ban: HTTP error while administering ban.")
 			raise RuntimeError("Banning error: HTTP exception caught while administering ban.")
 
