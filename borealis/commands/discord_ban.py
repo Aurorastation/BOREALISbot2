@@ -31,7 +31,7 @@ class CommandDiscordBan(BorealisCommand):
 			ban_type = "PERMABAN"
 
 		reason = "You have been banned by an administrator."
-		if params.len > 2:
+		if len(params) > 2:
 			reason = " ".join(params[2:])
 
 		user_reply = "{0} has applied a {1} for you over at the {2} server for the following reason:\n{3}".format(author_obj.name, ban_type, message.channel.server.name, reason)
@@ -78,7 +78,7 @@ class CommandDiscordBan(BorealisCommand):
 
 	@classmethod
 	def verify_params(cls, params, message, bot):
-		if params.len < 2:
+		if len(params) < 2:
 			return False
 
 		if len(message.mentions) != 1:
