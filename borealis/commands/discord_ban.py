@@ -78,7 +78,7 @@ class CommandDiscordBan(BorealisCommand):
 
 	@classmethod
 	def verify_params(cls, params, message, bot):
-		if super(CommandDiscordBan, cls).verify_params(params, message, bot) == False:
+		if params.len < 2:
 			return False
 
 		if len(message.mentions) != 1:
