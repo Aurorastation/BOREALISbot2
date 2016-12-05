@@ -437,6 +437,10 @@ class BotBorealis(discord.Client):
 			self.logger.error("Bot register_ban: attempted to register ban with missing arguments.")
 			raise ValueError("Error registering ban: missing arguments given.")
 
+		if user_obj == self.user:
+			self.logger.error("Bot register_ban: attempted to ban myself.")
+			raise ValueError("Error registering ban: attempted to ban myself. This is not possible.")
+
 		data = {"user_id" : user_obj.id, "user_name" : user_obj.name, "server_id" : server_obj.id, "ban_type" : ban_type, "ban_duration" : duration, "admin_id" : author_obj.id, "admin_name" : author_obj.name, "ban_reason" : reason}
 
 		try:
