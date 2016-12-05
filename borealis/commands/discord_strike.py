@@ -24,7 +24,7 @@ class CommandDiscordStrike(BorealisCommand):
 		user_obj = message.mentions[0]
 
 		if user_obj == bot.user:
-			await bot.send(message.channel, "{0}, issuing strike failed. I cannot warn myself.".format(message.author.mention))
+			await bot.send_message(message.channel, "{0}, issuing strike failed. I cannot warn myself.".format(message.author.mention))
 			return
 
 		author_obj = message.author
