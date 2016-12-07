@@ -30,7 +30,7 @@ class CommandPlayerInfo(BorealisCommand):
 				await bot.send_message(message.channel, "{0}, no such player found.".format(message.author.mention))
 				return
 
-			reply = "Information regarding {0}, retreived from the {1}:".format(params[0], params[1].lower())
+			reply = "Information regarding {0}:".format(params[0])
 
 			for key in response["data"]["sort_order"]:
 				reply += "\n{0}: {1}".format(key, response["data"][key])
