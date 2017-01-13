@@ -65,6 +65,9 @@ class BotBorealis(discord.Client):
 		# borealis.subsystems.Scheduler instance
 		self.scheduler = None
 
+		# Used to cache the subscriber role. Of which there can only be one.
+		self.subscriber_role = None
+
 	def setup(self):
 		"""Sets up the bot and its various sub-processes."""
 
@@ -129,6 +132,15 @@ class BotBorealis(discord.Client):
 
 		# Check if the command is even valid.
 		if message.content.startswith(self.config_value("prefix")) == False or len(message.content) < 1:
+			# Snowflake unsubscribe handler
+			if message.author == self.user and self.config_value("subscriber_server") and message.server and message.server.id == self.config_value("subscriber_server"):
+				role = self.get_subscriber_role(message.server)
+
+				if role and role in message.role_mentions:
+					await self.auto_unsubscribe(message.server)
+					self.logger.debug("Bot on_message: handled automated subscribers.")
+					return
+
 			self.logger.debug("Bot on_message: message discarded due to bad prefix or content length. Content: '{0}'. Author: '{1}'.".format(message.content, message.author))
 			return
 
@@ -577,3 +589,43 @@ class BotBorealis(discord.Client):
 			raise RuntimeError(error)
 
 		return data["data"]
+
+	def get_subscriber_role(self, server_obj):
+		"""Gets a role object for subscribers to be set to and unset to."""
+		if not server_obj:
+			return None
+
+		if self.subscriber_role:
+			return self.subscriber_role
+
+		for role in server_obj.roles:
+			if role.name == self.config_value("subscriber_role"):
+				self.subscriber_role = role
+				break
+
+		return self.subscriber_role
+
+	async def auto_unsubscribe(self, server_obj):
+		"""Unsubscribes people who subscribed to only one notification."""
+
+		role = self.get_subscriber_role(server_obj)
+
+		if not role:
+			return
+
+		try:
+			users = self.query_api("/subscriber", "get", return_keys = ["users"])
+
+			if not users or not users["users"]:
+				return
+
+			for i, uid in enumerate(users["users"]):
+				user = server_obj.get_member(uid)
+
+				if user:
+					await self.remove_roles(user, role)
+
+				self.query_api("/subscriber", "delete", {"user_id": uid})
+				user = None
+		except Exception as e:
+			self.logger.error("Automatic subscriptions: error while removing old users. {0}".format(e))

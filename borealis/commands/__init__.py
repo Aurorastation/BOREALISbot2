@@ -14,6 +14,8 @@ from borealis.commands.channel_update import CommandChannelUpdate
 from borealis.commands.help import CommandHelp
 from borealis.commands.discord_strike import CommandDiscordStrike
 from borealis.commands.discord_ban import CommandDiscordBan
+from borealis.commands.discord_subscribe import CommandDiscordSubscribe
+from borealis.commands.discord_unsubscribe import CommandDiscordUnsubscribe
 from borealis.commands.debug_channel import CommandDebugChannel
 from borealis.commands.server_status import CommandServerStatus
 from borealis.commands.server_manifest import CommandServerManifest

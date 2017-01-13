@@ -10,3 +10,6 @@ server_port: 1234
 server_auth: ""
 
 scheduler_interval: 600
+
+subscriber_server: null
+subscriber_role: null
