@@ -6,7 +6,6 @@ from borealis.commands.user_info import CommandUserInfo
 from borealis.commands.player_info import CommandPlayerInfo
 from borealis.commands.player_notes import CommandPlayerNotes
 from borealis.commands.silly_cats import CommandCats
-from borealis.commands.silly_penguins import CommandPenguins
 from borealis.commands.silly_regional import CommandRegional
 from borealis.commands.channel_add import CommandChannelAdd
 from borealis.commands.channel_remove import CommandChannelRemove
