@@ -457,6 +457,11 @@ class BotBorealis(discord.Client):
 			self.logger.warning("Bot register_ban: attempted to ban a staff member.")
 			raise ValueError("Error registering ban: cannot ban other members of staff.")
 
+		if author_obj:
+			if author_obj == user_obj:
+				self.logger.warning("Bot register ban: user attempted to ban themselves.")
+				raise ValueError("Error registering ban: cannot ban yourself.")
+
 		data = {"user_id" : user_obj.id, "user_name" : user_obj.name, "server_id" : server_obj.id, "ban_type" : ban_type, "ban_duration" : duration, "admin_id" : author_obj.id, "admin_name" : author_obj.name, "ban_reason" : reason}
 
 		try:
