@@ -29,6 +29,14 @@ class CommandDiscordStrike(BorealisCommand):
 
 		author_obj = message.author
 
+		if user_obj == author_obj:
+			await bot.send_message(message.channel, "{0}, issuing strike failed. You cannot warn yourself.".format(message.author.mention))
+			return
+
+		if bot.check_command_auths(["R_MOD", "R_ADMIN"], user_obj.id):
+			await bot.send_message(message.channel, "{0}, issuing strike failed. You cannot strike a member of staff.".format(message.author.mention))
+			return
+
 		try:
 			data = {"user_id" : user_obj.id, "user_name" : user_obj.name, "admin_id" : author_obj.id, "admin_name" : author_obj.name}
 			response = bot.query_api("/discord/strike", "put", data, ["bot_action", "strike_count"], enforce_return_keys = True)
