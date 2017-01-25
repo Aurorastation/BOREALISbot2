@@ -52,6 +52,9 @@ class CommandDiscordBan(BorealisCommand):
 		except RuntimeError as e:
 			await bot.send_message(message.channel, "{0}, applying an automated ban failed. {1}".format(author_obj.mention, e))
 			return
+		except ValueError as e1:
+			await bot.send_message(message.channel, "{0}, applying an automated ban failed. {1}".format(author_obj.mention, e1))
+			return
 
 		await bot.send_message(user_obj, user_reply)
 		await bot.send_message(author_obj, author_reply)
