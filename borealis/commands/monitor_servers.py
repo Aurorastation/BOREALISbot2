@@ -29,9 +29,9 @@ class CommandMonitorServers(BorealisCommand):
 			elif data["error"] or "data" not in data:
 				reply = "{0}, the monitor returned an error. {1}".format(message.atuhor.mention, data["msg"])
 			else:
-				reply = "{0} operation successful! Supported servers are:\n"
-				for server in data:
-					reply += "**{0}**:\n -- Running: {1}\n -- Can start: {2}\n\n".format(server, data[server]["running"], data[server]["can_run"])
+				reply = "{0} operation successful! Supported servers are:\n".format(message.author.mention)
+				for server in data["data"]:
+					reply += "**{0}**:\n -- Running: {1}\n -- Can start: {2}\n\n".format(server, data["data"][server]["running"], data["data"][server]["can_run"])
 		except Exception as e:
 			reply = "{0}, operation failed! Exception caught: {0}".format(e)
 
