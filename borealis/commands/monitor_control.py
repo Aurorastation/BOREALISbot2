@@ -22,7 +22,7 @@ class CommandMonitorControl(BorealisCommand):
 	@classmethod
 	async def do_command(cls, bot, message, params):
 		try:
-			data = await bot.query_monitor({"cmd": "server_control", "args": {"control": params[1].lower(), "server": params[2].lower()}, "auths": bot.config_user_auths(message.author.id)})
+			data = await bot.query_monitor({"cmd": "server_control", "args": {"control": params[0].lower(), "server": params[1].lower()}, "auths": bot.config_user_auths(message.author.id)})
 
 			if not data:
 				reply = "{0}, something went horribly wrong!".format(message.author.mention)
