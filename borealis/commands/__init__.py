@@ -27,3 +27,5 @@ from borealis.commands.server_faxlist import CommandServerFaxlist
 from borealis.commands.server_getfax import CommandServerGetfax
 from borealis.commands.server_who import CommandServerWho
 from borealis.commands.server_restart import CommandServerRestart
+from borealis.commands.monitor_control import CommandMonitorControl
+from borealis.commands.monitor_servers import CommandMonitorServers

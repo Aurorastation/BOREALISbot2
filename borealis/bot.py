@@ -638,3 +638,39 @@ class BotBorealis(discord.Client):
 				user = None
 		except Exception as e:
 			self.logger.error("Automatic subscriptions: error while removing old users. {0}".format(e))
+
+	async def query_monitor(self, data):
+		"""Communicates with the server monitor via a TCP socket."""
+		if not data:
+			raise ValueError("Invalid query data for query_monitor.")
+
+		host = self.config_value("monitor_host")
+		port = self.config_value("monitor_port")
+
+		if not host or not port:
+			raise ValueError("Invalid port or host for the monitor provided.")
+
+		try:
+			reader, writer = await asyncio.open_connection(host, port, loop = self.loop)
+
+			query = json.dumps(data, separators=(',', ':')).encode("utf-8")
+
+			writer.write(query)
+
+			data = b''
+			while True:
+				buffer = await reader.read(1024)
+				data += buffer
+				buffer_size = len(buffer)
+				if buffer_size < 1024:
+					break
+
+			writer.close()
+
+			data = data.decode("utf-8")
+			data = json.loads(data)
+
+			return data
+
+		except Exception as e:
+			raise RuntimeError("Unspecified exception while attempting data transfer with the monitor. {0}".format(e))
