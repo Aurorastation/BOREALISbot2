@@ -22,7 +22,7 @@ class CommandPenguins(BorealisCommand):
 
 	@classmethod
 	async def do_command(cls, bot, message, params):
-		r = requests.get("http://penguin.wtf/")
+		r = requests.get("http://penguins.aurorastation.org/", params={'user': 'bot'})
 
 		if r.status_code != 200:
 			reply = "Nope, no penguins here. Sad."
@@ -31,6 +31,8 @@ class CommandPenguins(BorealisCommand):
 				reply = r.content.decode(r.encoding)
 			except Exception as e:
 				reply = "Nope, no penguins here. Sad."
+
+		reply = "http://penguins.aurorastation.org/" + reply
 
 		await bot.send_message(message.channel, reply)
 
