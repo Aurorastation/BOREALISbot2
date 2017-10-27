@@ -76,3 +76,6 @@ class MonitorCog:
                 await ctx.send(embed=embed)
         except ApiError as err:
             await ctx.send("{}, error encountered.\n{}".format(ctx.author.mention, err))
+
+def setup(bot):
+    bot.add_cog(MonitorCog(bot))
