@@ -17,6 +17,7 @@
 CALLER_BOT    = 1
 CALLER_API    = 2
 CALLER_CONFIG = 3
+CALLER_SCHEDULER = 4
 
 class BorealisError(Exception):
     """Base class for Borealis' exception handling."""
@@ -33,9 +34,10 @@ class BorealisError(Exception):
         Returns a string like this: "Bot Error: Error message is here. Source: run_bot."
         """
         pretty_dict = {
-            1: "Bot Error:",
-            2: "API Error:",
-            3: "Config Error:"
+            CALLER_BOT: "Bot Error:",
+            CALLER_API: "API Error:",
+            CALLER_CONFIG: "Config Error:",
+            CALLER_SCHEDULER: "Scheduler Error:"
         }
 
         return "{} {} Source: {}".format(pretty_dict[self.identifier],
@@ -59,3 +61,13 @@ class BotError(BorealisError):
     """General Bot runtime error."""
     def __init__(self, message, origin):
         super(BotError, self).__init__(message, origin, CALLER_BOT)
+
+class SchedulerError(BorealisError):
+    """General scheduler error."""
+    def __init__(self, message, origin):
+        super(SchedulerError, self).__init__(message, origin, CALLER_SCHEDULER)
+
+class TaskError(SchedulerError):
+    """General task error."""
+    def __init__(self, message, task_name, origin):
+        super(TaskError, self).__init__(message, "{} - {}".format(task_name, origin), CALLER_SCHEDULER)
