@@ -112,6 +112,14 @@ class Config():
 
         return channel_objs
 
+    def get_channels_group(self, channel_id):
+        out = []
+        for group in self.channels:
+            if channel_id in self.channels[group]:
+                out.append(group)
+
+        return out
+
     async def update_channels(self, api):
         """Updates the list of channels stored in the config's datum."""
         self.logger.info("Config: updating channels.")
@@ -122,7 +130,8 @@ class Config():
         try:
             temporary_channels = await api.query_web("/channels", METHOD_GET,
                                                      return_keys=["channels"],
-                                                     enforce_return_keys=True)["channels"]
+                                                     enforce_return_keys=True)
+            temporary_channels = temporary_channels["channels"]
         except ApiError as err:
             # Only one way to crash here. Bad API query.
             raise ConfigError("API error encountered: {}".format(err.message), "update_channels")
@@ -136,21 +145,29 @@ class Config():
 
             self.channels[group] = temporary_channels[group]
 
-    async def remove_channel(self, api, channel_group, channel_id):
+    async def add_channel(self, channel_id, group, api):
+        if not api:
+            raise ConfigError("No API object provided.", "add_channel")
+
+        if not channel_id or not group:
+            raise ConfigError("No channel ID or group sent.", "add_channel")
+
+        try:
+            await api.query_web("/channels", METHOD_PUT, data={"channel_id": channel_id,
+                                                               "channel_group": group})
+            self.update_channels(api)
+        except ApiError as err:
+            raise ConfigError("API error encountered: {}".format(err.message), "add_channel")
+
+    async def remove_channel(self, channel_id, group, api):
         """Removes a channel from the global channel listing and updates channels as necessary."""
-        data = {"channel_id" : channel_id, "channel_group" : channel_group}
+        data = {"channel_id" : channel_id, "channel_group" : group}
 
         if not api:
             raise ConfigError("No API object provided.", "remove_channel")
 
         try:
-            response = await api.query_web("/channels", METHOD_DELETE, data, ["action"],
-                                           enforce_return_keys=True)
-
-            if response["action"] is "no channel":
-                raise ConfigError("This channel does not belong to the specified group.",
-                                  "remove_channel")
-
+            api.query_web("/channels", METHOD_DELETE, data)
             self.update_channels(api)
         except ApiError as err:
             # Bad query error.
