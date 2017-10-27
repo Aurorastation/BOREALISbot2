@@ -2,6 +2,7 @@ import random
 import aiohttp
 import discord
 from discord.ext import commands
+from cogs.utils.auth import is_authed, ANY_STAFF, R_ADMIN
 
 class SillyCog:
     def __init__(self, bot):
@@ -99,7 +100,7 @@ class SillyCog:
         await ctx.send(None, embed=lawEmbed)
 
     @commands.command()
-    @commands.is_owner()
+    @is_authed([R_ADMIN])
     async def memetype(self, ctx, *args):
         """They hate him for many things. But specialyl for this."""
         msg = []
@@ -134,6 +135,7 @@ class SillyCog:
                         await ctx.send("No pingus. I cri.")
 
     @commands.command()
+    @is_authed(ANY_STAFF)
     async def memes(self, ctx, *, meme: str):
         """Pick your poison: mod, or dev memes. Or both!"""
         async with aiohttp.ClientSession() as session:
