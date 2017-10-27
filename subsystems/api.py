@@ -73,10 +73,10 @@ class API():
             data = {}
 
         data["auth_key"] = self._auth
-        arg_dict = {"url":dest}
+        arg_dict = {"url": dest}
 
         if use_headers:
-            arg_dict["headers"] = data
+            arg_dict["data"] = data
         else:
             arg_dict["params"] = data
 
@@ -107,8 +107,10 @@ class API():
                     raise ApiError("API error while querying {}: {}."
                                    .format(uri, data["error_msg"]), "query_web")
 
-                dict_out = {}
+                if not return_keys:
+                    return data
 
+                dict_out = {}
                 for key in return_keys:
                     if key in data:
                         dict_out[key] = data[key]
