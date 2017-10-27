@@ -52,6 +52,9 @@ class API():
         self._server_port = config.server["port"]
         self._server_auth = config.server["auth"]
 
+        self._monitor_host = config.monitor["host"]
+        self._monitor_port = config.monitor["port"]
+
     async def query_web(self, uri, method, data=None, return_keys=None,
                         enforce_return_keys=False):
         """
@@ -174,3 +177,33 @@ class API():
             raise ApiError("Invalid JSON returned. Error: {}".format(err), "query_game")
 
         return data["data"]
+
+    async def query_monitor(self, data):
+        if not data:
+            raise ApiError("No data sent.", "query_monitor")
+
+        if not self._monitor_host or not self._monitor_port:
+            raise ApiError("No connection data provided.", "query_monitor")
+
+        try:
+            reader, writer = await asyncio.open_connection(host, port)
+
+            query = json.dumps(data, separators=(',', ':')).encode("utf-8")
+
+            writer.write(query)
+
+            data_in = b""
+            while True:
+                buffer = await reader.read(1024)
+                data_in += buffer
+                if len(buffer) < 1024:
+                    break
+
+            writer.close()
+            
+            data_in = data.decode("utf-8")
+            data_in = json.loads(data_in)
+
+            return data_in
+        except Exception as err:
+            raise ApiError("Exception encountered: {}".format(err), "query_monitor")
