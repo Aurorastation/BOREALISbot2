@@ -138,6 +138,10 @@ class SillyCog:
     @is_authed(ANY_STAFF)
     async def memes(self, ctx, *, meme: str):
         """Pick your poison: mod, or dev memes. Or both!"""
+        if meme.lower() not in ["mod", "dev"]:
+            await ctx.send(f":angry: :dagger:")
+            return
+
         async with aiohttp.ClientSession() as session:
             async with session.get("https://devmemes.aurorastation.org",
                                    params={"user": "bot", "meme": meme}) as resp:
