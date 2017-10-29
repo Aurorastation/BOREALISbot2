@@ -93,7 +93,8 @@ class SillyCog:
             intToWord = {1: "first", 2: "second", 3: "third", 4: "fourth", 5: "fifth", 6: "sixth"}
 
             # Since it may have a placeholder arg, we format it.
-            lawEmbed.add_field(name="Law {}".format(i), value=newLaw.format(intToWord[formatNr]))
+            lawEmbed.add_field(name="Law {}".format(i), value=newLaw.format(intToWord[formatNr]),
+                               inline=False)
 
             i += 1
 
