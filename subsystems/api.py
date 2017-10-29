@@ -186,7 +186,7 @@ class API():
             raise ApiError("No connection data provided.", "query_monitor")
 
         try:
-            reader, writer = await asyncio.open_connection(host, port)
+            reader, writer = await asyncio.open_connection(self._monitor_host, self._monitor_port)
 
             query = json.dumps(data, separators=(',', ':')).encode("utf-8")
 

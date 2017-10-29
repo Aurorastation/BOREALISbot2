@@ -99,6 +99,14 @@ class Config():
 
         return []
 
+    def get_user_ckey(self, user_id):
+        """Returns the ckey tied to the user_id parameter."""
+
+        if user_id in self.users:
+            return self.users[user_id]["ckey"]
+        else:
+            raise ConfigError(f"User_id {user_id} not found in users list.", "get_user_ckey")
+
     def get_channels(self, channel_group):
         """Get a list of channel objects that are grouped together."""
         self.logger.debug("Config: getting channels from channel group {0}".format(channel_group))
