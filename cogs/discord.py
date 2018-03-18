@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from .utils.auth import check_auths, is_authed, R_ADMIN, R_MOD
-from subsystems.api import METHOD_PUT
+from subsystems.api import METHOD_PUT, METHOD_DELETE
 from subsystems.borealis_exceptions import ApiError
 
 class DiscordCog():
@@ -87,6 +87,43 @@ class DiscordCog():
             else:
                 ban_word = "temporarily" if ban_type is "TEMPBAN" else "permanently"
                 await ctx.send(f"User was {ban_word} banned for having too many active strikes.")
+
+    @commands.command()
+    @commands.guild_only()
+    async def subscribe(self, ctx, once: bool = False):
+        conf = self.bot.Config()
+
+        if not conf.bot["subscriber_server"] or conf.bot["subscriber_server"] != ctx.guild.id:
+            await ctx.send("Sorry, subscribing is not supported in this server.")
+            return
+
+        if once:
+            success = "You will now be notified of the current round's end, and then removed from the subscriber group!"
+        else:
+            success = "You will now be notified of round ends!"
+
+        role = discord.Object(id=conf.bot["subscriber_role"])
+        await ctx.author.add_roles(role, reason="Subscribed for updates.")
+
+        await self.bot.Api().query_web("/subscriber", METHOD_PUT,
+                                      {"user_id": ctx.author.id, "once": 1 if once else 0})
+
+        await ctx.send(f"{ctx.author.mention}, operation successful. {success}")
+
+    @commands.command()
+    @commands.guild_only()
+    async def unsubscribe(self, ctx):
+        conf = self.bot.Config()
+
+        if not conf.bot["subscriber_server"] or conf.bot["subscriber_server"] != ctx.guild.id:
+            await ctx.send("Sorry, subscribing is not supported in this server.")
+            return
+
+        role = discord.Object(id=conf.bot["subscriber_role"])
+        await ctx.author.remove_roles(role, reason="Unsubscribed from updates.")
+
+        await self.bot.Api().query_web("/subscriber", METHOD_DELETE, {"user_id": ctx.author.id})
+        await ctx.send(f"{ctx.author.mention}, operation successful. Your role has been removed!")
 
 def setup(bot):
     bot.add_cog(DiscordCog(bot))

@@ -11,6 +11,8 @@ class Borealis(commands.Bot):
         self._api = api
         self._config = config
 
+        self.add_listener(self.process_unsubscribe, "on_message")
+
     def Api(self):
         return self._api
 
@@ -181,3 +183,26 @@ class Borealis(commands.Bot):
                                           bans["expired_bans"][ban_id]["server_id"])
         except BorealisError as err:
             self.logger.error(f"Error handling unbans: {err}.")
+
+    async def process_unsubscribe(self, message):
+        if not message.guild or message.guild.id != self.Config().bot["subscriber_server"]:
+            return
+
+        if message.author != self.user:
+            return
+
+        role = discord.Object(id=self.Config().bot["subscriber_role"])
+        if role in message.role_mentions:
+            users = await self.Api().query_web("/subscriber", METHOD_GET, return_keys=["users"])
+
+            if not users or not users["users"]:
+                return
+
+            for _, uid in enumerate(users["users"]):
+                user = message.guild.get_member(int(uid))
+
+                if user:
+                    await user.remove_roles(role, "Automatically unsubscribed.")
+                
+                await self.query_web("/subscribe", METHOD_DELETE, {"user_id": uid})
+                user = None
