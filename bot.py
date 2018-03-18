@@ -185,6 +185,13 @@ class Borealis(commands.Bot):
             self.logger.error(f"Error handling unbans: {err}.")
 
     async def process_unsubscribe(self, message):
+        """
+        A listener for a message mentioning the subcribers. Used to trigger automatic
+        unsubscribing when needed.
+        """
+        if not self.Config().bot["subscriber_server"] or not self.Config().bot["subscriber_role"]:
+            return
+
         if not message.guild or message.guild.id != self.Config().bot["subscriber_server"]:
             return
 
@@ -204,5 +211,5 @@ class Borealis(commands.Bot):
                 if user:
                     await user.remove_roles(role, "Automatically unsubscribed.")
                 
-                await self.query_web("/subscribe", METHOD_DELETE, {"user_id": uid})
+                await self.Api().query_web("/subscribe", METHOD_DELETE, {"user_id": uid})
                 user = None

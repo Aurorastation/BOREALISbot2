@@ -1,6 +1,8 @@
 bot:
   prefix: "?"
   token: ""
+  subscriber_server: None
+  subscriber_role: None
 
 api:
   auth: ""
