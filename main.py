@@ -18,7 +18,7 @@ config = None
 api = None
 scheduler = None
 
-INIT_EXT = {"cogs.owner"}
+INIT_EXT = {"cogs.owner", "cogs.channel", "cogs.discord", "cogs.monitor", "cogs.players", "cogs.server", "cogs.silly", "cogs.users"}
 
 ## CONFIG INIT
 try:
