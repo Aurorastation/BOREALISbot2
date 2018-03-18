@@ -63,7 +63,7 @@ class UserCog():
         except ConfigError as err:
             await ctx.send(f"Config error encountered:\n{err}")
         else:
-            await ctx.send("User's auths successfully removed.")
+            await ctx.send("User's auths successfully added.")
 
     @commands.command(aliases=["uinfo", "userinfo"])
     @commands.guild_only()

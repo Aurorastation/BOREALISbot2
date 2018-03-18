@@ -9,6 +9,7 @@ class SillyCog:
         self.bot = bot
 
     @commands.command()
+    @commands.cooldown(1, 15, commands.BucketType.channel)
     async def cats(self, ctx):
         """Showcases nice cat images. Send to Nursie or Scopes in case of emergency."""
         async with aiohttp.ClientSession() as session:
@@ -20,10 +21,11 @@ class SillyCog:
                         data = resp.url
 
                         await ctx.send(data)
-                    except Exception as e:
+                    except Exception:
                         await ctx.send("Oh no! The cats are on fire!")
 
     @commands.command()
+    @commands.cooldown(1, 15, commands.BucketType.channel)
     async def laws(self, ctx):
         """State my laws!"""
         laws = [
@@ -118,6 +120,7 @@ class SillyCog:
         await ctx.send(msg)
 
     @commands.command()
+    @commands.cooldown(1, 15, commands.BucketType.channel)
     async def penguins(self, ctx):
         """An Aurora staple!"""
         async with aiohttp.ClientSession() as session:
@@ -134,6 +137,7 @@ class SillyCog:
 
     @commands.command()
     @check_auths(ANY_STAFF)
+    @commands.cooldown(1, 15, commands.BucketType.channel)
     async def memes(self, ctx, *, meme: str):
         """Pick your poison: mod, or dev memes. Or both!"""
         if meme.lower() not in ["mod", "dev"]:
