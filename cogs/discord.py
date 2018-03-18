@@ -67,12 +67,12 @@ class DiscordCog():
         user_msg += f" You currently have {strikes} active strikes."
 
         try:
-            await self.bot.send_message(ctx.author, author_msg)
+            await ctx.author.send(author_msg)
         except Exception:
             pass
 
         try:
-            await self.bot.send_message(tgt, author_msg)
+            await tgt.send(user_msg)
         except Exception:
             pass
 
@@ -80,10 +80,13 @@ class DiscordCog():
 
         if ban_duration:
             try:
-                api.register_ban()
+                self.bot.register_ban(tgt, ban_type, ban_duration, ctx.guild,
+                                      author_obj=ctx.author, reason=ban_reason)
             except ApiError as err:
                 await ctx.send(f"Error encountered while registering ban.\n{err}")
             else:
                 ban_word = "temporarily" if ban_type is "TEMPBAN" else "permanently"
                 await ctx.send(f"User was {ban_word} banned for having too many active strikes.")
 
+def setup(bot):
+    bot.add_cog(DiscordCog(bot))

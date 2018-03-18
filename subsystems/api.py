@@ -55,14 +55,6 @@ class API():
         self._monitor_host = config.monitor["host"]
         self._monitor_port = config.monitor["port"]
 
-        self._bot = None
-
-    def link_bot(self, bot):
-        """
-        Links a bot to the API.
-        """
-        self._bot = bot
-
     async def query_web(self, uri, method, data=None, return_keys=None,
                         enforce_return_keys=False):
         """
@@ -215,24 +207,3 @@ class API():
             return data_in
         except Exception as err:
             raise ApiError("Exception encountered: {}".format(err), "query_monitor")
-
-    async def log_entry(self, action, author = None, subject = None):
-        if not action:
-            return
-
-        data = {"action": action}
-        str_list = [f"ACTION: {action}"]
-
-        if author:
-            data["admin_id"] = author.id
-            str_list.append(f"AUTHOR: {author.name}/{author.id}")
-        if subject:
-            data["user_id"] = subject.id
-            str_list.append(f"SUBJECT: {subject.name}/{subject.id}")
-
-        try:
-            self.query_web("/log", METHOD_PUT, data)
-        except ApiError:
-            pass
-
-        self._bot.forward_message(" || ".join(str_list), "channel_log")

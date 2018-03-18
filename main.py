@@ -6,7 +6,7 @@ import bot
 
 ## LOGGER
 logger = logging.getLogger("discord")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARNING)
 
 handler = logging.FileHandler(filename="logs/{}.log".format(datetime.date.today()), encoding="utf-8", mode="w")
 handler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s"))
@@ -50,6 +50,7 @@ try:
                        args=[api], is_coro=True)
     scheduler.add_task(43200, config.update_channels, "update_channels", init_now=True,
                        args=[api], is_coro=True)
+    scheduler.add_task(1800, bot.process_temporary_bans, "process_bans", init_now=True, is_coro=True)
 except subsystems.SchedulerError as err:
     print("Error initializing scheduler object.")
     print(str(err))
