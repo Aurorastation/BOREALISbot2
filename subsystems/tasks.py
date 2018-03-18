@@ -118,7 +118,7 @@ class Task(object):
         else:
             delta = (time_now - self._last_run).total_seconds()
             work_needed = delta >= self._frequency
-        
+
         if work_needed is False:
             return
 

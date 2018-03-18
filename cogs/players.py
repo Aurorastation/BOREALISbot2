@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from .utils.auth import is_authed, R_ADMIN, R_MOD
+from .utils.auth import check_auths, R_ADMIN, R_MOD
 from .utils.paginator import FieldPages
 from .utils.byond import get_ckey
 from subsystems.api import METHOD_GET
@@ -11,7 +11,7 @@ class PlayerCog():
         self.bot = bot
 
     @commands.command(aliases=["playerinfo", "pinfo"])
-    @is_authed([R_MOD, R_ADMIN])
+    @check_auths([R_MOD, R_ADMIN])
     async def player_info(self, ctx, ckey: get_ckey):
         api = self.bot.Api()
 
@@ -37,7 +37,7 @@ class PlayerCog():
             await ctx.send("{}, error occured.\n{}".format(ctx.author.mention, err))
 
     @commands.command(aliases=["playernotes", "pnotes"])
-    @is_authed([R_MOD, R_ADMIN])
+    @check_auths([R_MOD, R_ADMIN])
     async def player_notes(self, ctx, ckey: get_ckey):
         api = self.bot.Api()
 
@@ -46,7 +46,7 @@ class PlayerCog():
                                        data={"ckey": ckey}, return_keys=["data"],
                                        enforce_return_keys=True)
 
-            if data["data"]:
+            if not data["data"]:
                 await ctx.send("No notes found with that ckey.")
                 return
 

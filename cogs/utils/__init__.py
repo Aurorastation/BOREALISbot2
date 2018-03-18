@@ -1,1 +1,1 @@
-from .auth import is_authed
+from .auth import check_auths

@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from subsystems.borealis_exceptions import ConfigError, ApiError
 from subsystems.api import METHOD_DELETE, METHOD_PUT, METHOD_GET
-from .utils.auth import is_authed, R_ADMIN, R_MOD
+from .utils.auth import check_auths, R_ADMIN, R_MOD
 from .utils.byond import get_ckey
 
 class UserCog():
@@ -10,7 +10,7 @@ class UserCog():
         self.bot = bot
 
     @commands.command(aliases=["uupdate", "userupdate"])
-    @is_authed([R_ADMIN])
+    @check_auths([R_ADMIN])
     async def user_update(self, ctx):
         conf = self.bot.Config()
 
@@ -22,7 +22,7 @@ class UserCog():
             await ctx.send("Users successfully updated.")
 
     @commands.command(aliases=["uremove", "userremove"])
-    @is_authed([R_ADMIN])
+    @check_auths([R_ADMIN])
     async def user_remove(self, ctx, tgt):
         conf = self.bot.Config()
         api = self.bot.Api()
@@ -45,7 +45,7 @@ class UserCog():
 
     @commands.command(aliases=["uadd", "useradd"])
     @commands.guild_only()
-    @is_authed([R_ADMIN])
+    @check_auths([R_ADMIN])
     async def user_add(self, ctx, tgt: discord.Member, key: get_ckey):
         api = self.bot.Api()
         conf = self.bot.Config()
@@ -67,13 +67,14 @@ class UserCog():
 
     @commands.command(aliases=["uinfo", "userinfo"])
     @commands.guild_only()
-    @is_authed([R_ADMIN, R_MOD])
+    @check_auths([R_ADMIN, R_MOD])
     async def user_info(self, ctx, tgt: discord.Member):
         api = self.bot.Api()
         conf = self.bot.Config()
         fields = {
             "Nickname:": tgt.name,
-            "Discord ID:": tgt.id
+            "Discord ID:": tgt.id,
+            "Joined at:": tgt.joined_at.strftime("%m.%d.%Y")
         }
 
         try:
@@ -93,12 +94,12 @@ class UserCog():
         except ConfigError:
             fields["Linked ckey:"] = "None"
             fields["Auths:"] = "N/A"
-        
+
         embed = discord.Embed(title="User Info")
-        
+
         for field in fields:
             embed.add_field(name=field, value=fields[field])
-        
+
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["myinfo"])

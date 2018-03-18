@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from .utils.auth import is_authed, R_MOD, R_ADMIN, R_CCIAA, ANY_STAFF
+from .utils.auth import check_auths, R_MOD, R_ADMIN, R_CCIAA, ANY_STAFF
 from .utils.paginator import Pages, FieldPages
 from .utils.byond import get_ckey
 from subsystems.borealis_exceptions import ApiError
@@ -10,7 +10,7 @@ class ServerCog():
         self.bot = bot
 
     @commands.command(aliases=["faxlist"])
-    @is_authed([R_ADMIN, R_CCIAA])
+    @check_auths([R_ADMIN, R_CCIAA])
     async def fax_list(self, ctx, param: str):
         param = param.lower()
         if param not in ["sent", "received"]:
@@ -34,7 +34,7 @@ class ServerCog():
             await ctx.send(f"{ctx.author.mention}, error encountered.\n{err}")
 
     @commands.command(aliases=["faxget"])
-    @is_authed([R_ADMIN, R_CCIAA])
+    @check_auths([R_ADMIN, R_CCIAA])
     async def get_fax(self, ctx, sent: str, idnr: int):
         sent = sent.lower()
         if sent not in ["sent", "received"]:
@@ -92,7 +92,7 @@ class ServerCog():
             await ctx.send(f"I encountered an API error.\n{err}")
 
     @commands.command(name="serverpm", aliases=["server_pm"])
-    @is_authed([R_MOD, R_ADMIN])
+    @check_auths([R_MOD, R_ADMIN])
     async def _pm(self, ctx, ckey: get_ckey, *args):
         api = self.bot.Api()
         conf = self.bot.Config()
@@ -109,7 +109,7 @@ class ServerCog():
             await ctx.send("PM successfully sent!")
 
     @commands.command(name="server_restart", aliases=["serverrestart", "serverres", "server_res"])
-    @is_authed([R_ADMIN])
+    @check_auths([R_ADMIN])
     async def _restart(self, ctx):
         api = self.bot.Api()
 
@@ -122,7 +122,7 @@ class ServerCog():
             await ctx.send("Server successfully restarted.")
 
     @commands.command(name="server_staff", aliases=["serverstaff"])
-    @is_authed(ANY_STAFF)
+    @check_auths(ANY_STAFF)
     async def _staff(self, ctx):
         api = self.bot.Api()
 

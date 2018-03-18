@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from cogs.utils.auth import is_authed, R_ADMIN, R_DEV
+from cogs.utils.auth import check_auths, R_ADMIN, R_DEV
 from subsystems.borealis_exceptions import ApiError, ConfigError
 
 class ChannelCog:
@@ -9,7 +9,7 @@ class ChannelCog:
 
     @commands.command(aliases=["channelinfo", "channel", "cinfo"])
     @commands.guild_only()
-    @is_authed([R_ADMIN, R_DEV])
+    @check_auths([R_ADMIN, R_DEV])
     async def channel_info(self, ctx):
         embed = discord.Embed(title="Channel Info")
         embed.add_field(name="Channel:", value="{}\n({})".format(ctx.message.channel.name,
@@ -30,7 +30,7 @@ class ChannelCog:
 
     @commands.command(aliases=["cadd", "channeladd"])
     @commands.guild_only()
-    @is_authed([R_ADMIN])
+    @check_auths([R_ADMIN])
     async def channel_add(self, ctx, group: str):
         conf = ctx.bot.Config()
         api = ctx.bot.Api()
@@ -45,7 +45,7 @@ class ChannelCog:
 
     @commands.command(aliases=["crem", "cremove", "channelremove"])
     @commands.guild_only()
-    @is_authed([R_ADMIN])
+    @check_auths([R_ADMIN])
     async def channel_remove(self, ctx, group: str):
         conf = ctx.bot.Config()
         api = ctx.bot.Api()

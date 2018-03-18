@@ -2,7 +2,7 @@ import random
 import aiohttp
 import discord
 from discord.ext import commands
-from cogs.utils.auth import is_authed, ANY_STAFF, R_ADMIN
+from cogs.utils.auth import check_auths, ANY_STAFF, R_ADMIN
 
 class SillyCog:
     def __init__(self, bot):
@@ -12,18 +12,15 @@ class SillyCog:
     async def cats(self, ctx):
         """Showcases nice cat images. Send to Nursie or Scopes in case of emergency."""
         async with aiohttp.ClientSession() as session:
-            async with session.get("https://random.cat/meow") as resp:
+            async with session.get("http://thecatapi.com/api/images/get?format=src") as resp:
                 if resp.status != 200:
                     ctx.send("Oh no! I couldn't find any cats!")
                 else:
                     try:
-                        data = await resp.json()
+                        data = resp.url
 
-                        if data["file"]:
-                            await ctx.send(data["file"])
-                        else:
-                            await ctx.send("I didn't get an error, but I also didn't get any cats :frowning:")
-                    except Exception:
+                        await ctx.send(data)
+                    except Exception as e:
                         await ctx.send("Oh no! The cats are on fire!")
 
     @commands.command()
@@ -101,7 +98,7 @@ class SillyCog:
         await ctx.send(None, embed=lawEmbed)
 
     @commands.command()
-    @is_authed([R_ADMIN])
+    @check_auths([R_ADMIN])
     async def memetype(self, ctx, *args):
         """They hate him for many things. But specialyl for this."""
         msg = []
@@ -136,7 +133,7 @@ class SillyCog:
                         await ctx.send("No pingus. I cri.")
 
     @commands.command()
-    @is_authed(ANY_STAFF)
+    @check_auths(ANY_STAFF)
     async def memes(self, ctx, *, meme: str):
         """Pick your poison: mod, or dev memes. Or both!"""
         if meme.lower() not in ["mod", "dev"]:

@@ -1,6 +1,6 @@
 import discord
-from discord.ext import commands, errors
-from .utils.auth import is_authed, R_ADMIN, R_DEV
+from discord.ext import commands
+from .utils.auth import check_auths, R_ADMIN, R_DEV
 from subsystems.borealis_exceptions import ApiError
 
 class MonitorCog:
@@ -12,18 +12,18 @@ class MonitorCog:
         command = str(command)
 
         if not command:
-            raise errors.BadArgument("No command sent.")
+            raise commands.errors.BadArgument("No command sent.")
 
         command = command.lower()
 
         if command not in ["start", "stop", "restart"]:
-            raise errors.BadArgument("{} is not a valid command for the monitor."
+            raise commands.errors.BadArgument("{} is not a valid command for the monitor."
                                      .format(command))
 
         return command
 
     @commands.command(aliases=["monitorcontrol", "mcontrol", "monitor"])
-    @is_authed([R_ADMIN, R_DEV])
+    @check_auths([R_ADMIN, R_DEV])
     async def monitor_control(self, ctx, server: str, command: valid_command):
         api = ctx.bot.Api()
         conf = ctx.bot.Config()
@@ -44,7 +44,7 @@ class MonitorCog:
             await ctx.send("{}, error encountered.\n{}".format(ctx.author.mention, err))
 
     @commands.command(aliases=["mlist", "mservers", "monitorlist", "monitorservers"])
-    @is_authed([R_ADMIN, R_DEV])
+    @check_auths([R_ADMIN, R_DEV])
     async def monitor_list(self, ctx, server: str):
         api = ctx.bot.Api()
         conf = ctx.bot.Config()
