@@ -1,18 +1,19 @@
-APIAuth: ""
-API: ""
+bot:
+  prefix: "?"
+  token: ""
 
-prefix: "?"
+api:
+  auth: ""
+  path: ""
 
-token: ""
+server:
+  host: ""
+  port: 6666
+  auth: ""
 
-server_host: ""
-server_port: 1234
-server_auth: ""
+scheduler:
+  interval: 60
 
-scheduler_interval: 600
-
-subscriber_server: null
-subscriber_role: null
-
-monitor_host: ""
-monitor_port: 1124
+monitor:
+  host: ""
+  port: 6666
