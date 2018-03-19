@@ -45,7 +45,7 @@ class MonitorCog:
 
     @commands.command(aliases=["mlist", "mservers", "monitorlist", "monitorservers"])
     @check_auths([R_ADMIN, R_DEV])
-    async def monitor_list(self, ctx, server: str):
+    async def monitor_list(self, ctx):
         api = ctx.bot.Api()
         conf = ctx.bot.Config()
         try:

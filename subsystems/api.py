@@ -201,7 +201,7 @@ class API():
 
             writer.close()
 
-            data_in = data.decode("utf-8")
+            data_in = data_in.decode("utf-8")
             data_in = json.loads(data_in)
 
             return data_in
