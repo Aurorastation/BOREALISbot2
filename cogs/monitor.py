@@ -3,24 +3,23 @@ from discord.ext import commands
 from .utils.auth import check_auths, R_ADMIN, R_DEV
 from subsystems.borealis_exceptions import ApiError
 
+def valid_command(command):
+    command = str(command)
+
+    if not command:
+        raise commands.errors.BadArgument("No command sent.")
+
+    command = command.lower()
+
+    if command not in ["start", "stop", "restart"]:
+        raise commands.errors.BadArgument("{} is not a valid command for the monitor."
+                                    .format(command))
+
+    return command
+
 class MonitorCog:
     def __init__(self, bot):
         self.bot = bot
-
-    @staticmethod
-    def valid_command(command):
-        command = str(command)
-
-        if not command:
-            raise commands.errors.BadArgument("No command sent.")
-
-        command = command.lower()
-
-        if command not in ["start", "stop", "restart"]:
-            raise commands.errors.BadArgument("{} is not a valid command for the monitor."
-                                     .format(command))
-
-        return command
 
     @commands.command(aliases=["monitorcontrol", "mcontrol", "monitor"])
     @check_auths([R_ADMIN, R_DEV])
