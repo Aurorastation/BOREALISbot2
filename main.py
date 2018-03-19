@@ -40,7 +40,7 @@ except subsystems.ApiError as err:
     raise RuntimeError("Stopping now.")
 
 ## BOT INIT
-bot = bot.Borealis(config.bot["prefix"], config, api,
+bot = bot.Borealis(config.bot["prefix"], config, api, logger,
                    description="Borealis version 3, here to assist in any SS13 related matters!",
                    pm_help=True)
 

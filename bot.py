@@ -5,11 +5,13 @@ from subsystems.api import METHOD_PUT, METHOD_DELETE, METHOD_GET
 from subsystems.borealis_exceptions import BotError, ApiError, BorealisError
 
 class Borealis(commands.Bot):
-    def __init__(self, command_prefix, config, api, formatter=None, description=None, pm_help=False, **options):
+    def __init__(self, command_prefix, config, api, logger, formatter=None, description=None, pm_help=False, **options):
         super().__init__(command_prefix, formatter=formatter, description=description, pm_help=pm_help, **options)
 
         self._api = api
         self._config = config
+
+        self._logger = logger
 
         self.add_listener(self.process_unsubscribe, "on_message")
 
@@ -23,11 +25,15 @@ class Borealis(commands.Bot):
         if isinstance(error, commands.NoPrivateMessage):
             await ctx.author.send("This command cannot be used in private messages.")
         elif isinstance(error, commands.CommandOnCooldown):
-            await ctx.send(f"Command on cooldown. Retry again in {error.retry_after} seconds.")
+            await ctx.send(f"Command on cooldown. Retry again in {int(error.retry_after)} seconds.")
         elif isinstance(error, commands.CheckFailure):
             await ctx.send("Command execution checks failed. Most likely due to missing permissions.")
-        else:
-            await ctx.send("Command execution failed. General error.")
+        elif isinstance(error, commands.CommandNotFound):
+            pass
+        elif isinstance(error, commands.CommandInvokeError):
+            await ctx.send(f"Command execution failed. {error.original}")
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send(f"Bad argument provided. {error}")
 
     async def forward_message(self, msg, channel_str = None, channel_objs = None):
         """
@@ -182,7 +188,7 @@ class Borealis(commands.Bot):
                 await self.register_unban(ban_id, bans["expired_bans"][ban_id]["user_id"],
                                           bans["expired_bans"][ban_id]["server_id"])
         except BorealisError as err:
-            self.logger.error(f"Error handling unbans: {err}.")
+            self._logger.error(f"Error handling unbans: {err}.")
 
     async def process_unsubscribe(self, message):
         """
