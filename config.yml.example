@@ -28,3 +28,9 @@ scheduler:
 monitor:
   host: ""
   port: 6666
+
+github:
+  api_token: null
+  wiki_org: null
+  wiki_repo: null
+  wiki_label: null
