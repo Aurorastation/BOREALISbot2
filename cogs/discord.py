@@ -17,7 +17,7 @@ class DiscordCog():
         if tgt is ctx.author:
             await ctx.send("You cannot strike yourself.")
             return
-        elif tgt is self.bot.client:
+        elif tgt is self.bot.user:
             await ctx.send("I cannot strike myself!")
             return
         elif is_authed([R_ADMIN, R_MOD], tgt.id, self.bot):
@@ -99,7 +99,7 @@ class DiscordCog():
         if tgt is ctx.author:
             await ctx.send("You cannot ban yourself.")
             return
-        elif tgt is self.bot.client:
+        elif tgt is self.bot.user:
             await ctx.send("I cannot ban myself!")
             return
         elif is_authed([R_ADMIN, R_MOD], tgt.id, self.bot):
