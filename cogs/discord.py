@@ -14,10 +14,10 @@ class DiscordCog():
     async def strike(self, ctx, tgt: discord.Member, *reason):
         api = self.bot.Api()
 
-        if tgt is ctx.author:
+        if tgt == ctx.author:
             await ctx.send("You cannot strike yourself.")
             return
-        elif tgt is self.bot.user:
+        elif tgt == self.bot.user:
             await ctx.send("I cannot strike myself!")
             return
         elif is_authed([R_ADMIN, R_MOD], tgt.id, self.bot):
@@ -33,8 +33,8 @@ class DiscordCog():
                 "reason": " ".join(reason)
             }
 
-            response = api.query_web("/discord/strike", METHOD_PUT, data,
-                                     ["bot_action", "strike_count"], True)
+            response = await api.query_web("/discord/strike", METHOD_PUT, data,
+                                           ["bot_action", "strike_count"], True)
         except ApiError as err:
             await ctx.send(f"Error encountered while issuing strike!\n{err}")
             return
@@ -76,12 +76,13 @@ class DiscordCog():
         except Exception:
             pass
 
-        await api.log_entry(self.bot, "STRIKE ISSUED", ctx.author, tgt)
+        await self.bot.log_entry(f"STRIKE ISSUED | Reason: {reason}",
+                                 author=ctx.author, subject=tgt)
 
         if ban_duration:
             try:
-                self.bot.register_ban(tgt, ban_type, ban_duration, ctx.guild,
-                                      author_obj=ctx.author, reason=ban_reason)
+                await self.bot.register_ban(tgt, ban_type, ban_duration, ctx.guild,
+                                            author_obj=ctx.author, reason=ban_reason)
             except ApiError as err:
                 await ctx.send(f"Error encountered while registering ban.\n{err}")
             else:
@@ -96,10 +97,10 @@ class DiscordCog():
             await ctx.send("No reason provided.")
             return
 
-        if tgt is ctx.author:
+        if tgt == ctx.author:
             await ctx.send("You cannot ban yourself.")
             return
-        elif tgt is self.bot.user:
+        elif tgt == self.bot.user:
             await ctx.send("I cannot ban myself!")
             return
         elif is_authed([R_ADMIN, R_MOD], tgt.id, self.bot):
@@ -134,6 +135,8 @@ class DiscordCog():
             await ctx.send(f"{ctx.author.mention}, error applying ban.\n{err}.")
         else:
             await ctx.send(f"{ctx.author.mention}, operation successful.")
+            await self.bot.log_entry(f"BAN ISSUED | Reason: {reason}",
+                                     author=ctx.author, subject=tgt)
 
     @commands.command()
     @commands.guild_only()
