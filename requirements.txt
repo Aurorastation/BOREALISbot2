@@ -1,7 +1,7 @@
 aiohttp==2.2.5
 async-timeout==2.0.1
 chardet==3.0.4
-discord.py==1.0.0a0
+https://github.com/Rapptz/discord.py/archive/eb5defed007bfb694808258a38277bff2fddcfd1.zip#egg=discord.py
 idna==2.6
 multidict==4.1.0
 PyYAML==3.12
