@@ -1,0 +1,9 @@
+aiohttp==2.2.5
+async-timeout==2.0.1
+chardet==3.0.4
+discord.py==1.0.0a0
+idna==2.6
+multidict==4.1.0
+PyYAML==3.12
+websockets==4.0.1
+yarl==1.1.1
