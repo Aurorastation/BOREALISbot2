@@ -8,7 +8,7 @@
             "name": "Python",
             "type": "python",
             "request": "launch",
-            "stopOnEntry": true,
+            "stopOnEntry": false,
             "pythonPath": "${workspaceFolder}/venv/Scripts/python.exe",
             "program": "${file}",
             "cwd": "${workspaceFolder}",

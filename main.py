@@ -1,8 +1,15 @@
 import logging
+import os
 import datetime
 import subsystems
 from discord.ext import commands
 import bot
+
+cur_dir = os.path.dirname(os.path.realpath(__file__))
+log_path = os.path.join(cur_dir,
+                        "logs\\")
+if not os.path.exists(log_path):
+    os.makedirs(log_path)
 
 ## LOGGER
 logger = logging.getLogger("discord")
@@ -18,7 +25,7 @@ config = None
 api = None
 scheduler = None
 
-INIT_EXT = {"cogs.owner", "cogs.channel", "cogs.discord", "cogs.monitor", "cogs.players", "cogs.server", "cogs.silly", "cogs.users"}
+INIT_EXT = {"cogs.owner"}
 
 ## CONFIG INIT
 try:
@@ -29,6 +36,8 @@ except subsystems.ConfigError as err:
     print(str(err))
     logger.error(err)
     raise RuntimeError("Stopping now.")
+
+INIT_EXT = INIT_EXT.union(set(config.bot["autoload_cogs"]))
 
 ## API INIT
 try:

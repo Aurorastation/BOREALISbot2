@@ -3,6 +3,15 @@ bot:
   token: ""
   subscriber_server: None
   subscriber_role: None
+  autoload_cogs:
+    - cogs.channel
+    - cogs.discord
+    - cogs.monitor
+    - cogs.players
+    - cogs.server
+    - cogs.silly
+    - cogs.users
+    - cogs.git
 
 api:
   auth: ""

@@ -35,5 +35,33 @@ class OwnerCog:
         else:
             await ctx.send("Cog {} successfully reloaded.".format(cog))
 
+    @commands.command(name="reload_all", hidden=True)
+    @commands.is_owner()
+    async def cog_reload_all(self, ctx, *, owner_too: bool=False):
+        unloaded_ext = []
+        for extension in tuple(self.bot.extensions):
+            if not owner_too and extension == "cogs.owner":
+                continue
+
+            try:
+                self.bot.unload_extension(extension)
+                unloaded_ext.append(extension)
+            except:
+                pass
+
+        errored_ext = []
+        for extension in unloaded_ext:
+            try:
+                self.bot.load_extension(extension)
+            except:
+                errored_ext.append(extension)
+
+        if errored_ext:
+            length = len(error_ext)
+            errored_txt = ", ".join(errored_ext)
+            await ctx.send(f"Errored out when loading {length} extensions:\n{errored_txt}")
+        else:
+            await ctx.send("All extensions successfully reloaded.")
+
 def setup(bot):
     bot.add_cog(OwnerCog(bot))
