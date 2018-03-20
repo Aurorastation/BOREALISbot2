@@ -90,6 +90,53 @@ class DiscordCog():
 
     @commands.command()
     @commands.guild_only()
+    @check_auths([R_ADMIN, R_MOD])
+    async def ban(self, ctx, tgt: discord.Member, duration: int, *reason):
+        if not reason:
+            await ctx.send("No reason provided.")
+            return
+
+        if tgt is ctx.author:
+            await ctx.send("You cannot ban yourself.")
+            return
+        elif tgt is self.bot.client:
+            await ctx.send("I cannot ban myself!")
+            return
+        elif is_authed([R_ADMIN, R_MOD], tgt.id, self.bot):
+            await ctx.send("I can't ban someone with mod/admin permissions!")
+            return
+
+        ban_type = "TEMPBAN"
+        if duration < 0:
+            ban_type = "PERMABAN"
+
+        reason = " ".join(reason)
+        user_reply = f"{ctx.author.name} has applied a {ban_type.lower()} to you over at {ctx.guild.name}."
+        author_reply = f"Operation successful, {tgt.name} has been {ban_type.lower()}ned from the {ctx.guild.name} server."
+
+        if ban_type == "PERMABAN":
+            duration = -1
+            user_reply += " This ban can only be lifted upon appeal."
+        else:
+            user_reply += f" This ban expires after {duration} minutes."
+            author_reply += f"\nThis ban expires after {duration} minutes."
+
+        await ctx.author.send(author_reply)
+        await tgt.send(user_reply)
+        await tgt.send(f"Ban reason: {reason}")
+
+        try:
+            await self.bot.register_ban(tgt, ban_type, duration, ctx.guild,
+                                        author_obj=ctx.author, reason=reason)
+        except BotError as err:
+            await ctx.send(f"{ctx.author.mention}, error applying ban.\n{err}.")
+        except ApiError as err1:
+            await ctx.send(f"{ctx.author.mention}, error applying ban.\n{err}.")
+        else:
+            await ctx.send(f"{ctx.author.mention}, operation successful.")
+
+    @commands.command()
+    @commands.guild_only()
     async def subscribe(self, ctx, once: bool = False):
         conf = self.bot.Config()
 
