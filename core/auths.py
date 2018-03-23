@@ -1,6 +1,7 @@
+import asyncio
 from enum import Enum
 
-from subsystems import ApiMethods
+from .subsystems import ApiMethods
 from .borealis_exceptions import BotError, ApiError
 
 class AuthPerms(Enum):
@@ -15,12 +16,12 @@ class AuthType(Enum):
     ONE = 2
 
 class AuthHolder():
-    def __init__(self, uid, serverid, bot):
+    def __init__(self, user, guild, bot):
         if not bot:
             raise BotError("No bot object passed to auth holder.", "__init__")
 
-        self.auths = bot.AuthRepo().get_auths(uid, serverid)
-        self.uid = uid
+        self.auths = bot.UserRepo().get_auths(user.id, guild.id, user.roles)
+        self.uid = user.id
 
     def verify(self, req_auths, req_type=AuthType.ONE):
         if not req_auths:
@@ -48,7 +49,7 @@ class AuthRepo():
         self._user_dict = {}
         self._authed_groups = {}
 
-    def update_auths(self):
+    async def update_auths(self):
         api = self.bot.Api()
         if not api:
             raise BotError("No API object provided.", "update_auths")
@@ -56,11 +57,16 @@ class AuthRepo():
         try:
             new_users = await api.query_web("/auth/users", ApiMethods.GET, return_keys=["users"],
                                             enforce_return_keys=True)
-            self._user_dict = new_users
+            self._user_dict = new_users["users"]
         except ApiError as err:
             raise BotError(f"API error querying users: {err.message}", "update_auths")
 
         try:
-            new_groups = await api.query_web("/auth/groups")
-        except expression as identifier:
-            pass
+            new_groups = await api.query_web("/auth/groups", ApiMethods.GET, return_keys=["servers"],
+                                             enforce_return_keys=True)
+            self._authed_groups = new_groups["servers"]
+        except ApiError as err:
+            raise BotError(f"API error querying group auths: {err.message}", "update_auths")
+
+    def get_auths(self, uid, serverid):
+        ret = []
