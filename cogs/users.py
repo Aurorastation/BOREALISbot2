@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
-from subsystems.borealis_exceptions import ConfigError, ApiError
-from subsystems.api import METHOD_DELETE, METHOD_PUT, METHOD_GET
+from core import ConfigError, ApiError, ApiMethods
 from .utils.auth import check_auths, R_ADMIN, R_MOD
 from .utils.byond import get_ckey
 
@@ -34,7 +33,7 @@ class UserCog():
             data["ckey"] = get_ckey(tgt)
 
         try:
-            await api.query_web("/users", METHOD_DELETE, data=data)
+            await api.query_web("/users", ApiMethods.DELETE, data=data)
             await conf.update_users(api)
         except ApiError as err:
             await ctx.send(f"API error encountered:\n{err}")
@@ -56,7 +55,7 @@ class UserCog():
         }
 
         try:
-            await api.query_web("/users", METHOD_PUT, data=data)
+            await api.query_web("/users", ApiMethods.PUT, data=data)
             await conf.update_users(api)
         except ApiError as err:
             await ctx.send(f"API error encountered:\n{err}")
@@ -78,7 +77,7 @@ class UserCog():
         }
 
         try:
-            data = await api.query_web("/discord/strike", METHOD_GET,
+            data = await api.query_web("/discord/strike", ApiMethods.GET,
                                        data={"discord_id": tgt.id},
                                        return_keys=["strike_count"],
                                        enforce_return_keys=True)
@@ -113,7 +112,7 @@ class UserCog():
         }
 
         try:
-            data = await api.query_web("/discord/strike", METHOD_GET,
+            data = await api.query_web("/discord/strike", ApiMethods.GET,
                                        data={"discord_id": tgt.id},
                                        return_keys=["strike_count"],
                                        enforce_return_keys=True)

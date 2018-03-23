@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from cogs.utils.auth import check_auths, R_ADMIN, R_DEV
-from subsystems.borealis_exceptions import ApiError, ConfigError
+from core import ApiError, ConfigError
 
 class ChannelCog:
     def __init__(self, bot):

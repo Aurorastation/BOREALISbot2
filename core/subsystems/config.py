@@ -16,8 +16,8 @@
 
 import os.path
 import yaml
-from .borealis_exceptions import ConfigError, ApiError
-from .api import METHOD_DELETE, METHOD_GET, METHOD_POST, METHOD_PUT
+from ..borealis_exceptions import ConfigError, ApiError
+from .api import ApiMethods
 
 class Config():
     """
@@ -80,7 +80,7 @@ class Config():
             raise ConfigError("No API object provided.", "update_users")
 
         try:
-            new_users = await api.query_web("/users", METHOD_GET, return_keys=["users"],
+            new_users = await api.query_web("/users", ApiMethods.GET, return_keys=["users"],
                                             enforce_return_keys=True)
 
             # To stop assignment of malformed data from a failed request.
@@ -136,7 +136,7 @@ class Config():
             raise ConfigError("No API object provided.", "update_channels")
 
         try:
-            temporary_channels = await api.query_web("/channels", METHOD_GET,
+            temporary_channels = await api.query_web("/channels", ApiMethods.GET,
                                                      return_keys=["channels"],
                                                      enforce_return_keys=True)
             temporary_channels = temporary_channels["channels"]
@@ -161,7 +161,7 @@ class Config():
             raise ConfigError("No channel ID or group sent.", "add_channel")
 
         try:
-            await api.query_web("/channels", METHOD_PUT, data={"channel_id": channel_id,
+            await api.query_web("/channels", ApiMethods.PUT, data={"channel_id": channel_id,
                                                                "channel_group": group})
             self.update_channels(api)
         except ApiError as err:
@@ -175,7 +175,7 @@ class Config():
             raise ConfigError("No API object provided.", "remove_channel")
 
         try:
-            api.query_web("/channels", METHOD_DELETE, data)
+            api.query_web("/channels", ApiMethods.DELETE, data)
             self.update_channels(api)
         except ApiError as err:
             # Bad query error.

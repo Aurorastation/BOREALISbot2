@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from .utils.auth import check_auths, R_ADMIN, R_DEV
-from subsystems.borealis_exceptions import ApiError
+from core import ApiError
 
 def valid_command(command):
     command = str(command)

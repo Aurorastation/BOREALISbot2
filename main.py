@@ -1,9 +1,9 @@
 import logging
 import os
 import datetime
-import subsystems
 from discord.ext import commands
-import bot
+from core import subsystems
+from core import *
 
 cur_dir = os.path.dirname(os.path.realpath(__file__))
 log_path = os.path.join(cur_dir,
@@ -31,7 +31,7 @@ INIT_EXT = {"cogs.owner"}
 try:
     config = subsystems.Config("config.yml", logger)
     config.setup()
-except subsystems.ConfigError as err:
+except core.ConfigError as err:
     print("Error initializing Config object.")
     print(str(err))
     logger.error(err)
@@ -42,7 +42,7 @@ INIT_EXT = INIT_EXT.union(set(config.bot["autoload_cogs"]))
 ## API INIT
 try:
     api = subsystems.API(config)
-except subsystems.ApiError as err:
+except core.ApiError as err:
     print("Error initializing API object.")
     print(str(err))
     logger.error(err)
@@ -60,7 +60,7 @@ try:
     scheduler.add_task(43200, config.update_channels, "update_channels", init_now=True,
                        args=[api], is_coro=True)
     scheduler.add_task(1800, bot.process_temporary_bans, "process_bans", init_now=True, is_coro=True)
-except subsystems.SchedulerError as err:
+except core.SchedulerError as err:
     print("Error initializing scheduler object.")
     print(str(err))
     logger.error(err)

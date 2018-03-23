@@ -1,8 +1,7 @@
 import discord
 from discord.ext import commands
 from .utils.auth import check_auths, is_authed, R_ADMIN, R_MOD
-from subsystems.api import METHOD_PUT, METHOD_DELETE
-from subsystems.borealis_exceptions import ApiError
+from core import ApiMethods, ApiError
 
 class DiscordCog():
     def __init__(self, bot):
@@ -33,7 +32,7 @@ class DiscordCog():
                 "reason": " ".join(reason)
             }
 
-            response = await api.query_web("/discord/strike", METHOD_PUT, data,
+            response = await api.query_web("/discord/strike", ApiMethods.PUT, data,
                                            ["bot_action", "strike_count"], True)
         except ApiError as err:
             await ctx.send(f"Error encountered while issuing strike!\n{err}")
@@ -155,7 +154,7 @@ class DiscordCog():
         role = discord.Object(id=conf.bot["subscriber_role"])
         await ctx.author.add_roles(role, reason="Subscribed for updates.")
 
-        await self.bot.Api().query_web("/subscriber", METHOD_PUT,
+        await self.bot.Api().query_web("/subscriber", ApiMethods.PUT,
                                       {"user_id": ctx.author.id, "once": 1 if once else 0})
 
         await ctx.send(f"{ctx.author.mention}, operation successful. {success}")
@@ -172,7 +171,7 @@ class DiscordCog():
         role = discord.Object(id=conf.bot["subscriber_role"])
         await ctx.author.remove_roles(role, reason="Unsubscribed from updates.")
 
-        await self.bot.Api().query_web("/subscriber", METHOD_DELETE, {"user_id": ctx.author.id})
+        await self.bot.Api().query_web("/subscriber", ApiMethods.DELETE, {"user_id": ctx.author.id})
         await ctx.send(f"{ctx.author.mention}, operation successful. Your role has been removed!")
 
 def setup(bot):

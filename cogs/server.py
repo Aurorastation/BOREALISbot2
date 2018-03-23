@@ -3,7 +3,7 @@ from discord.ext import commands
 from .utils.auth import check_auths, R_MOD, R_ADMIN, R_CCIAA, ANY_STAFF
 from .utils.paginator import Pages, FieldPages
 from .utils.byond import get_ckey
-from subsystems.borealis_exceptions import ApiError
+from core import ApiError
 
 class ServerCog():
     def __init__(self, bot):

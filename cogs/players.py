@@ -3,8 +3,7 @@ from discord.ext import commands
 from .utils.auth import check_auths, R_ADMIN, R_MOD
 from .utils.paginator import FieldPages
 from .utils.byond import get_ckey
-from subsystems.api import METHOD_GET
-from subsystems.borealis_exceptions import ApiError
+from core import ApiMethods, ApiError
 
 class PlayerCog():
     def __init__(self, bot):
@@ -16,7 +15,7 @@ class PlayerCog():
         api = self.bot.Api()
 
         try:
-            data = await api.query_web("/query/database/playerinfo", METHOD_GET,
+            data = await api.query_web("/query/database/playerinfo", ApiMethods.GET,
                                        data={"ckey": ckey}, return_keys=["data"],
                                        enforce_return_keys=True)
 
@@ -42,7 +41,7 @@ class PlayerCog():
         api = self.bot.Api()
 
         try:
-            data = await api.query_web("/query/database/playernotes", METHOD_GET,
+            data = await api.query_web("/query/database/playernotes", ApiMethods.GET,
                                        data={"ckey": ckey}, return_keys=["data"],
                                        enforce_return_keys=True)
 
