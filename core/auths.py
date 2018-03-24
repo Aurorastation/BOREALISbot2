@@ -29,6 +29,9 @@ class AuthType(Enum):
     ONE = 2
 
 class AuthHolder():
+    """
+    An abstract class for running authentication checks.
+    """
     def __init__(self, user, guild, bot):
         if not bot:
             raise BotError("No bot object passed to auth holder.", "__init__")
