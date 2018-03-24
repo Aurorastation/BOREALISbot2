@@ -15,10 +15,6 @@ class GitCog:
             await ctx.send("Updating failed: repository initialization failed.")
             return
 
-        if repo.is_dirty():
-            await ctx.send("Update failed: uncommitted changes detected.")
-            return
-
         try:
             remote = repo.remotes.origin
             if not remote:
