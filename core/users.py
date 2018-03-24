@@ -35,20 +35,21 @@ class UserRepo():
         except ApiError as err:
             raise BotError(f"API error querying users: {err.message}", "update_auths")
 
-#        try:
-#            new_groups = await api.query_web("/auth/groups", ApiMethods.GET, return_keys=["servers"],
-#                                             enforce_return_keys=True)
-#            self._authed_groups = new_groups["servers"]
-#        except ApiError as err:
-#            raise BotError(f"API error querying group auths: {err.message}", "update_auths")
+        try:
+            new_groups = await api.query_web("/auth/groups", ApiMethods.GET, return_keys=["servers"],
+                                             enforce_return_keys=True)
+            self._authed_groups = self.parse_servers(new_groups["servers"])
+        except ApiError as err:
+            raise BotError(f"API error querying group auths: {err.message}", "update_auths")
 
     def parse_users(self, new_data):
         if not new_data:
-            return []
+            return {}
 
         new_users = {}
         for user_id in new_data:
             dat = new_data[user_id]
+            user_id = int(user_id)
 
             if user_id in self._user_dict:
                 user = self._user_dict[user_id]
@@ -61,11 +62,32 @@ class UserRepo():
 
         return new_users
 
+    def parse_servers(self, new_data):
+        if not new_data:
+            return {}
+
+        new_servers = {}
+        for server_id in new_data:
+            groups = new_data[server_id]
+            guild_id = int(server_id)
+
+            guild_auths = {}
+            for group_id in groups:
+                auths = groups[group_id]
+                group_id = int(group_id)
+
+                guild_auths[group_id] = self.str_to_auths(auths)
+
+            if guild_auths:
+                new_servers[guild_id] = guild_auths
+
+        return new_servers
+
     def get_auths(self, uid, serverid, ugroups):
         auths = []
 
-        if str(uid) in self._user_dict:
-            auths += self._user_dict[str(uid)].g_auths
+        if uid in self._user_dict:
+            auths += self._user_dict[uid].g_auths
 
         if not ugroups:
             return auths
@@ -79,8 +101,8 @@ class UserRepo():
         return auths
 
     def get_ckey(self, uid):
-        if str(uid) in self._user_dict:
-            return self._user_dict[str(uid)].ckey
+        if uid in self._user_dict:
+            return self._user_dict[uid].ckey
         else:
             return None
 
