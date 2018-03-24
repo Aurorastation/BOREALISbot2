@@ -13,6 +13,7 @@ class PlayerCog():
     @commands.command(aliases=["playerinfo", "pinfo"])
     @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
     async def player_info(self, ctx, ckey: get_ckey):
+        """Information regarding a given player."""
         api = self.bot.Api()
 
         try:
@@ -39,6 +40,7 @@ class PlayerCog():
     @commands.command(aliases=["playernotes", "pnotes"])
     @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
     async def player_notes(self, ctx, ckey: get_ckey):
+        """Display notes issued to the specified player."""
         api = self.bot.Api()
 
         try:

@@ -13,6 +13,7 @@ class DiscordCog():
     @commands.guild_only()
     @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
     async def strike(self, ctx, tgt: discord.Member, *reason):
+        """Applies a 2 month warning to the tagged user."""
         api = self.bot.Api()
 
         if tgt == ctx.author:
@@ -96,6 +97,7 @@ class DiscordCog():
     @commands.guild_only()
     @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
     async def ban(self, ctx, tgt: discord.Member, duration: int, *reason):
+        """Bans someone for a given duration."""
         if not reason:
             await ctx.send("No reason provided.")
             return
@@ -146,6 +148,10 @@ class DiscordCog():
     @commands.command()
     @commands.guild_only()
     async def subscribe(self, ctx, once: bool = False):
+        """
+        Get updates on when the round ends! Add 'true' as an argument to have 
+        this happen only once.
+        """
         conf = self.bot.Config()
 
         if not conf.bot["subscriber_server"] or conf.bot["subscriber_server"] != ctx.guild.id:
@@ -168,6 +174,7 @@ class DiscordCog():
     @commands.command()
     @commands.guild_only()
     async def unsubscribe(self, ctx):
+        """Stop pestering me!"""
         conf = self.bot.Config()
 
         if not conf.bot["subscriber_server"] or conf.bot["subscriber_server"] != ctx.guild.id:

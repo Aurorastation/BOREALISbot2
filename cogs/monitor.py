@@ -22,9 +22,10 @@ class MonitorCog:
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=["monitorcontrol", "mcontrol", "monitor"])
+    @commands.command(aliases=["monitorcontrol", "mcontrol"])
     @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_DEV])
     async def monitor_control(self, ctx, server: str, command: valid_command):
+        """Issue a command to a given server."""
         api = ctx.bot.Api()
         conf = ctx.bot.Config()
         try:
@@ -43,9 +44,10 @@ class MonitorCog:
         except ApiError as err:
             await ctx.send("{}, error encountered.\n{}".format(ctx.author.mention, err))
 
-    @commands.command(aliases=["mlist", "mservers", "monitorlist", "monitorservers"])
+    @commands.command(aliases=["monitorlist", "mlist"])
     @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_DEV])
     async def monitor_list(self, ctx):
+        """List all servers controlled by the connected server monitor."""
         api = ctx.bot.Api()
         conf = ctx.bot.Config()
         try:

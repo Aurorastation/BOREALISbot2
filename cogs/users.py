@@ -9,9 +9,10 @@ class UserCog():
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=["uupdate", "userupdate"])
+    @commands.command(aliases=["userupdate", "uupdate"])
     @auth.check_auths([AuthPerms.R_ADMIN])
     async def user_update(self, ctx):
+        """Updates all user auths of the bot."""
         conf = self.bot.Config()
 
         try:
@@ -21,9 +22,10 @@ class UserCog():
         else:
             await ctx.send("Users successfully updated.")
 
-    @commands.command(aliases=["uremove", "userremove"])
+    @commands.command(aliases=["userremove", "uremove"])
     @auth.check_auths([AuthPerms.R_ADMIN])
     async def user_remove(self, ctx, tgt):
+        """Removes the specified user from being linked with the bot."""
         conf = self.bot.Config()
         api = self.bot.Api()
 
@@ -43,10 +45,16 @@ class UserCog():
         else:
             await ctx.send("User's auths successfully removed.")
 
-    @commands.command(aliases=["uadd", "useradd"])
+    @commands.command(aliases=["useradd", "uadd"])
     @commands.guild_only()
     @auth.check_auths([AuthPerms.R_ADMIN])
     async def user_add(self, ctx, tgt: discord.Member, key: get_ckey):
+        """
+        Links the specified user to the bot.
+        
+        The link is to allow for ingame perms to be read by the bot. Some permissions
+        may already be applied by virtue of the Discord groups the person is in.
+        """
         api = self.bot.Api()
         conf = self.bot.Config()
 
@@ -65,10 +73,11 @@ class UserCog():
         else:
             await ctx.send("User's auths successfully added.")
 
-    @commands.command(aliases=["uinfo", "userinfo"])
+    @commands.command(aliases=["userinfo", "uinfo"])
     @commands.guild_only()
     @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
     async def user_info(self, ctx, tgt: discord.Member):
+        """Displays information regarding the mentioned user."""
         api = self.bot.Api()
         repo = self.bot.UserRepo()
         fields = {
@@ -111,6 +120,7 @@ class UserCog():
 
     @commands.command(aliases=["myinfo"])
     async def my_info(self, ctx):
+        """Displays your info!"""
         api = self.bot.Api()
         repo = self.bot.UserRepo()
         tgt = ctx.author

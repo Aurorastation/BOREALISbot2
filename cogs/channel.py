@@ -8,10 +8,11 @@ class ChannelCog:
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=["channelinfo", "channel", "cinfo"])
+    @commands.command(aliases=["channelinfo", "cinfo"])
     @commands.guild_only()
     @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_DEV])
     async def channel_info(self, ctx):
+        """Displays information regarding the present channel."""
         embed = discord.Embed(title="Channel Info")
         embed.add_field(name="Channel:", value="{}\n({})".format(ctx.message.channel.name,
                                                                  ctx.message.channel.id),
@@ -29,10 +30,11 @@ class ChannelCog:
 
         await ctx.send(content=None, embed=embed)
 
-    @commands.command(aliases=["cadd", "channeladd"])
+    @commands.command(aliases=["channeladd", "cadd"])
     @commands.guild_only()
     @auth.check_auths([AuthPerms.R_ADMIN])
     async def channel_add(self, ctx, group: str):
+        """Adds the current channel to a specified channel group."""
         conf = ctx.bot.Config()
         api = ctx.bot.Api()
         try:
@@ -44,10 +46,11 @@ class ChannelCog:
         else:
             await ctx.send("Channel added to group {} successfully!".format(group))
 
-    @commands.command(aliases=["crem", "cremove", "channelremove"])
+    @commands.command(aliases=["channelremove", "cremove"])
     @commands.guild_only()
     @auth.check_auths([AuthPerms.R_ADMIN])
     async def channel_remove(self, ctx, group: str):
+        """Removes the current channel from a specified group."""
         conf = ctx.bot.Config()
         api = ctx.bot.Api()
         try:
