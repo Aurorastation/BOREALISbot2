@@ -1,8 +1,8 @@
 import discord
 from discord.ext import commands
-from subsystems.borealis_exceptions import ConfigError, ApiError
-from subsystems.api import METHOD_DELETE, METHOD_PUT, METHOD_GET
-from .utils.auth import check_auths, R_ADMIN, R_MOD
+from core import ConfigError, ApiError, ApiMethods
+
+from .utils import auth, AuthPerms, AuthType
 from .utils.byond import get_ckey
 
 class UserCog():
@@ -10,7 +10,7 @@ class UserCog():
         self.bot = bot
 
     @commands.command(aliases=["uupdate", "userupdate"])
-    @check_auths([R_ADMIN])
+    @auth.check_auths([AuthPerms.R_ADMIN])
     async def user_update(self, ctx):
         conf = self.bot.Config()
 
@@ -22,7 +22,7 @@ class UserCog():
             await ctx.send("Users successfully updated.")
 
     @commands.command(aliases=["uremove", "userremove"])
-    @check_auths([R_ADMIN])
+    @auth.check_auths([AuthPerms.R_ADMIN])
     async def user_remove(self, ctx, tgt):
         conf = self.bot.Config()
         api = self.bot.Api()
@@ -34,7 +34,7 @@ class UserCog():
             data["ckey"] = get_ckey(tgt)
 
         try:
-            await api.query_web("/users", METHOD_DELETE, data=data)
+            await api.query_web("/users", ApiMethods.DELETE, data=data)
             await conf.update_users(api)
         except ApiError as err:
             await ctx.send(f"API error encountered:\n{err}")
@@ -45,7 +45,7 @@ class UserCog():
 
     @commands.command(aliases=["uadd", "useradd"])
     @commands.guild_only()
-    @check_auths([R_ADMIN])
+    @auth.check_auths([AuthPerms.R_ADMIN])
     async def user_add(self, ctx, tgt: discord.Member, key: get_ckey):
         api = self.bot.Api()
         conf = self.bot.Config()
@@ -56,7 +56,7 @@ class UserCog():
         }
 
         try:
-            await api.query_web("/users", METHOD_PUT, data=data)
+            await api.query_web("/users", ApiMethods.PUT, data=data)
             await conf.update_users(api)
         except ApiError as err:
             await ctx.send(f"API error encountered:\n{err}")
@@ -67,10 +67,10 @@ class UserCog():
 
     @commands.command(aliases=["uinfo", "userinfo"])
     @commands.guild_only()
-    @check_auths([R_ADMIN, R_MOD])
+    @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
     async def user_info(self, ctx, tgt: discord.Member):
         api = self.bot.Api()
-        conf = self.bot.Config()
+        repo = self.bot.UserRepo()
         fields = {
             "Nickname:": tgt.name,
             "Discord ID:": tgt.id,
@@ -78,7 +78,7 @@ class UserCog():
         }
 
         try:
-            data = await api.query_web("/discord/strike", METHOD_GET,
+            data = await api.query_web("/discord/strike", ApiMethods.GET,
                                        data={"discord_id": tgt.id},
                                        return_keys=["strike_count"],
                                        enforce_return_keys=True)
@@ -88,12 +88,19 @@ class UserCog():
             await ctx.send(f"API error encountered!\n{err}")
             return
 
-        try:
-            fields["Linked ckey:"] = conf.get_user_ckey(str(tgt.id))
-            fields["Auths:"] = conf.get_user_auths(str(tgt.id))
-        except ConfigError:
-            fields["Linked ckey:"] = "None"
+        fields["Ckey:"] = repo.get_ckey(tgt.id)
+        if not fields["Ckey:"]:
+            fields["Ckey:"] = "N/A"
+
+        auths = repo.get_auths(tgt.id, ctx.guild.id, tgt.roles)
+        if not auths:
             fields["Auths:"] = "N/A"
+        else:
+            str_l = []
+            for perm in auths:
+                str_l.append(str(perm))
+
+            fields["Auths:"] = ", ".join(str_l)
 
         embed = discord.Embed(title="User Info")
 
@@ -105,15 +112,16 @@ class UserCog():
     @commands.command(aliases=["myinfo"])
     async def my_info(self, ctx):
         api = self.bot.Api()
-        conf = self.bot.Config()
+        repo = self.bot.UserRepo()
         tgt = ctx.author
+
         fields = {
             "Nickname:": tgt.name,
             "Discord ID:": tgt.id
         }
 
         try:
-            data = await api.query_web("/discord/strike", METHOD_GET,
+            data = await api.query_web("/discord/strike", ApiMethods.GET,
                                        data={"discord_id": tgt.id},
                                        return_keys=["strike_count"],
                                        enforce_return_keys=True)
@@ -123,12 +131,19 @@ class UserCog():
             await ctx.send(f"API error encountered!\n{err}")
             return
 
-        try:
-            fields["Linked ckey:"] = conf.get_user_ckey(str(tgt.id))
-            fields["Auths:"] = conf.get_user_auths(str(tgt.id))
-        except ConfigError:
-            fields["Linked ckey:"] = "None"
+        fields["Ckey:"] = repo.get_ckey(tgt.id)
+        if not fields["Ckey:"]:
+            fields["Ckey:"] = "N/A"
+
+        auths = repo.get_auths(tgt.id, ctx.guild.id, tgt.roles)
+        if not auths:
             fields["Auths:"] = "N/A"
+        else:
+            str_l = []
+            for perm in auths:
+                str_l.append(str(perm))
+
+            fields["Auths:"] = ", ".join(str_l)
 
         embed = discord.Embed(title="Your Info")
 

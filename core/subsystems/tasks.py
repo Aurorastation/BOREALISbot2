@@ -1,6 +1,6 @@
 import asyncio
 from datetime import datetime as dt
-from .borealis_exceptions import SchedulerError, TaskError
+from ..borealis_exceptions import SchedulerError, TaskError
 
 class TaskScheduler():
     def __init__(self, bot, interval, logger):

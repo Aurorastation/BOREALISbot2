@@ -14,10 +14,19 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see http://www.gnu.org/licenses/.
 
-CALLER_BOT    = 1
-CALLER_API    = 2
-CALLER_CONFIG = 3
-CALLER_SCHEDULER = 4
+from enum import Enum
+
+__all__ = ["BorealisError", "ApiError", "ConfigError", "BadConfigSpawn", "BotError",
+           "BotError", "SchedulerError", "TaskError"]
+
+class Callers(Enum):
+    BOT = "Bot"
+    API = "API"
+    CONFIG = "Config"
+    SCHEDULER = "Scheduler"
+
+    def __str__(self):
+        return f"{self.value} error:"
 
 class BorealisError(Exception):
     """Base class for Borealis' exception handling."""
@@ -33,25 +42,19 @@ class BorealisError(Exception):
         Override to allow a prettier printing of the exceptions.
         Returns a string like this: "Bot Error: Error message is here. Source: run_bot."
         """
-        pretty_dict = {
-            CALLER_BOT: "Bot Error:",
-            CALLER_API: "API Error:",
-            CALLER_CONFIG: "Config Error:",
-            CALLER_SCHEDULER: "Scheduler Error:"
-        }
 
-        return "{} {} Source: {}".format(pretty_dict[self.identifier],
+        return "{} {} Source: {}".format(self.identifier,
                                          self.message, self.origin)
 
 class ApiError(BorealisError):
     """General API error."""
     def __init__(self, message, origin):
-        super(ApiError, self).__init__(message, origin, CALLER_API)
+        super(ApiError, self).__init__(message, origin, Callers.API)
 
 class ConfigError(BorealisError):
     """General Config error."""
     def __init__(self, message, origin):
-        super(ConfigError, self).__init__(message, origin, CALLER_CONFIG)
+        super(ConfigError, self).__init__(message, origin, Callers.CONFIG)
 
 class BadConfigSpawn(ConfigError):
     """Describes an error during the creation of the config class."""
@@ -60,14 +63,14 @@ class BadConfigSpawn(ConfigError):
 class BotError(BorealisError):
     """General Bot runtime error."""
     def __init__(self, message, origin):
-        super(BotError, self).__init__(message, origin, CALLER_BOT)
+        super(BotError, self).__init__(message, origin, Callers.BOT)
 
 class SchedulerError(BorealisError):
     """General scheduler error."""
     def __init__(self, message, origin):
-        super(SchedulerError, self).__init__(message, origin, CALLER_SCHEDULER)
+        super(SchedulerError, self).__init__(message, origin, Callers.SCHEDULER)
 
 class TaskError(SchedulerError):
     """General task error."""
     def __init__(self, message, task_name, origin):
-        super(TaskError, self).__init__(message, "{} - {}".format(task_name, origin), CALLER_SCHEDULER)
+        super(TaskError, self).__init__(message, "{} - {}".format(task_name, origin), Callers.SCHEDULER)

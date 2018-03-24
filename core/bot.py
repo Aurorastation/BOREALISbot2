@@ -1,8 +1,9 @@
 import discord
 from discord.ext import commands
 
-from subsystems.api import METHOD_PUT, METHOD_DELETE, METHOD_GET
-from subsystems.borealis_exceptions import BotError, ApiError, BorealisError
+from .subsystems import ApiMethods
+from .borealis_exceptions import BotError, ApiError, BorealisError
+from .users import UserRepo
 
 class Borealis(commands.Bot):
     def __init__(self, command_prefix, config, api, logger, formatter=None, description=None, pm_help=False, **options):
@@ -15,11 +16,16 @@ class Borealis(commands.Bot):
 
         self.add_listener(self.process_unsubscribe, "on_message")
 
+        self._user_repo = UserRepo(self)
+
     def Api(self):
         return self._api
 
     def Config(self):
         return self._config
+
+    def UserRepo(self):
+        return self._user_repo
 
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.NoPrivateMessage):
@@ -105,7 +111,7 @@ class Borealis(commands.Bot):
             str_list.append(f"SUBJECT: {subject.name}/{subject.id}")
 
         try:
-            await self.Api().query_web("/log", METHOD_PUT, data)
+            await self.Api().query_web("/log", ApiMethods.PUT, data)
         except ApiError:
             pass
 
@@ -140,7 +146,7 @@ class Borealis(commands.Bot):
 
         try:
             await server_obj.ban(user_obj, reason=reason)
-            await self.Api().query_web("/discord/ban", METHOD_PUT, data)
+            await self.Api().query_web("/discord/ban", ApiMethods.PUT, data)
             await self.log_entry(f"PLACED BAN | Length: {duration} | Reason: {reason}",
                                  author_obj, user_obj)
         except ApiError as err:
@@ -173,13 +179,13 @@ class Borealis(commands.Bot):
             except discord.Forbidden:
                 raise BotError("Unable to unban.", "register_unban")
 
-        await self.Api().query_web("/discord/ban", METHOD_DELETE, {"ban_id": ban_id})
+        await self.Api().query_web("/discord/ban", ApiMethods.DELETE, {"ban_id": ban_id})
         await self.log_entry(f"LIFTED BAN #{ban_id}", subject = user_obj)
 
     async def process_temporary_bans(self):
         """A scheduled coroutine for handling unbans."""
         try:
-            bans = await self.Api().query_web("/discord/ban", METHOD_GET, return_keys=["expired_bans"])
+            bans = await self.Api().query_web("/discord/ban", ApiMethods.GET, return_keys=["expired_bans"])
 
             if not bans or not bans["expired_bans"]:
                 return
@@ -206,7 +212,7 @@ class Borealis(commands.Bot):
 
         role = discord.Object(id=self.Config().bot["subscriber_role"])
         if role in message.role_mentions:
-            users = await self.Api().query_web("/subscriber", METHOD_GET, return_keys=["users"])
+            users = await self.Api().query_web("/subscriber", ApiMethods.GET, return_keys=["users"])
 
             if not users or not users["users"]:
                 return
@@ -217,5 +223,5 @@ class Borealis(commands.Bot):
                 if user:
                     await user.remove_roles(role, "Automatically unsubscribed.")
                 
-                await self.Api().query_web("/subscribe", METHOD_DELETE, {"user_id": uid})
+                await self.Api().query_web("/subscribe", ApiMethods.DELETE, {"user_id": uid})
                 user = None

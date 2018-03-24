@@ -57,7 +57,7 @@ class OwnerCog:
                 errored_ext.append(extension)
 
         if errored_ext:
-            length = len(error_ext)
+            length = len(errored_ext)
             errored_txt = ", ".join(errored_ext)
             await ctx.send(f"Errored out when loading {length} extensions:\n{errored_txt}")
         else:

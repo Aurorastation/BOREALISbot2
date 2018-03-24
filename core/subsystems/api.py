@@ -18,19 +18,20 @@ import asyncio
 import json
 import struct
 import aiohttp
-from .borealis_exceptions import ApiError
+from enum import Enum
+from ..borealis_exceptions import ApiError
 
-METHOD_POST = 1
-METHOD_GET = 2
-METHOD_PUT = 3
-METHOD_DELETE = 4
+class ApiMethods(Enum):
+    POST = "post"
+    GET = "get"
+    PUT = "put"
+    DELETE = "delete"
 
-VALID_METHODS = [
-    METHOD_POST,
-    METHOD_GET,
-    METHOD_PUT,
-    METHOD_DELETE
-]
+    def resolve_session_func(self, session):
+        if not isinstance(session, aiohttp.client.ClientSession):
+            return None
+
+        return getattr(session, self.value)
 
 class API():
     """A class for interacting with the ingame and web based APIs."""
@@ -66,11 +67,11 @@ class API():
         if not uri:
             raise ApiError("No URI sent.", "query_web")
 
-        if method not in VALID_METHODS:
+        if not isinstance(method, ApiMethods):
             raise ApiError("Bad method sent.", "query_web")
 
         dest = self._api_path + uri
-        use_headers = (method is not METHOD_GET)
+        use_headers = (method is not ApiMethods.GET)
 
         if not data:
             data = {}
@@ -84,14 +85,7 @@ class API():
             arg_dict["params"] = data
 
         async with aiohttp.ClientSession() as session:
-            methods = {
-                METHOD_GET    : session.get,
-                METHOD_POST   : session.post,
-                METHOD_PUT    : session.put,
-                METHOD_DELETE : session.delete
-            }
-
-            method = methods[method]
+            method = method.resolve_session_func(session)
 
             async with method(**arg_dict) as resp:
                 try:
