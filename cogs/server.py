@@ -96,7 +96,7 @@ class ServerCog():
         except ApiError as err:
             await ctx.send(f"I encountered an API error.\n{err}")
 
-    @commands.command(aliases=["server_pm", "spm"])
+    @commands.command(aliases=["serverpm", "spm"])
     @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
     async def server_pm(self, ctx, ckey: get_ckey, *args):
         """Sends a PM to the specified player on the server."""
