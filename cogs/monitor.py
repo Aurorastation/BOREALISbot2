@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
-from .utils.auth import check_auths, R_ADMIN, R_DEV
+
+from .utils import auth, AuthPerms
 from core import ApiError
 
 def valid_command(command):
@@ -22,7 +23,7 @@ class MonitorCog:
         self.bot = bot
 
     @commands.command(aliases=["monitorcontrol", "mcontrol", "monitor"])
-    @check_auths([R_ADMIN, R_DEV])
+    @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_DEV])
     async def monitor_control(self, ctx, server: str, command: valid_command):
         api = ctx.bot.Api()
         conf = ctx.bot.Config()
@@ -43,7 +44,7 @@ class MonitorCog:
             await ctx.send("{}, error encountered.\n{}".format(ctx.author.mention, err))
 
     @commands.command(aliases=["mlist", "mservers", "monitorlist", "monitorservers"])
-    @check_auths([R_ADMIN, R_DEV])
+    @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_DEV])
     async def monitor_list(self, ctx):
         api = ctx.bot.Api()
         conf = ctx.bot.Config()

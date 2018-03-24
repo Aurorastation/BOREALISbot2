@@ -1,28 +1,10 @@
 from discord.ext import commands
-R_ADMIN = "R_ADMIN"
-R_MOD = "R_MOD"
-R_DEV = "R_DEV"
-R_CCIAA = "R_CCIAA"
-R_WIKI = "R_WIKI"
+from core import auths
 
-ANY_STAFF = [R_ADMIN, R_MOD, R_DEV, R_CCIAA]
-
-def is_authed(auths, uid, bot):
-    conf = bot.Config()
-
-    u_auths = conf.get_user_auths(str(uid))
-
-    found = False
-
-    for auth in auths:
-        if auth in u_auths:
-            found = True
-            break
-
-    return found
-
-def check_auths(auths):
+def check_auths(req_auths, req_type=auths.AuthType.ONE):
     def decorator(ctx):
-        return is_authed(auths, ctx.author.id, ctx.bot)
+        holder = auths.AuthHolder(ctx.author, ctx.guild, ctx.bot)
+
+        return holder.verify(req_auths, req_type)
 
     return commands.check(decorator)

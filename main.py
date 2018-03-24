@@ -6,8 +6,7 @@ from core import subsystems
 from core import *
 
 cur_dir = os.path.dirname(os.path.realpath(__file__))
-log_path = os.path.join(cur_dir,
-                        "logs\\")
+log_path = os.path.join(cur_dir, "logs\\")
 if not os.path.exists(log_path):
     os.makedirs(log_path)
 
@@ -31,7 +30,7 @@ INIT_EXT = {"cogs.owner"}
 try:
     config = subsystems.Config("config.yml", logger)
     config.setup()
-except core.ConfigError as err:
+except ConfigError as err:
     print("Error initializing Config object.")
     print(str(err))
     logger.error(err)
@@ -42,25 +41,25 @@ INIT_EXT = INIT_EXT.union(set(config.bot["autoload_cogs"]))
 ## API INIT
 try:
     api = subsystems.API(config)
-except core.ApiError as err:
+except ApiError as err:
     print("Error initializing API object.")
     print(str(err))
     logger.error(err)
     raise RuntimeError("Stopping now.")
 
 ## BOT INIT
-bot = bot.Borealis(config.bot["prefix"], config, api, logger,
+bot = Borealis(config.bot["prefix"], config, api, logger,
                    description="Borealis version 3, here to assist in any SS13 related matters!",
                    pm_help=True)
 
 try:
     scheduler = subsystems.TaskScheduler(bot, config.scheduler["interval"], logger)
-    scheduler.add_task(43200, config.update_users, "update_users", init_now=True,
-                       args=[api], is_coro=True)
+    scheduler.add_task(43200, bot.UserRepo().update_auths, "update_users", init_now=True,
+                       is_coro=True)
     scheduler.add_task(43200, config.update_channels, "update_channels", init_now=True,
                        args=[api], is_coro=True)
     scheduler.add_task(1800, bot.process_temporary_bans, "process_bans", init_now=True, is_coro=True)
-except core.SchedulerError as err:
+except SchedulerError as err:
     print("Error initializing scheduler object.")
     print(str(err))
     logger.error(err)

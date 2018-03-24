@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
-from .utils.auth import check_auths, R_ADMIN, R_MOD
+
+from .utils import auth, AuthPerms
 from .utils.paginator import FieldPages
 from .utils.byond import get_ckey
 from core import ApiMethods, ApiError
@@ -10,7 +11,7 @@ class PlayerCog():
         self.bot = bot
 
     @commands.command(aliases=["playerinfo", "pinfo"])
-    @check_auths([R_MOD, R_ADMIN])
+    @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
     async def player_info(self, ctx, ckey: get_ckey):
         api = self.bot.Api()
 
@@ -36,7 +37,7 @@ class PlayerCog():
             await ctx.send("{}, error occured.\n{}".format(ctx.author.mention, err))
 
     @commands.command(aliases=["playernotes", "pnotes"])
-    @check_auths([R_MOD, R_ADMIN])
+    @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
     async def player_notes(self, ctx, ckey: get_ckey):
         api = self.bot.Api()
 

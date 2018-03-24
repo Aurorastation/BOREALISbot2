@@ -1,7 +1,9 @@
 import discord
 from discord.ext import commands
-from .utils.auth import check_auths, is_authed, R_ADMIN, R_MOD
-from core import ApiMethods, ApiError
+
+from core import ApiMethods, ApiError, BotError
+from core.auths import *
+from .utils import auth, AuthPerms
 
 class DiscordCog():
     def __init__(self, bot):
@@ -9,7 +11,7 @@ class DiscordCog():
 
     @commands.command()
     @commands.guild_only()
-    @check_auths([R_ADMIN, R_MOD])
+    @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
     async def strike(self, ctx, tgt: discord.Member, *reason):
         api = self.bot.Api()
 
@@ -19,7 +21,9 @@ class DiscordCog():
         elif tgt == self.bot.user:
             await ctx.send("I cannot strike myself!")
             return
-        elif is_authed([R_ADMIN, R_MOD], tgt.id, self.bot):
+
+        holder = AuthHolder(tgt, ctx.guild, self.bot)
+        if holder.verify([AuthPerms.R_ADMIN, AuthPerms.R_MOD]):
             await ctx.send("I can't strike someone with mod/admin permissions!")
             return
 
@@ -90,7 +94,7 @@ class DiscordCog():
 
     @commands.command()
     @commands.guild_only()
-    @check_auths([R_ADMIN, R_MOD])
+    @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
     async def ban(self, ctx, tgt: discord.Member, duration: int, *reason):
         if not reason:
             await ctx.send("No reason provided.")
@@ -102,7 +106,9 @@ class DiscordCog():
         elif tgt == self.bot.user:
             await ctx.send("I cannot ban myself!")
             return
-        elif is_authed([R_ADMIN, R_MOD], tgt.id, self.bot):
+
+        holder = AuthHolder(tgt, ctx.guild, self.bot)
+        if holder.verify([AuthPerms.R_ADMIN, AuthPerms.R_MOD]):
             await ctx.send("I can't ban someone with mod/admin permissions!")
             return
 
@@ -131,7 +137,7 @@ class DiscordCog():
         except BotError as err:
             await ctx.send(f"{ctx.author.mention}, error applying ban.\n{err}.")
         except ApiError as err1:
-            await ctx.send(f"{ctx.author.mention}, error applying ban.\n{err}.")
+            await ctx.send(f"{ctx.author.mention}, error applying ban.\n{err1}.")
         else:
             await ctx.send(f"{ctx.author.mention}, operation successful.")
             await self.bot.log_entry(f"BAN ISSUED | Reason: {reason}",

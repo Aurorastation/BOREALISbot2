@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
-from .utils.auth import check_auths, R_MOD, R_ADMIN, R_CCIAA, ANY_STAFF
+
+from .utils import auth, AuthPerms, AuthType
 from .utils.paginator import Pages, FieldPages
 from .utils.byond import get_ckey
 from core import ApiError
@@ -10,7 +11,7 @@ class ServerCog():
         self.bot = bot
 
     @commands.command(aliases=["faxlist"])
-    @check_auths([R_ADMIN, R_CCIAA])
+    @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_CCIAA])
     async def fax_list(self, ctx, param: str):
         param = param.lower()
         if param not in ["sent", "received"]:
@@ -34,7 +35,7 @@ class ServerCog():
             await ctx.send(f"{ctx.author.mention}, error encountered.\n{err}")
 
     @commands.command(aliases=["faxget"])
-    @check_auths([R_ADMIN, R_CCIAA])
+    @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_CCIAA])
     async def get_fax(self, ctx, sent: str, idnr: int):
         sent = sent.lower()
         if sent not in ["sent", "received"]:
@@ -92,7 +93,7 @@ class ServerCog():
             await ctx.send(f"I encountered an API error.\n{err}")
 
     @commands.command(name="serverpm", aliases=["server_pm"])
-    @check_auths([R_MOD, R_ADMIN])
+    @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
     async def _pm(self, ctx, ckey: get_ckey, *args):
         api = self.bot.Api()
         conf = self.bot.Config()
@@ -109,7 +110,7 @@ class ServerCog():
             await ctx.send("PM successfully sent!")
 
     @commands.command(name="server_restart", aliases=["serverrestart", "serverres", "server_res"])
-    @check_auths([R_ADMIN])
+    @auth.check_auths([AuthPerms.R_ADMIN])
     async def _restart(self, ctx):
         api = self.bot.Api()
 
@@ -122,7 +123,7 @@ class ServerCog():
             await ctx.send("Server successfully restarted.")
 
     @commands.command(name="server_staff", aliases=["serverstaff"])
-    @check_auths(ANY_STAFF)
+    @auth.check_auths([AuthPerms.R_ANYSTAFF])
     async def _staff(self, ctx):
         api = self.bot.Api()
 

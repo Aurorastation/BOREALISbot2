@@ -1,5 +1,6 @@
 from .subsystems import ApiMethods
 from .borealis_exceptions import BotError, ApiError
+from .auths import AuthPerms
 
 class User():
     def __init__(self, uid, ckey, auths=[]):
@@ -30,18 +31,18 @@ class UserRepo():
         try:
             new_users = await api.query_web("/users", ApiMethods.GET, return_keys=["users"],
                                             enforce_return_keys=True)
-            self._user_dict = self.update_users(new_users["users"])
+            self._user_dict = self.parse_users(new_users["users"])
         except ApiError as err:
             raise BotError(f"API error querying users: {err.message}", "update_auths")
 
-        try:
-            new_groups = await api.query_web("/auth/groups", ApiMethods.GET, return_keys=["servers"],
-                                             enforce_return_keys=True)
-            self._authed_groups = new_groups["servers"]
-        except ApiError as err:
-            raise BotError(f"API error querying group auths: {err.message}", "update_auths")
+#        try:
+#            new_groups = await api.query_web("/auth/groups", ApiMethods.GET, return_keys=["servers"],
+#                                             enforce_return_keys=True)
+#            self._authed_groups = new_groups["servers"]
+#        except ApiError as err:
+#            raise BotError(f"API error querying group auths: {err.message}", "update_auths")
 
-    def update_users(self, new_data):
+    def parse_users(self, new_data):
         if not new_data:
             return []
 
@@ -52,9 +53,9 @@ class UserRepo():
             if user_id in self._user_dict:
                 user = self._user_dict[user_id]
 
-                user.update(dat["ckey"], auths=dat["auths"])
+                user.update(dat["ckey"], auths=self.str_to_auths(dat["auth"]))
             else:
-                user = User(user_id, dat["ckey"], auths=dat["auths"])
+                user = User(user_id, dat["ckey"], auths=self.str_to_auths(dat["auth"]))
 
             new_users[user_id] = user
 
@@ -63,8 +64,8 @@ class UserRepo():
     def get_auths(self, uid, serverid, ugroups):
         auths = []
 
-        if uid in self._user_dict:
-            auths += self._user_dict[uid].g_auths
+        if str(uid) in self._user_dict:
+            auths += self._user_dict[str(uid)].g_auths
 
         if not ugroups:
             return auths
@@ -78,9 +79,17 @@ class UserRepo():
         return auths
 
     def get_ckey(self, uid):
-        if uid in self._user_dict:
-            return self._user_dict[uid].ckey
+        if str(uid) in self._user_dict:
+            return self._user_dict[str(uid)].ckey
         else:
             return None
 
-    
+    def str_to_auths(self, auths):
+        if isinstance(auths, str):
+            return [AuthPerms(auths)]
+
+        ret = []
+        for auth in auths:
+            ret.append(AuthPerms(auth))
+
+        return ret

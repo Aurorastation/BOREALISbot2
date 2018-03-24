@@ -3,6 +3,7 @@ from discord.ext import commands
 
 from .subsystems import ApiMethods
 from .borealis_exceptions import BotError, ApiError, BorealisError
+from .users import UserRepo
 
 class Borealis(commands.Bot):
     def __init__(self, command_prefix, config, api, logger, formatter=None, description=None, pm_help=False, **options):
@@ -15,11 +16,16 @@ class Borealis(commands.Bot):
 
         self.add_listener(self.process_unsubscribe, "on_message")
 
+        self._user_repo = UserRepo(self)
+
     def Api(self):
         return self._api
 
     def Config(self):
         return self._config
+
+    def UserRepo(self):
+        return self._user_repo
 
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.NoPrivateMessage):
