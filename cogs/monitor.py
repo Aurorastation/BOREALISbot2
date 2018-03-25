@@ -27,12 +27,16 @@ class MonitorCog:
     async def monitor_control(self, ctx, server: str, command: valid_command):
         """Issue a command to a given server."""
         api = ctx.bot.Api()
-        conf = ctx.bot.Config()
+        repo = ctx.bot.UserRepo()
         try:
+            auths = []
+            for perm in repo.get_auths(ctx.author.id, ctx.guild.id, ctx.author.roles):
+                auths.append(str(perm))
+
             data = await api.query_monitor({
                 "cmd": "server_control",
                 "args": {"control": command, "server": server.lower()},
-                "auths": conf.get_user_auths(str(ctx.author.id))
+                "auths": auths
             })
 
             if not data:
@@ -49,12 +53,16 @@ class MonitorCog:
     async def monitor_list(self, ctx):
         """List all servers controlled by the connected server monitor."""
         api = ctx.bot.Api()
-        conf = ctx.bot.Config()
+        repo = ctx.bot.UserRepo()
         try:
+            auths = []
+            for perm in repo.get_auths(ctx.author.id, ctx.guild.id, ctx.author.roles):
+                auths.append(str(perm))
+
             data = await api.query_monitor({
                 "cmd": "get_servers",
                 "args": {},
-                "auths": conf.get_user_auths(str(ctx.author.id))
+                "auths": auths
             })
 
             if not data:
