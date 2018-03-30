@@ -1,4 +1,5 @@
 import asyncio
+from discord import Member
 from enum import Enum
 
 from .subsystems import ApiMethods
@@ -36,7 +37,17 @@ class AuthHolder():
         if not bot:
             raise BotError("No bot object passed to auth holder.", "__init__")
 
-        self.auths = bot.UserRepo().get_auths(user.id, guild.id, user.roles)
+        if guild:
+            g_id = guild.id
+        else:
+            g_id = None
+
+        if isinstance(user, Member):
+            u_roles = user.roles
+        else:
+            u_roles = None
+
+        self.auths = bot.UserRepo().get_auths(user.id, g_id, u_roles)
         self.uid = user.id
 
     def verify(self, req_auths, req_type=AuthType.ONE):

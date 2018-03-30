@@ -123,7 +123,7 @@ class UserRepo():
         if not ugroups:
             return auths
 
-        if serverid in self._authed_groups:
+        if serverid and serverid in self._authed_groups:
             s_groups = self._authed_groups[serverid]
             for role in ugroups:
                 if role.id in s_groups:
