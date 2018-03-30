@@ -13,10 +13,8 @@ class UserCog():
     @auth.check_auths([AuthPerms.R_ADMIN])
     async def user_update(self, ctx):
         """Updates all user auths of the bot."""
-        conf = self.bot.Config()
-
         try:
-            await conf.update_users(self.bot.Api())
+            await self.bot.UserRepo().update_auths()
         except ConfigError as err:
             await ctx.send(f"Updating users failed.\n{err}")
         else:
@@ -26,7 +24,6 @@ class UserCog():
     @auth.check_auths([AuthPerms.R_ADMIN])
     async def user_remove(self, ctx, tgt):
         """Removes the specified user from being linked with the bot."""
-        conf = self.bot.Config()
         api = self.bot.Api()
 
         data = {}
@@ -37,7 +34,7 @@ class UserCog():
 
         try:
             await api.query_web("/users", ApiMethods.DELETE, data=data)
-            await conf.update_users(api)
+            await self.bot.UserRepo().update_auths()
         except ApiError as err:
             await ctx.send(f"API error encountered:\n{err}")
         except ConfigError as err:
@@ -56,7 +53,6 @@ class UserCog():
         may already be applied by virtue of the Discord groups the person is in.
         """
         api = self.bot.Api()
-        conf = self.bot.Config()
 
         data = {
             "discord_id": tgt.id,
@@ -65,7 +61,7 @@ class UserCog():
 
         try:
             await api.query_web("/users", ApiMethods.PUT, data=data)
-            await conf.update_users(api)
+            await self.bot.UserRepo().update_auths()
         except ApiError as err:
             await ctx.send(f"API error encountered:\n{err}")
         except ConfigError as err:
