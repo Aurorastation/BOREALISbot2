@@ -31,7 +31,7 @@ class Callers(Enum):
 class BorealisError(Exception):
     """Base class for Borealis' exception handling."""
     def __init__(self, message, origin, identifier):
-        super(BorealisError, self).__init__(message)
+        super().__init__(message)
 
         self.identifier = identifier
         self.origin = origin
@@ -49,12 +49,12 @@ class BorealisError(Exception):
 class ApiError(BorealisError):
     """General API error."""
     def __init__(self, message, origin):
-        super(ApiError, self).__init__(message, origin, Callers.API)
+        super().__init__(message, origin, Callers.API)
 
 class ConfigError(BorealisError):
     """General Config error."""
     def __init__(self, message, origin):
-        super(ConfigError, self).__init__(message, origin, Callers.CONFIG)
+        super().__init__(message, origin, Callers.CONFIG)
 
 class BadConfigSpawn(ConfigError):
     """Describes an error during the creation of the config class."""
@@ -63,14 +63,14 @@ class BadConfigSpawn(ConfigError):
 class BotError(BorealisError):
     """General Bot runtime error."""
     def __init__(self, message, origin):
-        super(BotError, self).__init__(message, origin, Callers.BOT)
+        super().__init__(message, origin, Callers.BOT)
 
 class SchedulerError(BorealisError):
     """General scheduler error."""
     def __init__(self, message, origin):
-        super(SchedulerError, self).__init__(message, origin, Callers.SCHEDULER)
+        super().__init__(message, origin, Callers.SCHEDULER)
 
 class TaskError(SchedulerError):
     """General task error."""
     def __init__(self, message, task_name, origin):
-        super(TaskError, self).__init__(message, "{} - {}".format(task_name, origin), Callers.SCHEDULER)
+        super().__init__(message, "{} - {}".format(task_name, origin), Callers.SCHEDULER)

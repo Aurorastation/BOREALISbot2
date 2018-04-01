@@ -16,26 +16,23 @@ class PlayerCog():
         """Information regarding a given player."""
         api = self.bot.Api()
 
-        try:
-            data = await api.query_web("/query/database/playerinfo", ApiMethods.GET,
-                                       data={"ckey": ckey}, return_keys=["data"],
-                                       enforce_return_keys=True)
+        data = await api.query_web("/query/database/playerinfo", ApiMethods.GET,
+                                    data={"ckey": ckey}, return_keys=["data"],
+                                    enforce_return_keys=True)
 
-            data = data["data"]
+        data = data["data"]
 
-            if data["found"] is False:
-                await ctx.send("{}, no such player found.".format(ctx.author.mention))
-                return
+        if data["found"] is False:
+            await ctx.send("{}, no such player found.".format(ctx.author.mention))
+            return
 
-            embed = discord.Embed(title="Player Info",
-                                  description="Information on ckey {}".format(ckey))
+        embed = discord.Embed(title="Player Info",
+                                description="Information on ckey {}".format(ckey))
 
-            for key in data["sort_order"]:
-                embed.add_field(name=str(key), value=str(data[key]))
+        for key in data["sort_order"]:
+            embed.add_field(name=str(key), value=str(data[key]))
 
-            await ctx.send(embed=embed)
-        except ApiError as err:
-            await ctx.send("{}, error occured.\n{}".format(ctx.author.mention, err))
+        await ctx.send(embed=embed)
 
     @commands.command(aliases=["playernotes", "pnotes"])
     @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
@@ -43,29 +40,23 @@ class PlayerCog():
         """Display notes issued to the specified player."""
         api = self.bot.Api()
 
-        try:
-            data = await api.query_web("/query/database/playernotes", ApiMethods.GET,
-                                       data={"ckey": ckey}, return_keys=["data"],
-                                       enforce_return_keys=True)
+        data = await api.query_web("/query/database/playernotes", ApiMethods.GET,
+                                    data={"ckey": ckey}, return_keys=["data"],
+                                    enforce_return_keys=True)
 
-            if not data["data"]:
-                await ctx.send("No notes found with that ckey.")
-                return
+        if not data["data"]:
+            await ctx.send("No notes found with that ckey.")
+            return
 
-            try:
-                notes = list()
-                for note in data["data"]:
-                    points = note.split(" || ")
+        notes = []
+        for note in data["data"]:
+            points = note.split(" || ")
 
-                    notes.append((f"{points[1]} on {points[0]}", points[2]))
+            notes.append((f"{points[1]} on {points[0]}", points[2]))
 
-                p = FieldPages(ctx, entries=notes, per_page=4)
-                p.embed.title = f"Notes for {ckey}"
-                await p.paginate()
-            except Exception as err:
-                await ctx.send(err)
-        except ApiError as err:
-            await ctx.send(f"{ctx.author.mention}, error retreiving notes.\n{err}")
+        p = FieldPages(ctx, entries=notes, per_page=4)
+        p.embed.title = f"Notes for {ckey}"
+        await p.paginate()
 
 def setup(bot):
     bot.add_cog(PlayerCog(bot))

@@ -21,19 +21,14 @@ class ServerCog():
 
         api = self.bot.Api()
 
-        try:
-            data = await api.query_game("get_faxlist", params={"faxtype": param})
+        data = await api.query_game("get_faxlist", params={"faxtype": param})
 
-            if not data:
-                await ctx.send(f"No {param} faxes found.")
-                return
+        if not data:
+            await ctx.send(f"No {param} faxes found.")
+            return
 
-            p = Pages(ctx, entries=data)
-            await p.paginate()
-        except ApiError as err:
-            await ctx.send(f"{ctx.author.mention}, API error encountered.\n{err}")
-        except Exception as err:
-            await ctx.send(f"{ctx.author.mention}, error encountered.\n{err}")
+        p = Pages(ctx, entries=data)
+        await p.paginate()
 
     @commands.command(aliases=["faxget", "fget"])
     @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_CCIAA])
@@ -46,73 +41,59 @@ class ServerCog():
 
         api = self.bot.Api()
 
-        try:
-            data = await api.query_game("get_fax", params={"faxid": idnr, "faxtype": sent})
+        data = await api.query_game("get_fax", params={"faxid": idnr, "faxtype": sent})
 
-            embed = discord.Embed(title=f"{sent} fax #{idnr}")
-            embed.add_field(name="Title:", value=data["title"], inline=False)
-            embed.add_field(name="Content:", value=data["content"][:1024])
+        embed = discord.Embed(title=f"{sent} fax #{idnr}")
+        embed.add_field(name="Title:", value=data["title"], inline=False)
+        embed.add_field(name="Content:", value=data["content"][:1024])
 
-            await ctx.send(embed=embed)
-        except ApiError as err:
-            await ctx.send(f"{ctx.author.mention}, I encountered an error.\n{err}")
+        await ctx.send(embed=embed)
 
     @commands.command(aliases=["serverwho", "swho"])
     async def server_who(self, ctx):
         """Displays who's on the server currently."""
         api = self.bot.Api()
 
-        try:
-            data = await api.query_game("get_player_list", params={"showadmins": 0})
+        data = await api.query_game("get_player_list", params={"showadmins": 0})
 
-            if not data:
-                await ctx.send("There are currently no players on the server.")
-                return
+        if not data:
+            await ctx.send("There are currently no players on the server.")
+            return
 
-            p = Pages(ctx, entries=data, per_page=20)
-            p.embed.title = "Players"
-            p.embed.description = "Players currently on the server."
-            await p.paginate()
-        except ApiError as err:
-            await ctx.send(f"I encountered an API error.\n{err}")
-        except Exception as err:
-            await ctx.send(f"I encountered an error.\n{err}")
+        p = Pages(ctx, entries=data, per_page=20)
+        p.embed.title = "Players"
+        p.embed.description = "Players currently on the server."
+        await p.paginate()
 
     @commands.command(aliases=["serverstatus", "sstatus"])
     async def server_status(self, ctx):
         """Displays information regarding the current round, player count, etc."""
         api = self.bot.Api()
 
-        try:
-            data = await api.query_game("get_serverstatus")
+        data = await api.query_game("get_serverstatus")
 
-            embed = discord.Embed(title="Server Status")
-            embed.add_field(name="Round ID:", value=data["gameid"])
-            embed.add_field(name="Duration:", value=data["roundduration"])
-            embed.add_field(name="Mode:", value=data["mode"])
-            embed.add_field(name="Players:", value=data["players"])
-            embed.add_field(name="Admins:", value=data["admins"])
-            await ctx.send(embed=embed)
-        except ApiError as err:
-            await ctx.send(f"I encountered an API error.\n{err}")
+        embed = discord.Embed(title="Server Status")
+        embed.add_field(name="Round ID:", value=data["gameid"])
+        embed.add_field(name="Duration:", value=data["roundduration"])
+        embed.add_field(name="Mode:", value=data["mode"])
+        embed.add_field(name="Players:", value=data["players"])
+        embed.add_field(name="Admins:", value=data["admins"])
+        await ctx.send(embed=embed)
 
     @commands.command(aliases=["serverpm", "spm"])
     @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
     async def server_pm(self, ctx, ckey: get_ckey, *args):
         """Sends a PM to the specified player on the server."""
         api = self.bot.Api()
-        conf = self.bot.Config()
+        repo = self.bot.UserRepo()
 
-        try:
-            msg = " ".join(args)
-            sender = conf.get_user_ckey(str(ctx.author.id))
-            await api.query_game("send_adminmsg", params={"ckey": ckey,
-                                                          "senderkey": sender,
-                                                          "msg": msg})
-        except ApiError as err:
-            await ctx.send(f"API error encountered!\n{err}")
-        else:
-            await ctx.send("PM successfully sent!")
+        msg = " ".join(args)
+        sender = repo.get_ckey(ctx.author.id)
+        await api.query_game("send_adminmsg", params={"ckey": ckey,
+                                                        "senderkey": sender,
+                                                        "msg": msg})
+
+        await ctx.send("PM successfully sent!")
 
     @commands.command(aliases=["serverrestart", "srestart"])
     @auth.check_auths([AuthPerms.R_ADMIN])
@@ -120,13 +101,10 @@ class ServerCog():
         """Issues a restart command to the server."""
         api = self.bot.Api()
 
-        try:
-            await api.query_game("restart_round", params={"senderkey":
-                                                          f"{ctx.author.name}/{ctx.author.id}"})
-        except ApiError as err:
-            await ctx.send(f"API error encountered!\n{err}")
-        else:
-            await ctx.send("Server successfully restarted.")
+        await api.query_game("restart_round", params={"senderkey":
+                                                     f"{ctx.author.name}/{ctx.author.id}"})
+
+        await ctx.send("Server successfully restarted.")
 
     @commands.command(aliases=["serverstaff", "sstaff"])
     @auth.check_auths([AuthPerms.R_ANYSTAFF])
@@ -134,70 +112,60 @@ class ServerCog():
         """Displays all staff currently on the server."""
         api = self.bot.Api()
 
-        try:
-            data = await api.query_game("get_stafflist")
-            staff = {
-                "Head Developer": [],
-                "Head Admin": [],
-                "Primary Admin": [],
-                "Secondary Admin": [],
-                "Moderator": [],
-                "Trial Moderator": [],
-                "CCIA Leader": [],
-                "CCIAA": []
-            }
+        data = await api.query_game("get_stafflist")
+        staff = {
+            "Head Developer": [],
+            "Head Admin": [],
+            "Primary Admin": [],
+            "Secondary Admin": [],
+            "Moderator": [],
+            "Trial Moderator": [],
+            "CCIA Leader": [],
+            "CCIAA": []
+        }
 
-            if not data:
-                await ctx.send("No staff found!")
-                return
+        if not data:
+            await ctx.send("No staff found!")
+            return
 
-            for ckey in data:
-                if data[ckey] not in staff:
-                    staff[data[ckey]] = []
+        for ckey in data:
+            if data[ckey] not in staff:
+                staff[data[ckey]] = []
 
-                staff[data[ckey]].append(ckey)
+            staff[data[ckey]].append(ckey)
 
-            people = []
-            for team in staff:
-                if staff[team]:
-                    people.append((team, ", ".join(staff[team])))
+        people = []
+        for team in staff:
+            if staff[team]:
+                people.append((team, ", ".join(staff[team])))
 
-            p = FieldPages(ctx, entries=people, per_page=12)
-            p.embed.title = "Staff Currently Online"
-            await p.paginate()
-        except ApiError as err:
-            await ctx.send(f"Error encountered querying game!\n{err}")
-        except Exception as err:
-            await ctx.send(f"General error encountered!\n{err}")
+        p = FieldPages(ctx, entries=people, per_page=12)
+        p.embed.title = "Staff Currently Online"
+        await p.paginate()
 
     @commands.command(aliases=["servermanifest", "smanifest"])
     async def server_manifest(self, ctx):
         """Displays the current crew manifest. Antags exluded (hopefully)."""
         api = self.bot.Api()
 
-        try:
-            data = await api.query_game("get_manifest")
+        data = await api.query_game("get_manifest")
 
-            entries = []
-            for department in data:
-                dep = data[department]
+        entries = []
+        for department in data:
+            dep = data[department]
 
-                if not dep:
-                    continue
+            if not dep:
+                continue
 
-                people = []
-                for person in dep:
-                    people.append(f"{person} - {dep[person]}")
+            people = []
+            for person in dep:
+                people.append(f"{person} - {dep[person]}")
 
-                entries.append((department, "\n".join(people)))
+            entries.append((department, "\n".join(people)))
 
-            p = FieldPages(ctx, entries=entries, per_page=1)
-            p.embed.title = "Crew Manifest"
-            await p.paginate()
-        except ApiError as err:
-            await ctx.send(f"API error encountered.\n{err}")
-        except Exception as err:
-            await ctx.send(f"Unidentifier error encountered.\n{err}")
+        p = FieldPages(ctx, entries=entries, per_page=1)
+        p.embed.title = "Crew Manifest"
+        await p.paginate()
 
 def setup(bot):
     bot.add_cog(ServerCog(bot))

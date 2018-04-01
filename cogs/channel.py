@@ -37,14 +37,10 @@ class ChannelCog:
         """Adds the current channel to a specified channel group."""
         conf = ctx.bot.Config()
         api = ctx.bot.Api()
-        try:
-            await conf.add_channel(str(ctx.message.channel.id), group, api)
-        except ConfigError as err:
-            await ctx.send("Error adding channel:\n{}".format(err))
-        except ApiError as err:
-            await ctx.send("Error adding channel:\n{}".format(err))
-        else:
-            await ctx.send("Channel added to group {} successfully!".format(group))
+
+        await conf.add_channel(str(ctx.message.channel.id), group, api)
+
+        await ctx.send("Channel added to group {} successfully!".format(group))
 
     @commands.command(aliases=["channelremove", "cremove"])
     @commands.guild_only()
@@ -53,14 +49,10 @@ class ChannelCog:
         """Removes the current channel from a specified group."""
         conf = ctx.bot.Config()
         api = ctx.bot.Api()
-        try:
-            await conf.remove_channel(str(ctx.message.channel.id), group, api)
-        except ConfigError as err:
-            await ctx.send("Error removing channel:\n{}".format(err))
-        except ApiError as err:
-            await ctx.send("Error removing channel:\n{}".format(err))
-        else:
-            await ctx.send("Channel removed from group {} successfully!".format(group))
+
+        await conf.remove_channel(str(ctx.message.channel.id), group, api)
+
+        await ctx.send("Channel removed from group {} successfully!".format(group))
 
 def setup(bot):
     bot.add_cog(ChannelCog(bot))
