@@ -51,7 +51,8 @@ class GitCog:
         entries = []
         for commit in commits:
             time = datetime.fromtimestamp(commit.committed_date).strftime("%Y-%m-%d")
-            entries.append((f"{time}-{commit.binsha}", f"{commit.message}"))
+            name = commit.name_rev.split(" ")[0]
+            entries.append((f"{time}-{name}", f"{commit.message}"))
 
         p = FieldPages(ctx, entries=entries, per_page=5)
         p.embed.title = "Latest changes"

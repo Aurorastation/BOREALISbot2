@@ -188,7 +188,9 @@ class DmCog:
         if not os.path.isfile(dme_path):
             raise BotError(".dme under evaluation not found.", "compile_dm")
 
-        process = await asyncio.create_subprocess_exec(*[dm_path, dme_path], loop=loop)
+        process = await asyncio.create_subprocess_exec(*[dm_path, dme_path], loop=loop,
+                                                       stderr=asyncio.subprocess.DEVNULL,
+                                                       stdout=asyncio.subprocess.DEVNULL)
 
         try:
             await asyncio.wait_for(process.wait(), timeout=60.0, loop=loop)
@@ -224,7 +226,9 @@ class DmCog:
 
         p_args = [dd_path, dmb_path] + ["-invisible", "-ultrasafe", "-logself", "-log", "output.log", "-once", "-close", "-quiet"]
 
-        process = await asyncio.create_subprocess_exec(*p_args, loop=loop)
+        process = await asyncio.create_subprocess_exec(*p_args, loop=loop,
+                                                       stderr=asyncio.subprocess.DEVNULL,
+                                                       stdout=asyncio.subprocess.DEVNULL)
 
         try:
             await asyncio.wait_for(process.wait(), timeout=60.0, loop=loop)
