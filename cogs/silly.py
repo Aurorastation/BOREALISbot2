@@ -132,7 +132,7 @@ class SillyCog:
                 else:
                     try:
                         reply = await resp.text()
-                        await ctx.send("https://penguins.aurorastation.org/{}".format(reply))
+                        await ctx.send(f"https://penguins.aurorastation.org/{reply}")
                     except Exception:
                         await ctx.send("No pingus. I cri.")
 
@@ -153,7 +153,7 @@ class SillyCog:
                 else:
                     try:
                         reply = await resp.text()
-                        await ctx.send("https://devmemes.aurorastation.org/{}".format(reply))
+                        await ctx.send(f"https://devmemes.aurorastation.org/{reply}")
                     except Exception:
                         await ctx.send("I did something wrong and was unable to get memes!")
 

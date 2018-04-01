@@ -13,12 +13,9 @@ class UserCog():
     @auth.check_auths([AuthPerms.R_ADMIN])
     async def user_update(self, ctx):
         """Updates all user auths of the bot."""
-        try:
-            await self.bot.UserRepo().update_auths()
-        except ConfigError as err:
-            await ctx.send(f"Updating users failed.\n{err}")
-        else:
-            await ctx.send("Users successfully updated.")
+        await self.bot.UserRepo().update_auths()
+
+        await ctx.send("Users successfully updated.")
 
     @commands.command(aliases=["userremove", "uremove"])
     @auth.check_auths([AuthPerms.R_ADMIN])
@@ -32,15 +29,10 @@ class UserCog():
         else:
             data["ckey"] = get_ckey(tgt)
 
-        try:
-            await api.query_web("/users", ApiMethods.DELETE, data=data)
-            await self.bot.UserRepo().update_auths()
-        except ApiError as err:
-            await ctx.send(f"API error encountered:\n{err}")
-        except ConfigError as err:
-            await ctx.send(f"Config error encountered:\n{err}")
-        else:
-            await ctx.send("User's auths successfully removed.")
+        await api.query_web("/users", ApiMethods.DELETE, data=data)
+        await self.bot.UserRepo().update_auths()
+
+        await ctx.send("User's auths successfully removed.")
 
     @commands.command(aliases=["useradd", "uadd"])
     @commands.guild_only()
@@ -59,15 +51,10 @@ class UserCog():
             "ckey": key
         }
 
-        try:
-            await api.query_web("/users", ApiMethods.PUT, data=data)
-            await self.bot.UserRepo().update_auths()
-        except ApiError as err:
-            await ctx.send(f"API error encountered:\n{err}")
-        except ConfigError as err:
-            await ctx.send(f"Config error encountered:\n{err}")
-        else:
-            await ctx.send("User's auths successfully added.")
+        await api.query_web("/users", ApiMethods.PUT, data=data)
+        await self.bot.UserRepo().update_auths()
+
+        await ctx.send("User's auths successfully added.")
 
     @commands.command(aliases=["userinfo", "uinfo"])
     @commands.guild_only()
@@ -82,16 +69,10 @@ class UserCog():
             "Joined at:": tgt.joined_at.strftime("%m.%d.%Y")
         }
 
-        try:
-            data = await api.query_web("/discord/strike", ApiMethods.GET,
-                                       data={"discord_id": tgt.id},
-                                       return_keys=["strike_count"],
-                                       enforce_return_keys=True)
+        data = await api.query_web("/discord/strike", ApiMethods.GET, data={"discord_id": tgt.id},
+                                   return_keys=["strike_count"], enforce_return_keys=True)
 
-            fields["Strikes:"] = data["strike_count"]
-        except ApiError as err:
-            await ctx.send(f"API error encountered!\n{err}")
-            return
+        fields["Strikes:"] = data["strike_count"]
 
         fields["Ckey:"] = repo.get_ckey(tgt.id)
         if not fields["Ckey:"]:
@@ -126,16 +107,10 @@ class UserCog():
             "Discord ID:": tgt.id
         }
 
-        try:
-            data = await api.query_web("/discord/strike", ApiMethods.GET,
-                                       data={"discord_id": tgt.id},
-                                       return_keys=["strike_count"],
-                                       enforce_return_keys=True)
+        data = await api.query_web("/discord/strike", ApiMethods.GET, data={"discord_id": tgt.id},
+                                   return_keys=["strike_count"], enforce_return_keys=True)
 
-            fields["Strikes:"] = data["strike_count"]
-        except ApiError as err:
-            await ctx.send(f"API error encountered!\n{err}")
-            return
+        fields["Strikes:"] = data["strike_count"]
 
         fields["Ckey:"] = repo.get_ckey(tgt.id)
         if not fields["Ckey:"]:
@@ -156,12 +131,9 @@ class UserCog():
         for field in fields:
             embed.add_field(name=field, value=fields[field])
 
-        try:
-            await ctx.author.send(embed=embed)
-        except Exception:
-            await ctx.send(f"I was unable to PM you, {ctx.author.mention}!")
-        else:
-            await ctx.send("Sending info now!")
+        await ctx.author.send(embed=embed)
+
+        await ctx.send("Sending info now!")
 
 def setup(bot):
     bot.add_cog(UserCog(bot))

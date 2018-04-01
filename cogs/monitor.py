@@ -13,8 +13,7 @@ def valid_command(command):
     command = command.lower()
 
     if command not in ["start", "stop", "restart"]:
-        raise commands.errors.BadArgument("{} is not a valid command for the monitor."
-                                    .format(command))
+        raise commands.errors.BadArgument(f"{command} is not a valid command for the monitor.")
 
     return command
 
@@ -28,25 +27,23 @@ class MonitorCog:
         """Issue a command to a given server."""
         api = ctx.bot.Api()
         repo = ctx.bot.UserRepo()
-        try:
-            auths = []
-            for perm in repo.get_auths(ctx.author.id, ctx.guild.id, ctx.author.roles):
-                auths.append(str(perm))
 
-            data = await api.query_monitor({
-                "cmd": "server_control",
-                "args": {"control": command, "server": server.lower()},
-                "auths": auths
-            })
+        auths = []
+        for perm in repo.get_auths(ctx.author.id, ctx.guild.id, ctx.author.roles):
+            auths.append(str(perm))
 
-            if not data:
-                await ctx.send("{}, no data was received!".format(ctx.author.mention))
-            elif data["error"]:
-                await ctx.send("{}, error encountered. {}".format(ctx.author.mention, data["error"]))
-            else:
-                await ctx.send("{}, operation successful. {}".format(ctx.author.mention, data["msg"]))
-        except ApiError as err:
-            await ctx.send("{}, error encountered.\n{}".format(ctx.author.mention, err))
+        data = await api.query_monitor({
+            "cmd": "server_control",
+            "args": {"control": command, "server": server.lower()},
+            "auths": auths
+        })
+
+        if not data:
+            await ctx.send("{}, no data was received!".format(ctx.author.mention))
+        elif data["error"]:
+            await ctx.send("{}, error encountered. {}".format(ctx.author.mention, data["error"]))
+        else:
+            await ctx.send("{}, operation successful. {}".format(ctx.author.mention, data["msg"]))
 
     @commands.command(aliases=["monitorlist", "mlist"])
     @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_DEV])
@@ -54,38 +51,36 @@ class MonitorCog:
         """List all servers controlled by the connected server monitor."""
         api = ctx.bot.Api()
         repo = ctx.bot.UserRepo()
-        try:
-            auths = []
-            for perm in repo.get_auths(ctx.author.id, ctx.guild.id, ctx.author.roles):
-                auths.append(str(perm))
 
-            data = await api.query_monitor({
-                "cmd": "get_servers",
-                "args": {},
-                "auths": auths
-            })
+        auths = []
+        for perm in repo.get_auths(ctx.author.id, ctx.guild.id, ctx.author.roles):
+            auths.append(str(perm))
 
+        data = await api.query_monitor({
+            "cmd": "get_servers",
+            "args": {},
+            "auths": auths
+        })
+
+        if not data:
+            await ctx.send("{}, no data was received!".format(ctx.author.mention))
+        elif data["error"]:
+            await ctx.send("{}, error encountered. {}".format(ctx.author.mention, data["error"]))
+        else:
+            embed = discord.Embed(title="Server List")
+            data = data["data"]
             if not data:
-                await ctx.send("{}, no data was received!".format(ctx.author.mention))
-            elif data["error"]:
-                await ctx.send("{}, error encountered. {}".format(ctx.author.mention, data["error"]))
-            else:
-                embed = discord.Embed(title="Server List")
-                data = data["data"]
-                if not data:
-                    await ctx.send("{}, no servers were found linked.".format(ctx.author.mention))
-                    return
+                await ctx.send("{}, no servers were found linked.".format(ctx.author.mention))
+                return
 
-                for server in data:
-                    s_dat = data[server]
-                    embed.add_field(name="Server {}:".format(server),
-                                    value="Running: {}\nCan start: {}\n"
-                                          .format(s_dat["running"], s_dat["can_run"]),
-                                    inline=False)
+            for server in data:
+                s_dat = data[server]
+                embed.add_field(name="Server {}:".format(server),
+                                value="Running: {}\nCan start: {}\n"
+                                        .format(s_dat["running"], s_dat["can_run"]),
+                                inline=False)
 
-                await ctx.send(embed=embed)
-        except ApiError as err:
-            await ctx.send("{}, error encountered.\n{}".format(ctx.author.mention, err))
+            await ctx.send(embed=embed)
 
 def setup(bot):
     bot.add_cog(MonitorCog(bot))

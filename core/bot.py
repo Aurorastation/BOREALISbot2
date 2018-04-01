@@ -39,7 +39,9 @@ class Borealis(commands.Bot):
         elif isinstance(error, commands.CommandInvokeError):
             await ctx.send(f"Command execution failed. {error.original}")
         elif isinstance(error, commands.BadArgument):
-            await ctx.send(f"Bad argument provided. {error}")
+            await ctx.send(f"Bad argument provided. {error.original}")
+        else:
+            self._logger.error("Unrecognized error in command. %s", error, extra={"type": type(error)})
 
     async def forward_message(self, msg, channel_str = None, channel_objs = None):
         """

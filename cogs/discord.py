@@ -28,20 +28,16 @@ class DiscordCog():
             await ctx.send("I can't strike someone with mod/admin permissions!")
             return
 
-        try:
-            data = {
-                "user_id": tgt.id,
-                "user_name": tgt.name,
-                "admin_id": ctx.author.id,
-                "admin_name": ctx.author.name,
-                "reason": " ".join(reason)
-            }
+        data = {
+            "user_id": tgt.id,
+            "user_name": tgt.name,
+            "admin_id": ctx.author.id,
+            "admin_name": ctx.author.name,
+            "reason": " ".join(reason)
+        }
 
-            response = await api.query_web("/discord/strike", ApiMethods.PUT, data,
-                                           ["bot_action", "strike_count"], True)
-        except ApiError as err:
-            await ctx.send(f"Error encountered while issuing strike!\n{err}")
-            return
+        response = await api.query_web("/discord/strike", ApiMethods.PUT, data,
+                                       ["bot_action", "strike_count"], True)
 
         author_msg = f"Strike issued to `{tgt.name}-{tgt.id}`."
         user_msg = f"{ctx.author.name} has issued you a strike."
@@ -133,17 +129,12 @@ class DiscordCog():
         await tgt.send(user_reply)
         await tgt.send(f"Ban reason: {reason}")
 
-        try:
-            await self.bot.register_ban(tgt, ban_type, duration, ctx.guild,
-                                        author_obj=ctx.author, reason=reason)
-        except BotError as err:
-            await ctx.send(f"{ctx.author.mention}, error applying ban.\n{err}.")
-        except ApiError as err1:
-            await ctx.send(f"{ctx.author.mention}, error applying ban.\n{err1}.")
-        else:
-            await ctx.send(f"{ctx.author.mention}, operation successful.")
-            await self.bot.log_entry(f"BAN ISSUED | Reason: {reason}",
-                                     author=ctx.author, subject=tgt)
+        await self.bot.register_ban(tgt, ban_type, duration, ctx.guild,
+                                    author_obj=ctx.author, reason=reason)
+
+        await ctx.send(f"{ctx.author.mention}, operation successful.")
+        await self.bot.log_entry(f"BAN ISSUED | Reason: {reason}",
+                                    author=ctx.author, subject=tgt)
 
     @commands.command()
     @commands.guild_only()

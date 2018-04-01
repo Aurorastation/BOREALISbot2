@@ -44,11 +44,7 @@ class WikiCog:
         """
         Adds the wiki update tag for the list of PR numbers given.
         """
-        try:
-            repo = self.get_repo()
-        except BotError as err:
-            await ctx.send(f"Error encountered:\n{err}")
-            return
+        repo = self.get_repo()
 
         try:
             for issue in issues:
@@ -68,11 +64,7 @@ class WikiCog:
         """
         Removes the wiki update tag for the list of PR numbers given.
         """
-        try:
-            repo = self.get_repo()
-        except BotError as err:
-            await ctx.send(f"Error encountered:\n{err}")
-            return
+        repo = self.get_repo()
 
         try:
             for issue in issues:
@@ -97,11 +89,7 @@ class WikiCog:
         Second parameter specifies if only merged PRs should be shown.
         Defaults to false.
         """
-        try:
-            repo = self.get_repo()
-        except BotError as err:
-            await ctx.send(f"Error encountered:\n{err}")
-            return
+        repo = self.get_repo()
 
         if merged_only:
             state = "closed"
