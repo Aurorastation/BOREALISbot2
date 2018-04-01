@@ -85,10 +85,10 @@ class ServerCog():
     async def server_pm(self, ctx, ckey: get_ckey, *args):
         """Sends a PM to the specified player on the server."""
         api = self.bot.Api()
-        conf = self.bot.Config()
+        repo = self.bot.UserRepo()
 
         msg = " ".join(args)
-        sender = conf.get_user_ckey(str(ctx.author.id))
+        sender = repo.get_ckey(ctx.author.id)
         await api.query_game("send_adminmsg", params={"ckey": ckey,
                                                         "senderkey": sender,
                                                         "msg": msg})
