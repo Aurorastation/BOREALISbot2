@@ -12,6 +12,7 @@ bot:
     - cogs.silly
     - cogs.users
     - cogs.git
+    - cogs.wiki
 
 api:
   auth: ""
