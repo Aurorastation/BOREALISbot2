@@ -12,6 +12,7 @@ bot:
     - cogs.silly
     - cogs.users
     - cogs.git
+    - cogs.dm_eval
     - cogs.wiki
 
 api:
