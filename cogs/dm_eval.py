@@ -136,22 +136,22 @@ class DmCog:
 
             self.validate_dm(code_segs["pre_proc"])
 
-            slices = slices[1]
+            code = slices[1]
 
         slices = code.split(";;")
 
         if len(slices) > 1:
-            code_segs["proc"] = slices[1]
-            self.validate_dm(code_segs["proc"])
+            code_segs["proc"] = slices[0]
 
-            if not code_segs["proc"].endswith(";"):
+            if slices[1]:
+                code_segs["to_out"] = slices[1].split(";")
+
+            if not code_segs["proc"].endswith(";") and not code_segs["proc"].endswith("}"):
                 code_segs["proc"] += ";"
 
-        code_segs["to_out"] = slices[0].split(";")
-
-        if len(slices) > 1:
-            code_segs["to_out"] = slices[1].split(";")
-            self.validate_dm(code_segs["to_out"])
+            self.validate_dm(code_segs["proc"])
+        else:
+            code_segs["to_out"] = slices[0].split(";")
 
         return code_segs
 
@@ -281,7 +281,7 @@ class DmCog:
             return "No contents found in the log file."
 
         content = [x.strip() for x in content]
-        content = content[1:31]
+        content = content[1:11]
         content = "\n".join(content)
         
         if len(content) > 1750:
