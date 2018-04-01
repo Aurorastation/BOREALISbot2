@@ -6,6 +6,8 @@ gitdb2==2.0.3
 GitPython==2.1.8
 idna==2.6
 multidict==4.1.0
+PyGithub==1.37
+PyJWT==1.6.1
 PyYAML==3.12
 smmap2==2.0.3
 websockets==4.0.1
