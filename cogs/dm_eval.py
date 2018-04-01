@@ -83,7 +83,8 @@ class DmCog:
 
         self._instances = []
 
-        self._safety_patterns = [r'#(\s*)?include', r'include', r'##']
+        self._safety_patterns = [r'#(\s*)?include', r'include', r'##',
+                                 r'```.*```', r'`.*`', r'Reboot']
         self._safety_expressions = []
 
         for patt in self._safety_patterns:
@@ -135,14 +136,18 @@ class DmCog:
 
             self.validate_dm(code_segs["pre_proc"])
 
-            slices = slices[1].split(";;")
+            slices = slices[1]
 
-        code_segs["proc"] = slices[0]
+        slices = code.split(";;")
 
-        self.validate_dm(code_segs["proc"])
+        if len(slices) > 1:
+            code_segs["proc"] = slices[1]
+            self.validate_dm(code_segs["proc"])
 
-        if not code_segs["proc"].endswith(";"):
-            code_segs["proc"] += ";"
+            if not code_segs["proc"].endswith(";"):
+                code_segs["proc"] += ";"
+
+        code_segs["to_out"] = slices[0].split(";")
 
         if len(slices) > 1:
             code_segs["to_out"] = slices[1].split(";")
@@ -169,8 +174,13 @@ class DmCog:
                     var_dump += f"world.log << {var};"
 
                 segments["to_out"] = var_dump
+
+                self.validate_dm(var_dump)
             else:
                 segments["to_out"] = ""
+
+            if not segments["proc"]:
+                segments["proc"] = ""
 
             output = self.DM_BOILERPLATE
             output = output.format(segments["pre_proc"], segments["proc"], segments["to_out"])
@@ -272,8 +282,12 @@ class DmCog:
 
         content = [x.strip() for x in content]
         content = content[1:31]
+        content = "\n".join(content)
+        
+        if len(content) > 1750:
+            content = content[0:1750] + "\n...Cut-off reached..."
 
-        out = "World.log output:\n```\n" + "\n".join(content) + "\n```"
+        out = "World.log output:\n```\n" + content + "\n```"
 
         return out
 
@@ -313,10 +327,11 @@ class DmCog:
     async def dm_eval(self, ctx, *, code):
         """
         Evaluates given DM code by compiling and running it. Accepts a maximum 
-        of 4 formatted arguments: v{byond_major}.{byond.minor} {global_code};;;{eval_code};;{vars;to;log}.
+        of 4 formatted arguments: v:{byond_major}.{byond.minor} {global_code};;;{eval_code};;{vars;to;log}.
 
-        All arguments other than eval_code are optional and may simply be omitted.
-        So at bare minimum you simply need to write the code to be evaluated.
+        All arguments other than {vars;to;log} are optional and may simply be omitted.
+        So at bare minimum you simply need to write some variables/expressions to be
+        evaluated and printed to world.log.
         """
         try:
             version_tuple = validate_byond_build(code)
