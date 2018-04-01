@@ -1,17 +1,19 @@
 import discord
 from discord.ext import commands
-from .utils.auth import check_auths, R_MOD, R_ADMIN, R_CCIAA, ANY_STAFF
+
+from .utils import auth, AuthPerms, AuthType
 from .utils.paginator import Pages, FieldPages
 from .utils.byond import get_ckey
-from subsystems.borealis_exceptions import ApiError
+from core import ApiError
 
 class ServerCog():
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=["faxlist"])
-    @check_auths([R_ADMIN, R_CCIAA])
+    @commands.command(aliases=["faxlist", "flist"])
+    @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_CCIAA])
     async def fax_list(self, ctx, param: str):
+        """List all sent or received faxes in the current round."""
         param = param.lower()
         if param not in ["sent", "received"]:
             await ctx.send("Invalid argument sent.")
@@ -33,9 +35,10 @@ class ServerCog():
         except Exception as err:
             await ctx.send(f"{ctx.author.mention}, error encountered.\n{err}")
 
-    @commands.command(aliases=["faxget"])
-    @check_auths([R_ADMIN, R_CCIAA])
-    async def get_fax(self, ctx, sent: str, idnr: int):
+    @commands.command(aliases=["faxget", "fget"])
+    @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_CCIAA])
+    async def fax_get(self, ctx, sent: str, idnr: int):
+        """Get a fax with a specified ID."""
         sent = sent.lower()
         if sent not in ["sent", "received"]:
             await ctx.send(f"Invalid argument {sent} sent.")
@@ -54,8 +57,9 @@ class ServerCog():
         except ApiError as err:
             await ctx.send(f"{ctx.author.mention}, I encountered an error.\n{err}")
 
-    @commands.command(name="serverwho", aliases=["server_who"])
-    async def _who(self, ctx):
+    @commands.command(aliases=["serverwho", "swho"])
+    async def server_who(self, ctx):
+        """Displays who's on the server currently."""
         api = self.bot.Api()
 
         try:
@@ -74,8 +78,9 @@ class ServerCog():
         except Exception as err:
             await ctx.send(f"I encountered an error.\n{err}")
 
-    @commands.command(name="serverstatus", aliases=["server_status"])
-    async def _status(self, ctx):
+    @commands.command(aliases=["serverstatus", "sstatus"])
+    async def server_status(self, ctx):
+        """Displays information regarding the current round, player count, etc."""
         api = self.bot.Api()
 
         try:
@@ -91,9 +96,10 @@ class ServerCog():
         except ApiError as err:
             await ctx.send(f"I encountered an API error.\n{err}")
 
-    @commands.command(name="serverpm", aliases=["server_pm"])
-    @check_auths([R_MOD, R_ADMIN])
-    async def _pm(self, ctx, ckey: get_ckey, *args):
+    @commands.command(aliases=["serverpm", "spm"])
+    @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
+    async def server_pm(self, ctx, ckey: get_ckey, *args):
+        """Sends a PM to the specified player on the server."""
         api = self.bot.Api()
         conf = self.bot.Config()
 
@@ -108,9 +114,10 @@ class ServerCog():
         else:
             await ctx.send("PM successfully sent!")
 
-    @commands.command(name="server_restart", aliases=["serverrestart", "serverres", "server_res"])
-    @check_auths([R_ADMIN])
-    async def _restart(self, ctx):
+    @commands.command(aliases=["serverrestart", "srestart"])
+    @auth.check_auths([AuthPerms.R_ADMIN])
+    async def server_restart(self, ctx):
+        """Issues a restart command to the server."""
         api = self.bot.Api()
 
         try:
@@ -121,9 +128,10 @@ class ServerCog():
         else:
             await ctx.send("Server successfully restarted.")
 
-    @commands.command(name="server_staff", aliases=["serverstaff"])
-    @check_auths(ANY_STAFF)
-    async def _staff(self, ctx):
+    @commands.command(aliases=["serverstaff", "sstaff"])
+    @auth.check_auths([AuthPerms.R_ANYSTAFF])
+    async def server_staff(self, ctx):
+        """Displays all staff currently on the server."""
         api = self.bot.Api()
 
         try:
@@ -162,8 +170,9 @@ class ServerCog():
         except Exception as err:
             await ctx.send(f"General error encountered!\n{err}")
 
-    @commands.command(aliases=["servermanifest", "serverman"])
+    @commands.command(aliases=["servermanifest", "smanifest"])
     async def server_manifest(self, ctx):
+        """Displays the current crew manifest. Antags exluded (hopefully)."""
         api = self.bot.Api()
 
         try:

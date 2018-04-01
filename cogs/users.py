@@ -1,30 +1,29 @@
 import discord
 from discord.ext import commands
-from subsystems.borealis_exceptions import ConfigError, ApiError
-from subsystems.api import METHOD_DELETE, METHOD_PUT, METHOD_GET
-from .utils.auth import check_auths, R_ADMIN, R_MOD
+from core import ConfigError, ApiError, ApiMethods
+
+from .utils import auth, AuthPerms, AuthType
 from .utils.byond import get_ckey
 
 class UserCog():
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=["uupdate", "userupdate"])
-    @check_auths([R_ADMIN])
+    @commands.command(aliases=["userupdate", "uupdate"])
+    @auth.check_auths([AuthPerms.R_ADMIN])
     async def user_update(self, ctx):
-        conf = self.bot.Config()
-
+        """Updates all user auths of the bot."""
         try:
-            await conf.update_users(self.bot.Api())
+            await self.bot.UserRepo().update_auths()
         except ConfigError as err:
             await ctx.send(f"Updating users failed.\n{err}")
         else:
             await ctx.send("Users successfully updated.")
 
-    @commands.command(aliases=["uremove", "userremove"])
-    @check_auths([R_ADMIN])
+    @commands.command(aliases=["userremove", "uremove"])
+    @auth.check_auths([AuthPerms.R_ADMIN])
     async def user_remove(self, ctx, tgt):
-        conf = self.bot.Config()
+        """Removes the specified user from being linked with the bot."""
         api = self.bot.Api()
 
         data = {}
@@ -34,8 +33,8 @@ class UserCog():
             data["ckey"] = get_ckey(tgt)
 
         try:
-            await api.query_web("/users", METHOD_DELETE, data=data)
-            await conf.update_users(api)
+            await api.query_web("/users", ApiMethods.DELETE, data=data)
+            await self.bot.UserRepo().update_auths()
         except ApiError as err:
             await ctx.send(f"API error encountered:\n{err}")
         except ConfigError as err:
@@ -43,12 +42,17 @@ class UserCog():
         else:
             await ctx.send("User's auths successfully removed.")
 
-    @commands.command(aliases=["uadd", "useradd"])
+    @commands.command(aliases=["useradd", "uadd"])
     @commands.guild_only()
-    @check_auths([R_ADMIN])
+    @auth.check_auths([AuthPerms.R_ADMIN])
     async def user_add(self, ctx, tgt: discord.Member, key: get_ckey):
+        """
+        Links the specified user to the bot.
+        
+        The link is to allow for ingame perms to be read by the bot. Some permissions
+        may already be applied by virtue of the Discord groups the person is in.
+        """
         api = self.bot.Api()
-        conf = self.bot.Config()
 
         data = {
             "discord_id": tgt.id,
@@ -56,8 +60,8 @@ class UserCog():
         }
 
         try:
-            await api.query_web("/users", METHOD_PUT, data=data)
-            await conf.update_users(api)
+            await api.query_web("/users", ApiMethods.PUT, data=data)
+            await self.bot.UserRepo().update_auths()
         except ApiError as err:
             await ctx.send(f"API error encountered:\n{err}")
         except ConfigError as err:
@@ -65,12 +69,13 @@ class UserCog():
         else:
             await ctx.send("User's auths successfully added.")
 
-    @commands.command(aliases=["uinfo", "userinfo"])
+    @commands.command(aliases=["userinfo", "uinfo"])
     @commands.guild_only()
-    @check_auths([R_ADMIN, R_MOD])
+    @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
     async def user_info(self, ctx, tgt: discord.Member):
+        """Displays information regarding the mentioned user."""
         api = self.bot.Api()
-        conf = self.bot.Config()
+        repo = self.bot.UserRepo()
         fields = {
             "Nickname:": tgt.name,
             "Discord ID:": tgt.id,
@@ -78,7 +83,7 @@ class UserCog():
         }
 
         try:
-            data = await api.query_web("/discord/strike", METHOD_GET,
+            data = await api.query_web("/discord/strike", ApiMethods.GET,
                                        data={"discord_id": tgt.id},
                                        return_keys=["strike_count"],
                                        enforce_return_keys=True)
@@ -88,12 +93,19 @@ class UserCog():
             await ctx.send(f"API error encountered!\n{err}")
             return
 
-        try:
-            fields["Linked ckey:"] = conf.get_user_ckey(str(tgt.id))
-            fields["Auths:"] = conf.get_user_auths(str(tgt.id))
-        except ConfigError:
-            fields["Linked ckey:"] = "None"
+        fields["Ckey:"] = repo.get_ckey(tgt.id)
+        if not fields["Ckey:"]:
+            fields["Ckey:"] = "N/A"
+
+        auths = repo.get_auths(tgt.id, ctx.guild.id, tgt.roles)
+        if not auths:
             fields["Auths:"] = "N/A"
+        else:
+            str_l = []
+            for perm in auths:
+                str_l.append(str(perm))
+
+            fields["Auths:"] = ", ".join(str_l)
 
         embed = discord.Embed(title="User Info")
 
@@ -104,16 +116,18 @@ class UserCog():
 
     @commands.command(aliases=["myinfo"])
     async def my_info(self, ctx):
+        """Displays your info!"""
         api = self.bot.Api()
-        conf = self.bot.Config()
+        repo = self.bot.UserRepo()
         tgt = ctx.author
+
         fields = {
             "Nickname:": tgt.name,
             "Discord ID:": tgt.id
         }
 
         try:
-            data = await api.query_web("/discord/strike", METHOD_GET,
+            data = await api.query_web("/discord/strike", ApiMethods.GET,
                                        data={"discord_id": tgt.id},
                                        return_keys=["strike_count"],
                                        enforce_return_keys=True)
@@ -123,12 +137,19 @@ class UserCog():
             await ctx.send(f"API error encountered!\n{err}")
             return
 
-        try:
-            fields["Linked ckey:"] = conf.get_user_ckey(str(tgt.id))
-            fields["Auths:"] = conf.get_user_auths(str(tgt.id))
-        except ConfigError:
-            fields["Linked ckey:"] = "None"
+        fields["Ckey:"] = repo.get_ckey(tgt.id)
+        if not fields["Ckey:"]:
+            fields["Ckey:"] = "N/A"
+
+        auths = repo.get_auths(tgt.id, ctx.guild.id, tgt.roles)
+        if not auths:
             fields["Auths:"] = "N/A"
+        else:
+            str_l = []
+            for perm in auths:
+                str_l.append(str(perm))
+
+            fields["Auths:"] = ", ".join(str_l)
 
         embed = discord.Embed(title="Your Info")
 

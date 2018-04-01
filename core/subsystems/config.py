@@ -16,8 +16,8 @@
 
 import os.path
 import yaml
-from .borealis_exceptions import ConfigError, ApiError
-from .api import METHOD_DELETE, METHOD_GET, METHOD_POST, METHOD_PUT
+from ..borealis_exceptions import ConfigError, ApiError
+from .api import ApiMethods
 
 class Config():
     """
@@ -44,9 +44,6 @@ class Config():
         # The master dictionary with configuration options.
         self.config = {}
 
-        # User dictionary.
-        self.users = {}
-
         # Initial channels dictionary.
         self.channels = {"channel_admin" : [], "channel_cciaa" : [],
                          "channel_announce" : [], "channel_log" : []}
@@ -70,42 +67,6 @@ class Config():
                 self.config = yaml.load(file)
             except yaml.YAMLError as err:
                 raise ConfigError("Error reading config: {}".format(err), "setup")
-
-    async def update_users(self, api):
-        """Starts the config auto-update loop."""
-
-        self.logger.info("Config: updating users.")
-
-        if not api:
-            raise ConfigError("No API object provided.", "update_users")
-
-        try:
-            new_users = await api.query_web("/users", METHOD_GET, return_keys=["users"],
-                                            enforce_return_keys=True)
-
-            # To stop assignment of malformed data from a failed request.
-            self.users = new_users["users"]
-        except ApiError as err:
-            raise ConfigError("API error querying users: {}".format(err.message),
-                              "update_users")
-
-        return
-
-    def get_user_auths(self, user_id):
-        """Return a list of strings representing a user's permissions."""
-
-        if user_id in self.users:
-            return self.users[user_id]["auth"]
-
-        return []
-
-    def get_user_ckey(self, user_id):
-        """Returns the ckey tied to the user_id parameter."""
-
-        if user_id in self.users:
-            return self.users[user_id]["ckey"]
-        else:
-            raise ConfigError(f"User_id {user_id} not found in users list.", "get_user_ckey")
 
     def get_channels(self, channel_group):
         """Get a list of channel objects that are grouped together."""
@@ -136,7 +97,7 @@ class Config():
             raise ConfigError("No API object provided.", "update_channels")
 
         try:
-            temporary_channels = await api.query_web("/channels", METHOD_GET,
+            temporary_channels = await api.query_web("/channels", ApiMethods.GET,
                                                      return_keys=["channels"],
                                                      enforce_return_keys=True)
             temporary_channels = temporary_channels["channels"]
@@ -161,7 +122,7 @@ class Config():
             raise ConfigError("No channel ID or group sent.", "add_channel")
 
         try:
-            await api.query_web("/channels", METHOD_PUT, data={"channel_id": channel_id,
+            await api.query_web("/channels", ApiMethods.PUT, data={"channel_id": channel_id,
                                                                "channel_group": group})
             self.update_channels(api)
         except ApiError as err:
@@ -175,7 +136,7 @@ class Config():
             raise ConfigError("No API object provided.", "remove_channel")
 
         try:
-            api.query_web("/channels", METHOD_DELETE, data)
+            api.query_web("/channels", ApiMethods.DELETE, data)
             self.update_channels(api)
         except ApiError as err:
             # Bad query error.
