@@ -87,6 +87,8 @@ class DmCog:
                                  r'```.*```', r'`.*`', r'Reboot']
         self._safety_expressions = []
 
+        self._arg_expression = re.compile(r'(?:(?P<pre_proc>.*);;;)?(?:(?P<proc>.*);;)?(?P<to_out>.*)?')
+
         for patt in self._safety_patterns:
             self._safety_expressions.append(re.compile(patt))
 
@@ -122,36 +124,31 @@ class DmCog:
         If those pieces do not exist, they are to be set as None. As to avoid key
         errors further down the call stack.
         """
-        slices = code.split(";;;")
-        code_segs = {"pre_proc": None, "proc": None, "to_out": None}
 
-        if not slices:
+        res = self._arg_expression.match(code)
+
+        if not res or not res.groupdict():
             raise BotError("No valid code sent.", "process_args")
 
-        if len(slices) > 1:
-            code_segs["pre_proc"] = slices[0]
+        code_segs = {"pre_proc": None, "proc": None, "to_out": None}
 
-            if not code_segs["pre_proc"].endswith(";"):
-                code_segs["pre_proc"] += ";"
+        res_dict = res.groupdict()
 
-            self.validate_dm(code_segs["pre_proc"])
+        for key in code_segs:
+            if key in res_dict:
+                code_segs[key] = res_dict[key]
 
-            code = slices[1]
+        if (code_segs["pre_proc"] and 
+                not code_segs["pre_proc"].endswith(";") and 
+                not code_segs["pre_proc"].endswith("}")):
+            code_segs["pre_proc"] += ";"
 
-        slices = code.split(";;")
+        if (code_segs["proc"] and not code_segs["proc"].endswith(";")
+            and not code_segs["proc"].endswith(";")):
+            code_segs["proc"] += ";"
 
-        if len(slices) > 1:
-            code_segs["proc"] = slices[0]
-
-            if slices[1]:
-                code_segs["to_out"] = slices[1].split(";")
-
-            if not code_segs["proc"].endswith(";") and not code_segs["proc"].endswith("}"):
-                code_segs["proc"] += ";"
-
-            self.validate_dm(code_segs["proc"])
-        else:
-            code_segs["to_out"] = slices[0].split(";")
+        if code_segs["to_out"]:
+            code_segs["to_out"] = code_segs["to_out"].split(";")
 
         return code_segs
 
