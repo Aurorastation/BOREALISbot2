@@ -140,9 +140,12 @@ class SillyCog:
     @auth.check_auths([AuthPerms.R_ANYSTAFF])
     @commands.cooldown(1, 15, commands.BucketType.channel)
     async def memes(self, ctx, *, meme: str):
-        """Pick your poison: mod, or dev memes. Or both!"""
-        if meme.lower() not in ["mod", "dev"]:
-            await ctx.send(f":angry: :dagger:")
+        """Pick your poison: mod, ccia or dev memes. Or all of them!"""
+        if meme.lower() not in ["mod", "dev", "ccia"]:
+			if meme.lower() == "nanako":
+				await ctx.send(f":mouse: :dagger:")
+			else:
+				await ctx.send(f":angry: :dagger:")
             return
 
         async with aiohttp.ClientSession() as session:
