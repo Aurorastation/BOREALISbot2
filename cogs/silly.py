@@ -142,10 +142,10 @@ class SillyCog:
     async def memes(self, ctx, *, meme: str):
         """Pick your poison: mod, ccia or dev memes. Or all of them!"""
         if meme.lower() not in ["mod", "dev", "ccia"]:
-			if meme.lower() == "nanako":
-				await ctx.send(f":mouse: :dagger:")
-			else:
-				await ctx.send(f":angry: :dagger:")
+            if meme.lower() == "nanako":
+                await ctx.send(f":mouse: :dagger:")
+            else:
+                await ctx.send(f":angry: :dagger:")
             return
 
         async with aiohttp.ClientSession() as session:
