@@ -1,23 +1,44 @@
 import logging
 import os
+import sys
 import datetime
-from discord.ext import commands
-from core import subsystems
+import argparse
 from core import *
 
-cur_dir = os.path.dirname(os.path.realpath(__file__))
-log_path = os.path.join(cur_dir, "logs\\")
-if not os.path.exists(log_path):
-    os.makedirs(log_path)
+## Parse the command line arguments
+ap = argparse.ArgumentParser(description="Launch Options for Borealis")
+ag = ap.add_mutually_exclusive_group()
+ag.add_argument("--log-file", dest="logfile", action="store_true")
+ag.add_argument("--no-log-file", dest="logfile", action="store_false")
+ag = ap.add_mutually_exclusive_group()
+ag.add_argument("--log-console", dest="logconsole", action="store_true")
+ag.add_argument("--no-log-console", dest="logconsole", action="store_false")
+ap.set_defaults(logconsole=False, logfile=True)
+args = ap.parse_args()
 
 ## LOGGER
-logger = logging.getLogger("discord")
+logFormatter = logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s")
+logger = logging.getLogger()
+
+if args.logconsole:
+    # Set up the console logging handler
+    consoleHandler = logging.StreamHandler(sys.stdout)
+    consoleHandler.setFormatter(logFormatter)
+    logger.addHandler(consoleHandler)
+
+if args.logfile:
+    # Set up the logging file handler
+    cur_dir = os.path.dirname(os.path.realpath(__file__))
+    log_path = os.path.join(cur_dir, "logs\\")
+    if not os.path.exists(log_path):
+        os.makedirs(log_path)
+    fileHandler = logging.FileHandler(filename="logs/{}.log".format(datetime.date.today()), encoding="utf-8", mode="w")
+    fileHandler.setFormatter(logFormatter)
+    logger.addHandler(fileHandler)
+
 logger.setLevel(logging.WARNING)
 
-handler = logging.FileHandler(filename="logs/{}.log".format(datetime.date.today()), encoding="utf-8", mode="w")
-handler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s"))
 
-logger.addHandler(handler)
 
 ## GLOBALS
 config = None
@@ -49,8 +70,8 @@ except ApiError as err:
 
 ## BOT INIT
 bot = Borealis(config.bot["prefix"], config, api, logger,
-                   description="Borealis version 3, here to assist in any SS13 related matters!",
-                   pm_help=True)
+               description="Borealis version 3, here to assist in any SS13 related matters!",
+               pm_help=True)
 
 try:
     scheduler = subsystems.TaskScheduler(bot, config.scheduler["interval"], logger)
@@ -64,6 +85,7 @@ except SchedulerError as err:
     print(str(err))
     logger.error(err)
     raise RuntimeError("Stopping now.")
+
 
 @bot.event
 async def on_ready():
@@ -82,5 +104,6 @@ async def on_ready():
     logger.info("MAIN: Bot up and running.")
 
     bot.loop.create_task(scheduler.run_loop())
+
 
 bot.run(config.bot["token"], bot=True, reconnect=True)

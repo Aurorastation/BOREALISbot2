@@ -103,7 +103,7 @@ class SillyCog:
     @commands.command()
     @auth.check_auths([AuthPerms.R_ADMIN])
     async def memetype(self, ctx, *args):
-        """They hate him for many things. But specialyl for this."""
+        """They hate him for many things. But specially for this."""
         msg = []
 
         for word in args:
