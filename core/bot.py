@@ -56,7 +56,10 @@ class Borealis(commands.Bot):
             if not config:
                 raise BotError("No Config accessible to bot.", "forward_message")
 
-            channel_objs = config.get_channels(channel_str)
+            channel_ids = config.get_channels(channel_str)
+            channel_objs = []
+            for cid in channel_ids:
+                channel_objs.append(self.get_channel(str(cid)))
 
         if not channel_objs or not len(channel_objs):
             return

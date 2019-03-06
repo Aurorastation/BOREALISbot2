@@ -69,17 +69,13 @@ class Config():
                 raise ConfigError("Error reading config: {}".format(err), "setup")
 
     def get_channels(self, channel_group):
-        """Get a list of channel objects that are grouped together."""
+        """Get a list of channel ids that are grouped together. The actual channels still have to be gathered via the bot"""
         self.logger.debug("Config: getting channels from channel group {0}".format(channel_group))
 
         if channel_group not in self.channels:
             return []
 
-        channel_objs = []
-        for cid in self.channels[channel_group]:
-            channel_objs.append(self.bot.get_channel(str(cid)))
-
-        return channel_objs
+        return self.channels[channel_group]
 
     def get_channels_group(self, channel_id):
         out = []
