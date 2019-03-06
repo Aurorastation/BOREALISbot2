@@ -57,11 +57,15 @@ class Borealis(commands.Bot):
                 raise BotError("No Config accessible to bot.", "forward_message")
 
             channel_ids = config.get_channels(channel_str)
+            self._logger.debug("Fetched Channel IDs",extra={"channel_ids":channel_ids})
             channel_objs = []
             for cid in channel_ids:
-                channel_objs.append(self.get_channel(str(cid)))
+                channel = self.get_channel(str(cid))
+                self._logger.debug("Fetched Channel from Channel ID",extra={"channel":channel,"channel_id":cid})
+                if channel is not None:
+                    channel_objs.append(channel)
 
-        if not channel_objs or not len(channel_objs):
+        if not len(channel_objs):
             return
 
         chunks = self.chunk_message(msg)
@@ -120,7 +124,7 @@ class Borealis(commands.Bot):
         except ApiError:
             pass
 
-        await self.forward_message(" || ".join(str_list), "channel_log")
+        await self.forward_message(" | ".join(str_list), "channel_log")
 
     async def register_ban(self, user_obj, ban_type, duration, server_obj,
                            author_obj = None, reason = "You have been banned by an administrator"):

@@ -36,7 +36,7 @@ if args.logfile:
     fileHandler.setFormatter(logFormatter)
     logger.addHandler(fileHandler)
 
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.DEBUG)
 
 
 
