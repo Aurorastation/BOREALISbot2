@@ -1,5 +1,6 @@
 # Project-specifics:
-config.yml
+/config.yml
+/logging.yml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -90,8 +91,7 @@ ENV/
 
 # Rope project settings
 .ropeproject
-.idea/*.iml
-.idea/misc.xml
-.idea/modules.xml
-.idea/vcs.xml
-.idea/workspace.xml
+
+
+# Pycharm IDE
+.idea

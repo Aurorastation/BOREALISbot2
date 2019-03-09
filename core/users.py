@@ -2,7 +2,8 @@ from .subsystems import ApiMethods
 from .borealis_exceptions import BotError, ApiError
 from .auths import AuthPerms
 
-class User():
+
+class User:
     """
     A user class for assisting with storage.
     """
@@ -16,7 +17,8 @@ class User():
         self.ckey = ckey
         self.g_auths = auths
 
-class UserRepo():
+
+class UserRepo:
     """
     A repository class for handling the regular refreshing and storage of user
     accounts.

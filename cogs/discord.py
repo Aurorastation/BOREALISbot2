@@ -1,4 +1,5 @@
 import discord
+import logging
 from discord.ext import commands
 
 from core import ApiMethods, ApiError, BotError
@@ -8,6 +9,7 @@ from .utils import auth, AuthPerms
 class DiscordCog():
     def __init__(self, bot):
         self.bot = bot
+        self._logger = logging.getLogger(__name__)
 
     @commands.command()
     @commands.guild_only()
@@ -46,6 +48,9 @@ class DiscordCog():
         ban_type = None
         ban_reason = ""
 
+        data["bot_action"] = response["bot_action"]
+        data["strike_count"] = response["strike_count"]
+
         if response["bot_action"] == "WARNING":
             author_msg += " User has been warned."
         elif response["bot_action"] == "TEMPBAN":
@@ -65,6 +70,8 @@ class DiscordCog():
         strikes = response["strike_count"]
         author_msg += f" User currently at {strikes} active strikes."
         user_msg += f" You currently have {strikes} active strikes."
+
+        self._logger.info("Strike Placed: %s", data)
 
         try:
             await ctx.author.send(author_msg)
@@ -177,6 +184,7 @@ class DiscordCog():
 
         await self.bot.Api().query_web("/subscriber", ApiMethods.DELETE, {"user_id": ctx.author.id})
         await ctx.send(f"{ctx.author.mention}, operation successful. Your role has been removed!")
+
 
 def setup(bot):
     bot.add_cog(DiscordCog(bot))

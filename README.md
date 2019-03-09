@@ -14,23 +14,10 @@ BOREALISbot2 is made to provide extended functionality to people on the communit
 The bot does not utilize direct sockets to communicate with the game. This is primarily because I've found socket communication between the game and a live python program to be troublesome. Instead, all requests are aimed towards an API, which will then service them with the access it has. This also enables certain requests to be fulfilled without the API even querying the server: instead, it can simply pull data from the game's database, which it has access to.
 
 ## Usage
-Once you have a Discord bot account connected to a specific server (you should read a guide on how to do that), along with the bot's token, simply create a file called "config.yml" next to the "run_borealis.py" script. Fill its contents out in the following fashion (all of this can be taken from the config.yml.example as well):
-```
-# The password/phrase that'll be hashed and sent to the API with each request for authentication.
-APIAuth: "password"
-# The URL for the API itself.
-API: "https://testapi.com"
+You need to have a Discord bot account connected to a specific server (you should read a guide on how to do that).
 
-# Whether or not the bot will accept external socket connections.
-listen_nudges: true
+Once you have that copy the config.yml.example and paste it as config.yml next to the main.py
 
-# The prefix that the bot will listen to in Discord
-prefix: "?"
+Do the same for the logging.yml.example.
 
-# The bot's OAuth2 token for logging into Discord
-token: "asdjkngraegdfb"
-
-# The host of the linked API, and the port via which it'll attempt communication.
-nudge_host: "127.0.0.1"
-nudge_port: 1200
-```
+Once you have both the config.yml and the logging.yml look through them and adapt them to your needs.
