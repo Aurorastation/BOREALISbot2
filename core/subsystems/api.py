@@ -21,6 +21,7 @@ import aiohttp
 from enum import Enum
 from ..borealis_exceptions import ApiError
 
+
 class ApiMethods(Enum):
     POST = "post"
     GET = "get"
@@ -33,7 +34,8 @@ class ApiMethods(Enum):
 
         return getattr(session, self.value)
 
-class API():
+
+class API:
     """A class for interacting with the ingame and web based APIs."""
     def __init__(self, config):
         if not config:

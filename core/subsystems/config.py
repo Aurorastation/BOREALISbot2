@@ -16,10 +16,12 @@
 
 import os.path
 import yaml
+import logging
 from ..borealis_exceptions import ConfigError, ApiError
 from .api import ApiMethods
 
-class Config():
+
+class Config:
     """
     A class for loading, and accessing at runtime the config settings of the bot.
 
@@ -28,18 +30,15 @@ class Config():
 
     The attribute operator is overloaded to permit access to keys of the config array.
     """
-    def __init__(self, config_path, logger):
+    def __init__(self, config_path):
         if config_path is None:
             raise ConfigError("No config path provided.", "__init__")
 
         # The filepath to the yml we want to read.
         self.filepath = config_path
 
-        if logger is None:
-            raise ConfigError("No logger provided.", "__init__")
-
         # The logger from the bot.
-        self.logger = logger
+        self.logger = logging.getLogger(__name__)
 
         # The master dictionary with configuration options.
         self.config = {}
@@ -70,7 +69,7 @@ class Config():
 
     def get_channels(self, channel_group):
         """Get a list of channel ids that are grouped together. The actual channels still have to be gathered via the bot"""
-        self.logger.debug("Config: getting channels from channel group {0}".format(channel_group))
+        self.logger.debug("Getting channels from channel group {0}".format(channel_group))
 
         if channel_group not in self.channels:
             return []
@@ -87,7 +86,7 @@ class Config():
 
     async def update_channels(self, api):
         """Updates the list of channels stored in the config's datum."""
-        self.logger.info("Config: updating channels.")
+        self.logger.info("Updating channels.")
 
         if not api:
             raise ConfigError("No API object provided.", "update_channels")
@@ -108,7 +107,10 @@ class Config():
             if group not in self.channels:
                 continue
 
-            self.channels[group] = temporary_channels[group]
+            for channel in temporary_channels[group]:
+                channel_id = int(channel)
+                if channel_id is not None and channel_id is not 0:
+                    self.channels[group].append(channel_id)
 
     async def add_channel(self, channel_id, group, api):
         if not api:

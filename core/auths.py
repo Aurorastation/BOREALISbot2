@@ -7,6 +7,7 @@ from .borealis_exceptions import BotError, ApiError
 
 __all__ = ["AuthPerms", "AuthType", "AuthHolder"]
 
+
 class AuthPerms(Enum):
     R_ADMIN = "R_ADMIN"
     R_MOD = "R_MOD"
@@ -25,11 +26,13 @@ class AuthPerms(Enum):
     def __str__(self):
         return self.value
 
+
 class AuthType(Enum):
     ALL = 1
     ONE = 2
 
-class AuthHolder():
+
+class AuthHolder:
     """
     An abstract class for running authentication checks.
     """

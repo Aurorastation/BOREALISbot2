@@ -1,9 +1,11 @@
 import asyncio
+import logging
 from datetime import datetime as dt
 from ..borealis_exceptions import SchedulerError, TaskError
 
+
 class TaskScheduler():
-    def __init__(self, bot, interval, logger):
+    def __init__(self, bot, interval):
         if not bot:
             raise SchedulerError("No bot provided.", "__init__")
 
@@ -14,10 +16,7 @@ class TaskScheduler():
 
         self._interval = interval
 
-        if not logger:
-            raise SchedulerError("No logger provided.", "__init__")
-
-        self._logger = logger
+        self._logger = logging.getLogger(__name__)
 
         self._events = []
 
@@ -33,7 +32,7 @@ class TaskScheduler():
 
         event = Task(frequency, task, name, args, init_now, is_coro)
 
-        self._logger.debug("Scheduler: Added task: %s.", name)
+        self._logger.debug("Added task: %s.", name)
 
         self._events.append(event)
 
@@ -43,16 +42,16 @@ class TaskScheduler():
 
         self._running = True
 
-        self._logger.debug("Scheduler: Started main loop.")
+        self._logger.debug("Started main loop.")
 
         # Avoiding race conditions, wee.
         await self._bot.wait_until_ready()
 
         while self._running:
-            self._logger.debug("Scheduler: Executing main loop.")
+            self._logger.debug("Executing main loop.")
 
             for event in self._events:
-                self._logger.debug("Scheduler: Executing task: %s", event.name())
+                self._logger.debug("Executing task: %s", event.name())
 
                 error = False
 
@@ -68,10 +67,11 @@ class TaskScheduler():
                     error = True
 
                 if error is True and event.do_failure() is False:
-                    self._logger.warning("Scheduler: Task %s disabled due to" +
+                    self._logger.warning("Task %s disabled due to" +
                                          " reaching max error count.", event.name())
 
             await asyncio.sleep(self._interval)
+
 
 class Task(object):
     def __init__(self, frequency, event, name, args=None, init_now=False, is_coro=False):

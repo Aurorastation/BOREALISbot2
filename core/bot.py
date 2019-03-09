@@ -1,18 +1,21 @@
 import discord
+import logging
+
 from discord.ext import commands
 
 from .subsystems import ApiMethods
 from .borealis_exceptions import BotError, ApiError, BorealisError
 from .users import UserRepo
 
+
 class Borealis(commands.Bot):
-    def __init__(self, command_prefix, config, api, logger, formatter=None, description=None, pm_help=False, **options):
+    def __init__(self, command_prefix, config, api, formatter=None, description=None, pm_help=False, **options):
         super().__init__(command_prefix, formatter=formatter, description=description, pm_help=pm_help, **options)
 
         self._api = api
         self._config = config
 
-        self._logger = logger
+        self._logger = logging.getLogger(__name__)
 
         self.add_listener(self.process_unsubscribe, "on_message")
 
@@ -41,9 +44,9 @@ class Borealis(commands.Bot):
         elif isinstance(error, commands.BadArgument):
             await ctx.send(f"Bad argument provided. {error.original}")
         else:
-            self._logger.error("Unrecognized error in command. %s", error, extra={"type": type(error)})
+            self._logger.error("Unrecognized error in command. %s - %s", error, type(error))
 
-    async def forward_message(self, msg, channel_str = None, channel_objs = None):
+    async def forward_message(self, msg, channel_str=None, channel_objs=None):
         """
         Forwards a message to a set of channels described by channel_str, or set
         via channel_objs argument.
@@ -51,17 +54,19 @@ class Borealis(commands.Bot):
         if not len(msg):
             return
 
+        if channel_objs is None:
+            channel_objs = []
+
         if channel_str:
             config = self.Config()
             if not config:
                 raise BotError("No Config accessible to bot.", "forward_message")
 
             channel_ids = config.get_channels(channel_str)
-            self._logger.debug("Fetched Channel IDs",extra={"channel_ids":channel_ids})
-            channel_objs = []
+            self._logger.debug("Fetched Channel IDs: %s", channel_ids)
             for cid in channel_ids:
-                channel = self.get_channel(str(cid))
-                self._logger.debug("Fetched Channel from Channel ID",extra={"channel":channel,"channel_id":cid})
+                channel = self.get_channel(cid)
+                self._logger.debug("Fetched Channel %s from Channel ID %s ", channel, cid)
                 if channel is not None:
                     channel_objs.append(channel)
 
@@ -104,7 +109,7 @@ class Borealis(commands.Bot):
 
         return chunks
 
-    async def log_entry(self, action, author = None, subject = None):
+    async def log_entry(self, action, author=None, subject=None):
         """Logs an entry to log channels and into the web API."""
         if not action:
             return
@@ -127,7 +132,7 @@ class Borealis(commands.Bot):
         await self.forward_message(" | ".join(str_list), "channel_log")
 
     async def register_ban(self, user_obj, ban_type, duration, server_obj,
-                           author_obj = None, reason = "You have been banned by an administrator"):
+                           author_obj=None, reason="You have been banned by an administrator"):
         """Bans a user from the Discord server and logs said ban in the API as well."""
         if not user_obj or not duration or not server_obj:
             raise BotError("Missing or invalid arguments.", "register_ban")
@@ -137,21 +142,23 @@ class Borealis(commands.Bot):
 
         auths = self.Config().get_user_auths(str(user_obj.id))
         if len(auths):
-            raise BotError("Unable to ban a staf member.", "register_ban")
+            raise BotError("Unable to ban a staff member.", "register_ban")
 
         if author_obj and author_obj is user_obj:
             raise BotError("You cannot ban yourself.", "register_ban")
 
         data = {
-            "user_id" : user_obj.id,
-            "user_name" : user_obj.name,
-            "server_id" : server_obj.id,
-            "ban_type" : ban_type,
-            "ban_duration" : duration,
-            "admin_id" : author_obj.id,
-            "admin_name" : author_obj.name,
-            "ban_reason" : reason
+            "user_id": user_obj.id,
+            "user_name": user_obj.name,
+            "server_id": server_obj.id,
+            "ban_type": ban_type,
+            "ban_duration": duration,
+            "admin_id": author_obj.id,
+            "admin_name": author_obj.name,
+            "ban_reason": reason
         }
+
+        self._logger.info("Placing Ban: %s", data)
 
         try:
             await server_obj.ban(user_obj, reason=reason)
@@ -181,15 +188,20 @@ class Borealis(commands.Bot):
                     break
         except discord.Forbidden:
             raise BotError("Unable to pull bans.", "register_unban")
-        
+
         if user_obj:
             try:
                 await server_obj.unban(user_obj)
             except discord.Forbidden:
                 raise BotError("Unable to unban.", "register_unban")
 
+        self._logger.info("Removing Ban: %s", {"ban_id": ban_id,
+                                               "user_id": user_obj.id,
+                                               "user_name": user_obj.name,
+                                               "server_id": server_obj.id})
+
         await self.Api().query_web("/discord/ban", ApiMethods.DELETE, {"ban_id": ban_id})
-        await self.log_entry(f"LIFTED BAN #{ban_id}", subject = user_obj)
+        await self.log_entry(f"LIFTED BAN #{ban_id}", subject=user_obj)
 
     async def process_temporary_bans(self):
         """A scheduled coroutine for handling unbans."""
@@ -231,6 +243,6 @@ class Borealis(commands.Bot):
 
                 if user:
                     await user.remove_roles(role, "Automatically unsubscribed.")
-                
+
                 await self.Api().query_web("/subscribe", ApiMethods.DELETE, {"user_id": uid})
                 user = None
