@@ -95,14 +95,16 @@ class API:
                 raise ApiError("No API path specified.", "query_web")
             arg_dict["url"] = self._api_path + uri
             data["auth_key"] = self._api_auth
-
-        if api_dest == "forum":
+        elif api_dest == "forum":
             error_message_key = "errorMessage1"
             if not self._forum_path:
                 self._logger.error("No Forum path specified.")
                 raise ApiError("No Forum path specified.", "query_web")
             arg_dict["url"] = self._forum_path + uri
             arg_dict["params"].update({"key": self._forum_auth})
+        else:
+            self._logger.error("Unimplemented API Dest Specified: {}".format(api_dest))
+            raise ApiError("Unimplemented API Dest Specified: {}".format(api_dest), "query_web")
 
         use_headers = (method is not ApiMethods.GET)
         if use_headers:
