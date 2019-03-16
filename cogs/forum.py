@@ -91,7 +91,7 @@ class ForumCog():
                     events.append(event.get_short_info())
 
         p = FieldPages(ctx, entries=events, per_page=4)
-        p.embed.title = "Events from {} to {}".format(startdate, enddate)
+        p.embed.title = "Events from {} to {}".format(date_start.strftime("%Y-%m-%d"), date_end.strftime("%Y-%m-%d"))
 
         await p.paginate()
 
