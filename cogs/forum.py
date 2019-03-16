@@ -57,7 +57,7 @@ class ForumCog():
         self._logger.debug("Got the following dates to work with: start: %s, end: %s", date_start, date_end)
 
         if date_start > date_end:
-            await ctx.send(f"The start date must be before the end date")
+            await ctx.send("The start date must be before the end date")
             return
 
         api = self.bot.Api()
