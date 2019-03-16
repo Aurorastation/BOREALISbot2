@@ -18,6 +18,7 @@ import asyncio
 import json
 import struct
 import aiohttp
+import logging
 from enum import Enum
 from ..borealis_exceptions import ApiError
 
@@ -37,19 +38,27 @@ class ApiMethods(Enum):
 
 class API:
     """A class for interacting with the ingame and web based APIs."""
+
     def __init__(self, config):
+        self._logger = logging.getLogger(__name__)
         if not config:
             raise ApiError("No config given to constructor.", "__init__")
 
-        self._auth = ""
-
+        self._api_auth = ""
         if config.api["auth"]:
-            self._auth = config.api["auth"]
+            self._api_auth = config.api["auth"]
 
         self._api_path = ""
-
         if config.api["path"]:
             self._api_path = config.api["path"]
+
+        self._forum_auth = ""
+        if config.forum["auth"]:
+            self._forum_auth = config.forum["auth"]
+
+        self._forum_path = ""
+        if config.forum["path"]:
+            self._forum_path = config.forum["path"]
 
         self._server_host = config.server["host"]
         self._server_port = config.server["port"]
@@ -58,33 +67,50 @@ class API:
         self._monitor_host = config.monitor["host"]
         self._monitor_port = config.monitor["port"]
 
-    async def query_web(self, uri, method, data=None, return_keys=None,
-                        enforce_return_keys=False):
+    async def query_web(self, uri, method, data={}, return_keys=None,
+                        enforce_return_keys=False, api_dest="api"):
         """
         A method for querying the home API of the bot.
         """
-        if not self._api_path:
+        valid_targets = ["forum", "api"]
+
+        if api_dest not in valid_targets:
+            self._logger.error("Invalid API Destination specified.")
             raise ApiError("No API path specified.", "query_web")
 
         if not uri:
+            self._logger.error("No URI sent.")
             raise ApiError("No URI sent.", "query_web")
 
         if not isinstance(method, ApiMethods):
+            self._logger.error("Bad method sent.")
             raise ApiError("Bad method sent.", "query_web")
 
-        dest = self._api_path + uri
-        use_headers = (method is not ApiMethods.GET)
-
-        if not data:
-            data = {}
-
-        data["auth_key"] = self._auth
-        arg_dict = {"url": dest}
-
-        if use_headers:
-            arg_dict["data"] = data
+        # Validate a different dataset based on api_dest
+        arg_dict = {"url": None, "data": {}, "params": {}}
+        error_message_key = "error_msg"
+        if api_dest == "api":
+            if not self._api_path:
+                self._logger.error("No API path specified.")
+                raise ApiError("No API path specified.", "query_web")
+            arg_dict["url"] = self._api_path + uri
+            data["auth_key"] = self._api_auth
+        elif api_dest == "forum":
+            error_message_key = "errorMessage1"
+            if not self._forum_path:
+                self._logger.error("No Forum path specified.")
+                raise ApiError("No Forum path specified.", "query_web")
+            arg_dict["url"] = self._forum_path + uri
+            arg_dict["params"].update({"key": self._forum_auth})
         else:
-            arg_dict["params"] = data
+            self._logger.error("Unimplemented API Dest Specified: {}".format(api_dest))
+            raise ApiError("Unimplemented API Dest Specified: {}".format(api_dest), "query_web")
+
+        use_headers = (method is not ApiMethods.GET)
+        if use_headers:
+            arg_dict["data"].update(data)
+        else:
+            arg_dict["params"].update(data)
 
         async with aiohttp.ClientSession() as session:
             method = method.resolve_session_func(session)
@@ -93,18 +119,26 @@ class API:
                 try:
                     data = await resp.json()
                 except Exception as err:
+                    self._logger.error("Exception deserializing JSON from {}: {}.".format(uri, err))
                     raise ApiError("Exception deserializing JSON from {}: {}.".format(uri, err),
                                    "query_web")
 
                 if resp.status is not 200:
+                    self._logger.error("Bad status code given while querying {}: {}. API error: {}"
+                                       .format(arg_dict["url"],
+                                               data[error_message_key] if error_message_key in data else "none.",
+                                               resp.status))
                     raise ApiError("Bad status code given while querying {}: {}. API error: {}"
                                    .format(uri,
-                                           data["error_msg"] if "error_msg" in data else "none.",
+                                           data[error_message_key] if error_message_key in data else "none.",
                                            resp.status), "query_web")
 
-                if data["error"] is True:
+                # TODO: Change the old API to return a statuscode != 200 on error
+                if api_dest == "api" and data["error"] is True:
+                    self._logger.error("API error while querying {}: {}."
+                                       .format(uri, data[error_message_key]))
                     raise ApiError("API error while querying {}: {}."
-                                   .format(uri, data["error_msg"]), "query_web")
+                                   .format(uri, data[error_message_key]), "query_web")
 
                 if not return_keys:
                     return data
@@ -114,6 +148,8 @@ class API:
                     if key in data:
                         dict_out[key] = data[key]
                     elif enforce_return_keys:
+                        self._logger.error("API did not return all of the required keys." +
+                                           " Key missing: {}.".format(key))
                         raise ApiError("API did not return all of the required keys." +
                                        " Key missing: {}.".format(key), "query_web")
 

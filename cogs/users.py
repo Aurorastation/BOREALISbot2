@@ -38,8 +38,7 @@ class UserCog():
     @commands.guild_only()
     @auth.check_auths([AuthPerms.R_ADMIN])
     async def user_add(self, ctx, tgt: discord.Member, key: get_ckey):
-        """
-        Links the specified user to the bot.
+        """Links the specified user to the bot.
         
         The link is to allow for ingame perms to be read by the bot. Some permissions
         may already be applied by virtue of the Discord groups the person is in.
