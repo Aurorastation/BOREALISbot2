@@ -49,7 +49,7 @@ class ForumCog():
         date_end = datetime.datetime.now() + datetime.timedelta(days=7)
         if enddate:
             try:
-                date_end = datetime.datetime.strptime(enddate, '%Y-%m-%d')
+                date_end = datetime.datetime.strptime(enddate, "%Y-%m-%d")
             except:
                 await ctx.send(f"Invalid end date specified. Must be in the format Y-m-d")
                 return
