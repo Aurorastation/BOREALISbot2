@@ -75,7 +75,7 @@ class ForumCog():
         # Print the data
         # If we dont have any events, we can exit immediately
         if not data or data["totalResults"] == 0:
-            await ctx.send(f"No events found.")
+            await ctx.send("No events found.")
             return
 
         # Lets build our event list:
