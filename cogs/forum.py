@@ -37,10 +37,10 @@ class ForumCog():
         Specifying a start and end date is optional
         """
         # Get the start date (otherwise just take today)
-        date_start = datetime.datetime.now()
+        date_start = datetime.datetime.now() - datetime.timedelta(weeks=1)
         if startdate:
             try:
-                date_start = datetime.datetime.strptime(startdate, '%Y-%m-%d') - datetime.timedelta(weeks=1)
+                date_start = datetime.datetime.strptime(startdate, '%Y-%m-%d')
             except:
                 await ctx.send(f"Invalid start date specified. Must be in the format Y-m-d")
                 return
