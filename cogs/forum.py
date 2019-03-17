@@ -40,13 +40,13 @@ class ForumCog():
         date_start = datetime.datetime.now()
         if startdate:
             try:
-                date_start = datetime.datetime.strptime(startdate, '%Y-%m-%d')
+                date_start = datetime.datetime.strptime(startdate, '%Y-%m-%d') - datetime.timedelta(weeks=1)
             except:
                 await ctx.send(f"Invalid start date specified. Must be in the format Y-m-d")
                 return
 
         # Get the end date (otherwise just take one week from now)
-        date_end = datetime.datetime.now() + datetime.timedelta(days=7)
+        date_end = datetime.datetime.now() + datetime.timedelta(weeks=4)
         if enddate:
             try:
                 date_end = datetime.datetime.strptime(enddate, "%Y-%m-%d")
