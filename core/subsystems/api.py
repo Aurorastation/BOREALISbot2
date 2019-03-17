@@ -216,7 +216,7 @@ class API:
             raise ApiError("Invalid JSON returned. Error: {}".format(err), "query_game")
 
         # Check if we have a statuscode set and if that statuscode is 200, otherwise return the error message
-        if "statuscode" in data and "statuscode" != 200:
+        if "statuscode" in data and data["statuscode"] != 200:
             self._logger.error(
                 "Error while executing command on server: {} - {}".format(data["statuscode"], data["response"]))
             raise ApiError(
