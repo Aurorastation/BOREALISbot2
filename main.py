@@ -56,7 +56,7 @@ except ApiError as err:
 
 ## BOT INIT
 bot = Borealis(config.bot["prefix"], config, api,
-               description="Borealis version 3.3.1, here to assist in any SS13 related matters!",
+               description="Borealis version 3.3.2, here to assist in any SS13 related matters!",
                pm_help=True)
 
 try:

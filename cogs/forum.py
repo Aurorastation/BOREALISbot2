@@ -30,7 +30,6 @@ class ForumCog():
         self._logger = logging.getLogger(__name__)
 
     @commands.command(aliases=["elist"])
-    @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_CCIAA])
     async def event_list(self, ctx, startdate=None, enddate=None):
         """List all upcoming events.
 
