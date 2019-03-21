@@ -158,10 +158,13 @@ class API:
     async def query_game(self, query, params=None):
         """Queries the game server for data."""
         if not self._server_host or not self._server_port:
+            self._logger.error("No valid server connection information found in the config.")
             raise ApiError("No valid server connection information found in the config.",
                            "query_game")
 
         message = {"query": query}
+
+        self._logger.debug("Querying gameserver with message: %s and params: %s", message, params)
 
         if self._server_auth:
             message["auth"] = self._server_auth
@@ -192,6 +195,7 @@ class API:
 
             writer.close()
         except Exception as err:
+            self._logger.error("Generic exception while querying server: {}".format(err))
             raise ApiError("Generic exception while querying server: {}".format(err),
                            "query_game")
 
@@ -203,18 +207,31 @@ class API:
         string = data[5:index_end].decode("utf-8")
         string = string.replace("\x00", "")
 
+        self._logger.debug("Got Answer from Gameserver: %s", string)
+
         try:
             data = json.loads(string)
         except json.JSONDecodeError as err:
+            self._logger.error("Invalid JSON returned. Error: {}".format(err))
             raise ApiError("Invalid JSON returned. Error: {}".format(err), "query_game")
+
+        # Check if we have a statuscode set and if that statuscode is 200, otherwise return the error message
+        if "statuscode" in data and data["statuscode"] != 200:
+            self._logger.error(
+                "Error while executing command on server: {} - {}".format(data["statuscode"], data["response"]))
+            raise ApiError(
+                "Error while executing command on server: {} - {}".format(data["statuscode"], data["response"]),
+                "query_game")
 
         return data["data"]
 
     async def query_monitor(self, data):
         if not data:
+            self._logger.error("No data sent.")
             raise ApiError("No data sent.", "query_monitor")
 
         if not self._monitor_host or not self._monitor_port:
+            self._logger.error("No connection data provided.")
             raise ApiError("No connection data provided.", "query_monitor")
 
         try:
@@ -238,4 +255,5 @@ class API:
 
             return data_in
         except Exception as err:
+            self._logger.error("Exception encountered: {}".format(err))
             raise ApiError("Exception encountered: {}".format(err), "query_monitor")

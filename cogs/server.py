@@ -1,4 +1,5 @@
 import discord
+import logging
 from discord.ext import commands
 
 from .utils import auth, AuthPerms, AuthType
@@ -6,9 +7,11 @@ from .utils.paginator import Pages, FieldPages
 from .utils.byond import get_ckey
 from core import ApiError
 
+
 class ServerCog():
     def __init__(self, bot):
         self.bot = bot
+        self._logger = logging.getLogger(__name__)
 
     @commands.command(aliases=["faxlist", "flist"])
     @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_CCIAA])
@@ -40,12 +43,15 @@ class ServerCog():
             return
 
         api = self.bot.Api()
-
         data = await api.query_game("get_fax", params={"faxid": idnr, "faxtype": sent})
 
-        embed = discord.Embed(title=f"{sent} fax #{idnr}")
-        embed.add_field(name="Title:", value=data["title"], inline=False)
-        embed.add_field(name="Content:", value=data["content"][:1024])
+        chunks = self.bot.chunk_message(data["content"])
+        i = 1
+        for message in chunks:
+            embed = discord.Embed(title=f"{sent} fax #{idnr} ({i}/{len(chunks)})")
+            embed.add_field(name="Title:", value=data["title"], inline=False)
+            embed.add_field(name="Content:", value=message)
+            i = i + 1
 
         await ctx.send(embed=embed)
 
@@ -90,8 +96,8 @@ class ServerCog():
         msg = " ".join(args)
         sender = repo.get_ckey(ctx.author.id)
         await api.query_game("send_adminmsg", params={"ckey": ckey,
-                                                        "senderkey": sender,
-                                                        "msg": msg})
+                                                      "senderkey": sender,
+                                                      "msg": msg})
 
         await ctx.send("PM successfully sent!")
 
@@ -102,7 +108,7 @@ class ServerCog():
         api = self.bot.Api()
 
         await api.query_game("restart_round", params={"senderkey":
-                                                     f"{ctx.author.name}/{ctx.author.id}"})
+                                                          f"{ctx.author.name}/{ctx.author.id}"})
 
         await ctx.send("Server successfully restarted.")
 
@@ -166,6 +172,7 @@ class ServerCog():
         p = FieldPages(ctx, entries=entries, per_page=1)
         p.embed.title = "Crew Manifest"
         await p.paginate()
+
 
 def setup(bot):
     bot.add_cog(ServerCog(bot))
