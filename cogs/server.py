@@ -49,7 +49,8 @@ class ServerCog():
         i = 1
         for message in chunks:
             embed = discord.Embed(title=f"{sent} fax #{idnr} ({i}/{len(chunks)})")
-            embed.add_field(name="Title:", value=data["title"], inline=False)
+            if i == 1:
+                embed.add_field(name="Title:", value=data["title"], inline=False)
             embed.add_field(name="Content:", value=message)
             i = i + 1
             await ctx.send(embed=embed)
