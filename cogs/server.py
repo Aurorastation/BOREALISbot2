@@ -45,7 +45,7 @@ class ServerCog():
         api = self.bot.Api()
         data = await api.query_game("get_fax", params={"faxid": idnr, "faxtype": sent})
 
-        chunks = self.bot.chunk_message(data["content"])
+        chunks = self.bot.chunk_message(data["content"],1000)
         i = 1
         for message in chunks:
             embed = discord.Embed(title=f"{sent} fax #{idnr} ({i}/{len(chunks)})")

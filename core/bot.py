@@ -82,7 +82,7 @@ class Borealis(commands.Bot):
             for message in chunks:
                 await channel.send(message)
 
-    def chunk_message(self, message):
+    def chunk_message(self, message, offset=2000):
         """
         Slices a message into an array of strings suitable for Discord. This means
         that all strings within that array are <= 2000 characters in length.
@@ -91,7 +91,6 @@ class Borealis(commands.Bot):
 
         while True:
             size = len(message)
-            offset = 2000
             cut_first = 1
 
             if size < offset:
