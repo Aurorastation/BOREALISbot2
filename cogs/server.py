@@ -52,8 +52,7 @@ class ServerCog():
             embed.add_field(name="Title:", value=data["title"], inline=False)
             embed.add_field(name="Content:", value=message)
             i = i + 1
-
-        await ctx.send(embed=embed)
+            await ctx.send(embed=embed)
 
     @commands.command(aliases=["serverwho", "swho"])
     async def server_who(self, ctx):
