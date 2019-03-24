@@ -45,7 +45,7 @@ class ServerCog():
         api = self.bot.Api()
         data = await api.query_game("get_fax", params={"faxid": idnr, "faxtype": sent})
 
-        chunks = self.bot.chunk_message(data["content"],1000)
+        chunks = self.bot.chunk_message(data["content"], 1000)
         i = 1
         for message in chunks:
             embed = discord.Embed(title=f"{sent} fax #{idnr} ({i}/{len(chunks)})")
@@ -85,21 +85,6 @@ class ServerCog():
         embed.add_field(name="Players:", value=data["players"])
         embed.add_field(name="Admins:", value=data["admins"])
         await ctx.send(embed=embed)
-
-    @commands.command(aliases=["serverpm", "spm"])
-    @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
-    async def server_pm(self, ctx, ckey: get_ckey, *args):
-        """Sends a PM to the specified player on the server."""
-        api = self.bot.Api()
-        repo = self.bot.UserRepo()
-
-        msg = " ".join(args)
-        sender = repo.get_ckey(ctx.author.id)
-        await api.query_game("send_adminmsg", params={"ckey": ckey,
-                                                      "senderkey": sender,
-                                                      "msg": msg})
-
-        await ctx.send("PM successfully sent!")
 
     @commands.command(aliases=["serverrestart", "srestart"])
     @auth.check_auths([AuthPerms.R_ADMIN])
@@ -172,6 +157,82 @@ class ServerCog():
         p = FieldPages(ctx, entries=entries, per_page=1)
         p.embed.title = "Crew Manifest"
         await p.paginate()
+
+    @commands.command(aliases=["serverpm", "spm"])
+    @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
+    async def server_pm(self, ctx, ckey: get_ckey, *args):
+        """Sends a PM to the specified player on the server."""
+        api = self.bot.Api()
+        repo = self.bot.UserRepo()
+
+        msg = " ".join(args)
+        sender = repo.get_ckey(ctx.author.id)
+        await api.query_game("send_adminmsg", params={"ckey": ckey,
+                                                      "senderkey": sender,
+                                                      "msg": msg})
+
+        await ctx.send("PM successfully sent!")
+
+    @commands.command(aliases=["stinfo"])
+    @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
+    async def server_tickets_info(self, ctx):
+        """Lists how many tickets are open, assigned, unassigned and closed on the server"""
+        api = self.bot.Api()
+
+        data = await api.query_game("get_ticketsinfo")
+
+        embed = discord.Embed(title="Ticket Infos")
+        embed.add_field(name="Total:", value=data["total"])
+        embed.add_field(name="Assigned:", value=data["assigned"])
+        embed.add_field(name="Unassigned:", value=data["unassigned"])
+        embed.add_field(name="Closed:", value=data["closed"])
+        await ctx.send(embed=embed)
+
+    @commands.command(aliases=["stlist"])
+    @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
+    async def server_tickets_list(self, ctx):
+        """Sends a PM to the specified player on the server."""
+        api = self.bot.Api()
+
+        data = await api.query_game("get_ticketslist")
+
+        tickets = []
+        for ticket_id in data:
+            ticket = data[ticket_id]
+
+            if not ticket:
+                continue
+
+            tickets.append(("Ticket#" + ticket_id,
+                            "Owner: {}\n"
+                            "Status: {}\n"
+                            "Closed By: {}\n"
+                            "Opened Time: {}\n"
+                            "Assigned Admins: {}\n"
+                            "Message Count: {}".format(
+                                ticket["owner"],
+                                ticket["status"],
+                                ticket["closed_by"],
+                                ticket["opened_time"],
+                                ticket["assigned_admins"],
+                                ticket["message_count"]
+                            )))
+        p = FieldPages(ctx, entries=tickets, per_page=1)
+        p.embed.title = "Ticket List"
+        await p.paginate()
+
+    @commands.command(aliases=["stclose"])
+    @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
+    async def server_ticket_close(self, ctx, id):
+        """Sends a PM to the specified player on the server."""
+        api = self.bot.Api()
+        repo = self.bot.UserRepo()
+
+        sender = repo.get_ckey(ctx.author.id)
+        await api.query_game("tickets_close", params={"id": id,
+                                                      "admin": sender})
+
+        await ctx.send("Ticket successfully closed!")
 
 
 def setup(bot):
