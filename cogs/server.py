@@ -176,7 +176,7 @@ class ServerCog():
     @commands.command(aliases=["stinfo"])
     @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
     async def server_tickets_info(self, ctx):
-        """Lists how many tickets are open, assigned, unassigned and closed on the server"""
+        """Lists how many tickets are open, assigned, unassigned and closed on the server."""
         api = self.bot.Api()
 
         data = await api.query_game("get_ticketsinfo")
@@ -190,11 +190,18 @@ class ServerCog():
 
     @commands.command(aliases=["stlist"])
     @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
-    async def server_tickets_list(self, ctx):
-        """Sends a PM to the specified player on the server."""
+    async def server_tickets_list(self, ctx, type="open"):
+        """Provides general information about all the tickets on the server
+
+        Can be used with the parameter all or open. Defaults to open.
+        """
         api = self.bot.Api()
 
-        data = await api.query_game("get_ticketslist")
+        only_open = 0
+        if type == "open":
+            only_open = 1
+
+        data = await api.query_game("get_ticketslist", params={"only_open": only_open})
 
         tickets = []
         for ticket_id in data:
@@ -202,6 +209,13 @@ class ServerCog():
 
             if not ticket:
                 continue
+
+            if ticket["status"] == 0:
+                ticket["status"] = "closed"
+            elif ticket["status"] == 1:
+                ticket["status"] = "open"
+            elif ticket["status"] == 2:
+                ticket["status"] = "assigned"
 
             tickets.append(("Ticket#" + ticket_id,
                             "Owner: {}\n"
@@ -223,8 +237,8 @@ class ServerCog():
 
     @commands.command(aliases=["stclose"])
     @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
-    async def server_ticket_close(self, ctx, id):
-        """Sends a PM to the specified player on the server."""
+    async def server_ticket_close(self, ctx, id: int):
+        """Closes a specified ticket."""
         api = self.bot.Api()
         repo = self.bot.UserRepo()
 
