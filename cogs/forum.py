@@ -15,6 +15,7 @@
 #    along with this program.  If not, see http://www.gnu.org/licenses/.
 import datetime
 import logging
+import discord
 
 from discord.ext import commands
 
@@ -60,12 +61,21 @@ class ForumCog():
             return
 
         api = self.bot.Api()
+        config = self.bot.Config()
+
+        # Build the event calendar list
+        calendars = []
+        if config.forum["public_event_calendar"] > 0:
+            calendars.append(str(config.forum["public_event_calendar"]))
+        if config.forum["private_event_calendar"] > 0:
+            calendars.append(str(config.forum["private_event_calendar"]))
 
         # Query the forum
         query_params = {
             "hidden": 0,
             "rangeStart": date_start.strftime("%Y-%m-%d"),
-            "rangeEnd": date_end.strftime("%Y-%m-%d")
+            "rangeEnd": date_end.strftime("%Y-%m-%d"),
+            "calendars": ",".join(calendars)
         }
 
         data = await api.query_web("/calendar/events", ApiMethods.GET, query_params, api_dest="forum")
@@ -85,7 +95,7 @@ class ForumCog():
             if event.valid_game_event:
                 # Check if the event is in the past or the future
                 if event.start < datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=1):
-                    events.append(event.get_full_info())
+                    events.append(event.get_short_info(False))
                 else:
                     events.append(event.get_short_info())
 
@@ -94,6 +104,54 @@ class ForumCog():
 
         await p.paginate()
 
+    @commands.command(aliases=["einfo"])
+    async def event_info(self, ctx, eventid: int):
+        """Get Information about a specific event identified by the event id."""
+        api = self.bot.Api()
+
+        self._logger.debug("Validating Event ID")
+        if eventid <= 0:
+            await ctx.send("Invalid Value for Event ID")
+            return
+
+        # Query the forum
+        self._logger.debug("Querying Forum")
+        data = await api.query_web("/calendar/events/"+str(eventid), ApiMethods.GET, api_dest="forum")
+        self._logger.debug("Got Data from forum: %s", data)
+
+        # Print the data
+
+        # Lets parse our event
+        self._logger.debug("Parsing Event Data")
+        event = CalendarEvent(data)
+        if not event.valid_game_event:
+            await ctx.send("Invalid Event")
+            return
+        
+        # Check if event is published
+        config = self.bot.Config()
+        self._logger.debug("Checking if event is published")
+        if event.calendar.id != config.forum["public_event_calendar"]:
+            await ctx.send("This event has not been published")
+            return
+
+        # Check if the event is in the past or the future
+        self._logger.debug("Checking time")
+        if event.start < datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=1):
+            title, body = event.get_full_info()
+        else:
+            title, body = event.get_short_info()
+
+        self._logger.debug("Chunking Data: {}".format(body))
+        chunks = self.bot.chunk_message(body, 1000)
+        i = 1
+        for message in chunks:
+            embed = discord.Embed(title=f"{title} ({i}/{len(chunks)})")
+            if i == 1:
+                embed.add_field(name="Title:", value=title, inline=False)
+            embed.add_field(name="Event-Details:", value=message)
+            i = i + 1
+            await ctx.send(embed=embed)
 
 def setup(bot):
     bot.add_cog(ForumCog(bot))

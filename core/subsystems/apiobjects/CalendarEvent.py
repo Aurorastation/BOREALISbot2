@@ -15,7 +15,7 @@
 #    along with this program.  If not, see http://www.gnu.org/licenses/.
 import re
 from dateutil import parser as dateparser
-
+from .Calendar import Calendar
 
 class CalendarEvent:
     id = None
@@ -29,6 +29,8 @@ class CalendarEvent:
     locked = None
     hidden = None
     featured = None
+    url = None
+    calendar = None
     valid_game_event = False
 
     def __init__(self, eventdata):
@@ -43,6 +45,10 @@ class CalendarEvent:
         self.locked = eventdata["locked"]
         self.hidden = eventdata["hidden"]
         self.featured = eventdata["featured"]
+        self.url = eventdata["url"]
+
+        # Create the Calendar Object
+        self.calendar = Calendar(eventdata["calendar"])
 
         # Parse the eventbody
         # Remove div, strong span elements
@@ -73,16 +79,26 @@ class CalendarEvent:
             self.valid_game_event = True
 
     # Returns basic infos about the event
-    def get_short_info(self):
+    def get_short_info(self,hide_title=True):
         if not self.valid_game_event:
             return None
-        eventtitle = "{} {} Event ({})".format(
-            self.description_fields["Event Scale"].capitalize(),
-            self.description_fields["Canon"].capitalize(),
-            self.description_fields["Event Type"]
-        )
         eventbody = self.get_date_string() + "\n"
-
+        if hide_title:
+            eventtitle = "**{} {} Event ({})**".format(
+                self.description_fields["Event Scale"].capitalize(),
+                self.description_fields["Canon"].capitalize(),
+                self.description_fields["Event Type"]
+            )
+            eventbody += f"**Event ID:** {self.id}\n"
+        else:
+            eventtitle = "**{}**".format(self.title)
+            eventbody += "**Details:** [{} {} Event ({})]({})\n".format(
+                self.description_fields["Event Scale"].capitalize(),
+                self.description_fields["Canon"].capitalize(),
+                self.description_fields["Event Type"],
+                self.url
+            )
+            eventbody += f"**Event ID:** {self.id}\n"
         return eventtitle, eventbody
 
     # returns full infos about the event

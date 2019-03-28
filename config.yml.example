@@ -22,6 +22,8 @@ api:
 forum:
   auth: ""
   path: ""
+  public_event_calendar: 1
+  private_event_calendar: 2
 
 server:
   host: ""
