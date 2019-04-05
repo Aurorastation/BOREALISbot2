@@ -17,6 +17,7 @@ import re
 from dateutil import parser as dateparser
 from .Calendar import Calendar
 
+
 class CalendarEvent:
     id = None
     title = None
@@ -79,7 +80,7 @@ class CalendarEvent:
             self.valid_game_event = True
 
     # Returns basic infos about the event
-    def get_short_info(self,hide_title=True):
+    def get_short_info(self, hide_title=True):
         if not self.valid_game_event:
             return None
         eventbody = self.get_date_string() + "\n"

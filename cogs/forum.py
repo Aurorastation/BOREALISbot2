@@ -95,7 +95,9 @@ class ForumCog():
             if event.valid_game_event:
                 # Check if the event is in the past or the future
                 if event.start < datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=1):
-                    events.append(event.get_short_info(False))
+                    events.append(event.get_short_info(False))  # If the event happened more than 24h ago -> More Infos
+                elif event.calendar.id == config.forum["public_event_calendar"]:
+                    events.append(event.get_short_info(False))  # If the event is in the public calendar -> More Infos
                 else:
                     events.append(event.get_short_info())
 
@@ -116,7 +118,7 @@ class ForumCog():
 
         # Query the forum
         self._logger.debug("Querying Forum")
-        data = await api.query_web("/calendar/events/"+str(eventid), ApiMethods.GET, api_dest="forum")
+        data = await api.query_web("/calendar/events/" + str(eventid), ApiMethods.GET, api_dest="forum")
         self._logger.debug("Got Data from forum: %s", data)
 
         # Print the data
@@ -127,7 +129,7 @@ class ForumCog():
         if not event.valid_game_event:
             await ctx.send("Invalid Event")
             return
-        
+
         # Check if event is published
         config = self.bot.Config()
         self._logger.debug("Checking if event is published")
@@ -135,12 +137,8 @@ class ForumCog():
             await ctx.send("This event has not been published")
             return
 
-        # Check if the event is in the past or the future
-        self._logger.debug("Checking time")
-        if event.start < datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=1):
-            title, body = event.get_full_info()
-        else:
-            title, body = event.get_short_info()
+        # Get the Full Event Details (If its in the public calendar, then we can print the full details
+        title, body = event.get_full_info()
 
         self._logger.debug("Chunking Data: {}".format(body))
         chunks = self.bot.chunk_message(body, 1000)
@@ -152,6 +150,7 @@ class ForumCog():
             embed.add_field(name="Event-Details:", value=message)
             i = i + 1
             await ctx.send(embed=embed)
+
 
 def setup(bot):
     bot.add_cog(ForumCog(bot))
