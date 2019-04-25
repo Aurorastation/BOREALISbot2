@@ -84,6 +84,7 @@ class ServerCog():
         embed.add_field(name="Mode:", value=data["mode"])
         embed.add_field(name="Players:", value=data["players"])
         embed.add_field(name="Staff:", value=data["staff"])
+        embed.add_field(name="Admins:", value=data["admins"])
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["serverrestart", "srestart"])
