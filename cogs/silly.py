@@ -7,11 +7,19 @@ from discord.ext import commands
 
 from .utils import auth, AuthPerms, AuthType
 
+safe_dict = dict()
+
 safe_list = ['math','acos', 'asin', 'atan', 'atan2', 'ceil', 'cos', 'cosh', 'degrees',
             'e', 'exp', 'fabs', 'floor', 'fmod', 'frexp', 'hypot', 'ldexp', 'log', 'abs'
             'log10', 'modf', 'pi', 'radians', 'sin', 'sinh', 'sqrt', 'tan', 'tanh', 'round']
-
-safe_dict = dict()
+safe_dict["+"] = operator.add
+safe_dict["-"] = operator.sub
+safe_dict["*"] = operator.mul
+safe_dict["/"] = operator.truediv
+safe_dict["^"] = operator.pow
+for k in safe_list:
+    safe_dict[k] = locals().get(k)
+del safe_list
 
 class SillyCog:
     def __init__(self, bot):
@@ -191,16 +199,5 @@ class SillyCog:
         except Exception:
             await ctx.send(f"Unable to understand math expression! :angry:")
 
-def initialize():
-    safe_dict["+"] = operator.add
-    safe_dict["-"] = operator.sub
-    safe_dict["*"] = operator.mul
-    safe_dict["/"] = operator.truediv
-    safe_dict["^"] = operator.pow
-    for k in safe_list:
-        safe_dict[k] = locals().get(k)
-    del safe_list
-
 def setup(bot):
-    initialize()
     bot.add_cog(SillyCog(bot))
