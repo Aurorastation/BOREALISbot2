@@ -2,6 +2,7 @@ import random
 import aiohttp
 import discord
 from math import *
+import re
 import operator
 from discord.ext import commands
 
@@ -194,8 +195,7 @@ class SillyCog:
     @commands.command()
     @commands.cooldown(1, 5, commands.BucketType.channel)
     async def math(self, ctx, *, inp: str):
-        """Does math. Uses python syntax with math library. Use like \"math 5 + 3\" or \"math [function](5)\" List of all functions:\n{}
-        """.format(safe_dict.keys())
+        """Does math. Uses python syntax with math library. Use like \"math 5 + 3\" or \"math [function](5)\". To get list of all functions use math_functions command."""
         if inp == "":
             await ctx.send(f"You need to give some numbers and functions to me")
             return
@@ -204,6 +204,18 @@ class SillyCog:
             await ctx.send(answer)
         except Exception:
             await ctx.send(f"Unable to understand math expression! :angry:")
+
+    @commands.command()
+    @commands.cooldown(1, 1, commands.BucketType.channel)
+    async def math_functions(self, ctx):
+        """List of all math functions for math command. Call this command to see the list."""
+        wrong_l = set(["+", "-", "*", "/", "^"])
+        func = set(safe_dict.keys()) - wrong_l
+        rand_function = random.choice(list(func))
+        clean = str(func).strip(['[')
+        clean = clean.strip([']')
+        clean = clean.strip(['\'')
+        await ctx.send("```List of all math functions:\n{}\n\nUse them like {}(number or function)\nEach function needs brackets\nOr you can use operators like (2 + 5 / 4) ^ 2```".format(clean, rand_function))
 
 def setup(bot):
     bot.add_cog(SillyCog(bot))
