@@ -212,9 +212,7 @@ class SillyCog:
         wrong_l = set(["+", "-", "*", "/", "^"])
         func = set(safe_dict.keys()) - wrong_l
         rand_function = random.choice(list(func))
-        clean = str(func).strip(['[')
-        clean = clean.strip([']')
-        clean = clean.strip(['\'')
+        clean = re.sub('[\'{}]', '', str(func))
         await ctx.send("```List of all math functions:\n{}\n\nUse them like {}(number or function)\nEach function needs brackets\nOr you can use operators like (2 + 5 / 4) ^ 2```".format(clean, rand_function))
 
 def setup(bot):
