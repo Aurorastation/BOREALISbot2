@@ -1,9 +1,17 @@
 import random
 import aiohttp
 import discord
+from math import *
+import operator
 from discord.ext import commands
 
 from .utils import auth, AuthPerms, AuthType
+
+safe_list = ['math','acos', 'asin', 'atan', 'atan2', 'ceil', 'cos', 'cosh', 'degrees',
+            'e', 'exp', 'fabs', 'floor', 'fmod', 'frexp', 'hypot', 'ldexp', 'log', 'abs'
+            'log10', 'modf', 'pi', 'radians', 'sin', 'sinh', 'sqrt', 'tan', 'tanh', 'round']
+
+safe_dict = dict()
 
 class SillyCog:
     def __init__(self, bot):
@@ -144,6 +152,8 @@ class SillyCog:
         if meme.lower() not in ["mod", "dev", "ccia"]:
             if meme.lower() == "nanako":
                 await ctx.send(f":mouse: :dagger:")
+            elif meme.lower() == "skull":
+                await ctx.send(f":skull: :dagger:")
             else:
                 await ctx.send(f":angry: :dagger:")
             return
@@ -159,6 +169,38 @@ class SillyCog:
                         await ctx.send(f"https://devmemes.aurorastation.org/{reply}")
                     except Exception:
                         await ctx.send("I did something wrong and was unable to get memes!")
+    
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.channel)
+    async def pick(self, ctx, *, inp: str):
+        """random generator!"""
+        choices = inp.split(",")
+        if len(choices) == 0:
+            await ctx.send("Give me choices to pick from!")
+            return
+        lucky = random.choice(choices)
+        await ctx.send(choices)
+
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.channel)
+    async def math(self, ctx, *, inp: str):
+        """math functions!"""
+        try:
+            answer = eval(inp,{"__builtins__":None},{safe_dict})
+            await ctx.send(answer)
+        except Exception:
+            await ctx.send(f"Unable to understand math expression! :angry:")
+
+def initialize():
+    safe_dict["+"] = operator.add
+    safe_dict["-"] = operator.sub
+    safe_dict["*"] = operator.mul
+    safe_dict["/"] = operator.truediv
+    safe_dict["^"] = operator.pow
+    for k in safe_list:
+        safe_dict[k] = locals().get(k)
+    del safe_list
 
 def setup(bot):
+    initialize()
     bot.add_cog(SillyCog(bot))
