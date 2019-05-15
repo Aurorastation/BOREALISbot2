@@ -183,7 +183,7 @@ class SillyCog:
     @commands.command()
     @commands.cooldown(1, 5, commands.BucketType.channel)
     async def pick(self, ctx, *, inp: str):
-        """random generator!"""
+        """Makes a random choice. Use like \"pick choice1, choice2, ..., choice_n\""""
         choices = inp.split(",")
         if len(choices) == 0:
             await ctx.send("Give me choices to pick from!")
@@ -194,7 +194,11 @@ class SillyCog:
     @commands.command()
     @commands.cooldown(1, 5, commands.BucketType.channel)
     async def math(self, ctx, *, inp: str):
-        """math functions!"""
+        """Does math. Uses python syntax with math library. Use like \"math 5 + 3\" or \"math [function](5)\" List of all functions:\n{}
+        """.format(safe_dict.keys())
+        if inp == "":
+            await ctx.send(f"You need to give some numbers and functions to me")
+            return
         try:
             answer = eval(inp, {"__builtins__":None}, safe_dict)
             await ctx.send(answer)
