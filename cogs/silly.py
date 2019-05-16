@@ -165,13 +165,19 @@ class SillyCog:
     @commands.command()
     @commands.cooldown(1, 5, commands.BucketType.channel)
     async def pick(self, ctx, *, inp: str):
-        """Makes a random choice. Use like \"pick choice1, choice2, ..., choice_n\""""
+        """Makes a random choice. Use like pick choice1, choice2, ..., choice_n"""
         choices = inp.split(",")
         if len(choices) == 0:
             await ctx.send("Give me choices to pick from!")
             return
         lucky = random.choice(choices)
         await ctx.send(lucky)
+ 
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.channel)
+    async def kek(self, ctx):
+        """Kek""""
+        await ctx.send(f"kek")
 
 
 def setup(bot):
