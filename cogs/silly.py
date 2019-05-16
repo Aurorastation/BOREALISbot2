@@ -1,28 +1,9 @@
 import random
 import aiohttp
 import discord
-from math import *
-import re
-import operator
 from discord.ext import commands
 
 from .utils import auth, AuthPerms, AuthType
-
-safe_dict = dict()
-
-safe_list = ['math','acos', 'asin', 'atan', 'atan2', 'ceil', 'cos', 'cosh', 'degrees',
-            'e', 'exp', 'fabs', 'floor', 'fmod', 'frexp', 'hypot', 'ldexp', 'log',
-            'log10', 'modf', 'pi', 'radians', 'sin', 'sinh', 'sqrt', 'tan', 'tanh']
-safe_dict["+"] = operator.add
-safe_dict["-"] = operator.sub
-safe_dict["*"] = operator.mul
-safe_dict["/"] = operator.truediv
-safe_dict["^"] = operator.pow
-safe_dict["round"] = round
-safe_dict["abs"] = abs
-for k in safe_list:
-    safe_dict[k] = locals().get(k)
-del safe_list
 
 class SillyCog:
     def __init__(self, bot):
@@ -192,28 +173,6 @@ class SillyCog:
         lucky = random.choice(choices)
         await ctx.send(lucky)
 
-    @commands.command()
-    @commands.cooldown(1, 5, commands.BucketType.channel)
-    async def math(self, ctx, *, inp: str):
-        """Does math. Uses python syntax with math library. Use like \"math 5 + 3\" or \"math [function](5)\". To get list of all functions use math_functions command."""
-        if inp == "":
-            await ctx.send(f"You need to give some numbers and functions to me")
-            return
-        try:
-            answer = eval(inp, {"__builtins__":None}, safe_dict)
-            await ctx.send(answer)
-        except Exception:
-            await ctx.send(f"Unable to understand math expression! :angry:")
-
-    @commands.command()
-    @commands.cooldown(1, 1, commands.BucketType.channel)
-    async def math_functions(self, ctx):
-        """List of all math functions for math command. Call this command to see the list."""
-        wrong_l = set(["+", "-", "*", "/", "^"])
-        func = set(safe_dict.keys()) - wrong_l
-        rand_function = random.choice(list(func))
-        clean = re.sub('[\'{}]', '', str(func))
-        await ctx.send("```List of all math functions:\n{}\n\nUse them like {}(number or function)\nEach function needs brackets\nOr you can use operators like (2 + 5 / 4) ^ 2```".format(clean, rand_function))
 
 def setup(bot):
     bot.add_cog(SillyCog(bot))
