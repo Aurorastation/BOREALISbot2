@@ -12,4 +12,5 @@ PyYAML==3.12
 smmap2==2.0.3
 websockets==4.0.1
 yarl==1.1.1
+pyparser
 python-dateutil
