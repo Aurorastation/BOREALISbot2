@@ -16,7 +16,7 @@ class MathCog:
     async def math(self, ctx, *, inp: str):
         """Does math. Uses python syntax with math library. Use like math 5 + 3 * 2 or math [function](5). To get list of all functions use math_functions command."""
         if inp == "":
-            await ctx.send(f"You need to give some numbers and functions to me")
+            await ctx.send("You need to give some numbers and functions to me")
             return
         try:
             nsp = NumericStringParser()
