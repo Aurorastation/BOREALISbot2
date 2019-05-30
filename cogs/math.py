@@ -41,12 +41,12 @@ class NumericStringParser(object):
 
     '''
 
-    def pushFirst(self, strg, loc, toks):
-        self.exprStack.append(toks[0])
+    def push_first(self, strg, loc, toks):
+        self.expr_tack.append(toks[0])
 
-    def pushUMinus(self, strg, loc, toks):
+    def push_u_minus(self, strg, loc, toks):
         if toks and toks[0] == '-':
-            self.exprStack.append('unary -')
+            self.expr_tack.append('unary -')
 
     def __init__(self):
         """
@@ -119,29 +119,29 @@ class NumericStringParser(object):
                    "round": round,
                    "sgn": lambda a: abs(a) > epsilon and cmp(a, 0) or 0}
 
-    def evaluateStack(self, s):
+    def evaluate_stack(self, s):
         op = s.pop()
         if op == 'unary -':
-            return -self.evaluateStack(s)
+            return -self.evaluate_stack(s)
         if op in "+-*/^%":
-            op2 = self.evaluateStack(s)
-            op1 = self.evaluateStack(s)
+            op2 = self.evaluate_stack(s)
+            op1 = self.evaluate_stack(s)
             return self.opn[op](op1, op2)
         elif op == "PI":
             return math.pi  # 3.1415926535
         elif op == "E":
             return math.e  # 2.718281828
         elif op in self.fn:
-            return self.fn[op](self.evaluateStack(s))
+            return self.fn[op](self.evaluate_stack(s))
         elif op[0].isalpha():
             return 0
         else:
             return float(op)
 
-    def eval(self, num_string, parseAll=True):
-        self.exprStack = []
-        results = self.bnf.parseString(num_string, parseAll)
-        val = self.evaluateStack(self.exprStack[:])
+    def eval(self, num_string, parse_all=True):
+        self.expr_stack = []
+        results = self.bnf.parseString(num_string, parse_all)
+        val = self.evaluate_stack(self.expr_stack[:])
         return val
 
 def setup(bot):
