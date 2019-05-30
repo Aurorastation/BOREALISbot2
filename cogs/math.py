@@ -78,20 +78,20 @@ class NumericStringParser(object):
         pi = CaselessLiteral("PI")
         expr = Forward()
         atom = ((Optional(oneOf("- +")) +
-                 (ident + lpar + expr + rpar | pi | e | fnumber).setParseAction(self.pushFirst))
+                 (ident + lpar + expr + rpar | pi | e | fnumber).setParseAction(self.push_first))
                 | Optional(oneOf("- +")) + Group(lpar + expr + rpar)
-                ).setParseAction(self.pushUMinus)
+                ).setParseAction(self.push_u_minus)
         # by defining exponentiation as "atom [ ^ factor ]..." instead of
         # "atom [ ^ atom ]...", we get right-to-left exponents, instead of left-to-right
         # that is, 2^3^2 = 2^(3^2), not (2^3)^2.
         factor = Forward()
         factor << atom + \
-            ZeroOrMore((expop + factor).setParseAction(self.pushFirst))
+            ZeroOrMore((expop + factor).setParseAction(self.push_first))
         term = factor + \
-            ZeroOrMore((multop + factor).setParseAction(self.pushFirst))
+            ZeroOrMore((multop + factor).setParseAction(self.push_first))
         expr << term + \
-            ZeroOrMore((addop + term).setParseAction(self.pushFirst))
-        # addop_term = ( addop + term ).setParseAction( self.pushFirst )
+            ZeroOrMore((addop + term).setParseAction(self.push_first))
+        # addop_term = ( addop + term ).setParseAction( self.push_first )
         # general_term = term + ZeroOrMore( addop_term ) | OneOrMore( addop_term)
         # expr <<  general_term
         self.bnf = expr

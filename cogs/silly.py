@@ -176,7 +176,7 @@ class SillyCog:
     @commands.command()
     @commands.cooldown(1, 5, commands.BucketType.channel)
     async def kek(self, ctx):
-        """Kek""""
+        """Kek"""
         await ctx.send(f"kek")
 
 
