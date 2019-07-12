@@ -10,7 +10,7 @@ PyGithub==1.37
 PyJWT==1.6.1
 PyYAML==3.12
 smmap2==2.0.3
-websockets==4.0.1
+websockets==5.0
 yarl==1.1.1
 pyparsing
 python-dateutil

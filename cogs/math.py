@@ -42,11 +42,11 @@ class NumericStringParser(object):
     '''
 
     def push_first(self, strg, loc, toks):
-        self.expr_tack.append(toks[0])
+        self.expr_stack.append(toks[0])
 
     def push_u_minus(self, strg, loc, toks):
         if toks and toks[0] == '-':
-            self.expr_tack.append('unary -')
+            self.expr_stack.append('unary -')
 
     def __init__(self):
         """
