@@ -144,6 +144,8 @@ class SillyCog:
         if meme.lower() not in ["mod", "dev", "ccia"]:
             if meme.lower() == "nanako":
                 await ctx.send(f":mouse: :dagger:")
+            elif meme.lower() == "skull":
+                await ctx.send(f":skull: :dagger:")
             else:
                 await ctx.send(f":angry: :dagger:")
             return
@@ -159,6 +161,24 @@ class SillyCog:
                         await ctx.send(f"https://devmemes.aurorastation.org/{reply}")
                     except Exception:
                         await ctx.send("I did something wrong and was unable to get memes!")
+    
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.channel)
+    async def pick(self, ctx, *, inp: str):
+        """Makes a random choice. Use like pick choice1, choice2, ..., choice_n"""
+        choices = inp.split(",")
+        if len(choices) == 0:
+            await ctx.send("Give me choices to pick from!")
+            return
+        lucky = random.choice(choices)
+        await ctx.send(lucky)
+ 
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.channel)
+    async def kek(self, ctx):
+        """Kek"""
+        await ctx.send(f"kek")
+
 
 def setup(bot):
     bot.add_cog(SillyCog(bot))

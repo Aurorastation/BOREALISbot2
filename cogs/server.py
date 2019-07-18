@@ -99,7 +99,6 @@ class ServerCog():
         await ctx.send("Server successfully restarted.")
 
     @commands.command(aliases=["serverstaff", "sstaff"])
-    @auth.check_auths([AuthPerms.R_ANYSTAFF])
     async def server_staff(self, ctx):
         """Displays all staff currently on the server."""
         api = self.bot.Api()
