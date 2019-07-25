@@ -167,7 +167,7 @@ class SillyCog:
     async def pick(self, ctx, *, inp: str):
         """Makes a random choice. Use like pick choice1, choice2, ..., choice_n"""
         if len(ctx.message.mentions):
-            await ctx.send(f"Sorry, I do not like to ping people. :dagger:")
+            await ctx.send("Sorry, I do not like to ping people. :dagger:")
             return
 
         choices = inp.split(",")
