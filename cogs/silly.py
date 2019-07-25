@@ -166,8 +166,12 @@ class SillyCog:
     @commands.cooldown(1, 5, commands.BucketType.channel)
     async def pick(self, ctx, *, inp: str):
         """Makes a random choice. Use like pick choice1, choice2, ..., choice_n"""
+        if len(ctx.message.mentions):
+            await ctx.send(f"Sorry, I do not like to ping people. :dagger:")
+            return
+
         choices = inp.split(",")
-        if len(choices) == 0:
+        if len(choices) < 2:
             await ctx.send("Give me choices to pick from!")
             return
         lucky = random.choice(choices)
