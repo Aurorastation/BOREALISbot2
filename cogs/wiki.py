@@ -6,7 +6,7 @@ from .utils import auth, AuthPerms, AuthType
 from .utils.paginator import FieldPages
 from core import BotError
 
-class WikiCog:
+class WikiCog(commands.Cog):
     """
     A set of commands for developers and wiki developers to control wiki related
     issue tagging with.

@@ -6,7 +6,7 @@ from core import ApiMethods, ApiError, BotError
 from core.auths import *
 from .utils import auth, AuthPerms
 
-class DiscordCog():
+class DiscordCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self._logger = logging.getLogger(__name__)

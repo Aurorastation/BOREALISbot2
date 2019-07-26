@@ -4,7 +4,7 @@ from discord.ext import commands
 from core import ApiError, ConfigError
 from .utils import auth, AuthPerms
 
-class ChannelCog:
+class ChannelCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 

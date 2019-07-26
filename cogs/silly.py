@@ -5,7 +5,7 @@ from discord.ext import commands
 
 from .utils import auth, AuthPerms, AuthType
 
-class SillyCog:
+class SillyCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 

@@ -8,7 +8,7 @@ from .utils.byond import get_ckey
 from core import ApiError
 
 
-class ServerCog():
+class ServerCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self._logger = logging.getLogger(__name__)

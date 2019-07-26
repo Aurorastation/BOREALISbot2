@@ -6,7 +6,7 @@ from discord.ext import commands
 
 from .utils.paginator import FieldPages
 
-class GitCog:
+class GitCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 

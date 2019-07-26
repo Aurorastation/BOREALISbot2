@@ -25,7 +25,7 @@ from .utils import auth, AuthPerms
 from .utils.paginator import FieldPages
 
 
-class ForumCog():
+class ForumCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self._logger = logging.getLogger(__name__)
