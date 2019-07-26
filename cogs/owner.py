@@ -1,12 +1,20 @@
 from discord.ext import commands
 
-class OwnerCog:
+class OwnerCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.command(name="amowner", hidden=True)
+    async def owner_check(self, ctx):
+        answer = await self.bot.is_owner(ctx.author)
+        if answer:
+            await ctx.send("Owner recognized.")
+        else:
+            await ctx.send("You're not the boss of me!")
+
     @commands.command(name="load", hidden=True)
     @commands.is_owner()
-    async def cog_load(self, ctx, *, cog: str):
+    async def owner_cog_load(self, ctx, *, cog: str):
         try:
             self.bot.load_extension(cog)
         except Exception as err:
@@ -16,7 +24,7 @@ class OwnerCog:
 
     @commands.command(name="unload", hidden=True)
     @commands.is_owner()
-    async def cog_unload(self, ctx, *, cog: str):
+    async def owner_cog_unload(self, ctx, *, cog: str):
         try:
             self.bot.unload_extension(cog)
         except Exception as err:
@@ -26,7 +34,7 @@ class OwnerCog:
     
     @commands.command(name="reload", hidden=True)
     @commands.is_owner()
-    async def cog_reload(self, ctx, *, cog: str):
+    async def owner_cog_reload(self, ctx, *, cog: str):
         try:
             self.bot.unload_extension(cog)
             self.bot.load_extension(cog)
@@ -37,7 +45,7 @@ class OwnerCog:
 
     @commands.command(name="reload_all", hidden=True)
     @commands.is_owner()
-    async def cog_reload_all(self, ctx, *, owner_too: bool=False):
+    async def owner_cog_reload_all(self, ctx, *, owner_too: bool=False):
         unloaded_ext = []
         for extension in tuple(self.bot.extensions):
             if not owner_too and extension == "cogs.owner":

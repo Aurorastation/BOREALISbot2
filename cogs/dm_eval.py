@@ -71,7 +71,7 @@ def validate_byond_build(byond_str):
 
     return major, minor
 
-class DmCog:
+class DmCog(commands.Cog):
     WORK_FOLDER = "cogs\\byond_eval"
 
     DM_BOILERPLATE = "/world/loop_checks = FALSE;\n" + \

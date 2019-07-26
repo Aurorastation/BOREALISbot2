@@ -5,7 +5,7 @@ from core import ConfigError, ApiError, ApiMethods
 from .utils import auth, AuthPerms, AuthType
 from .utils.byond import get_ckey
 
-class UserCog():
+class UserCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 

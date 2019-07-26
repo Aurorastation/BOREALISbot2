@@ -6,7 +6,7 @@ from .utils.paginator import FieldPages
 from .utils.byond import get_ckey
 from core import ApiMethods, ApiError
 
-class PlayerCog():
+class PlayerCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 

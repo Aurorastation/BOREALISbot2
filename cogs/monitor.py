@@ -17,7 +17,7 @@ def valid_command(command):
 
     return command
 
-class MonitorCog:
+class MonitorCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 

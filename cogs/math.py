@@ -7,7 +7,7 @@ import random
 import re
 import operator
 
-class MathCog:
+class MathCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 

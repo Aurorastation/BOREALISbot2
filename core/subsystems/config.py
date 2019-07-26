@@ -63,7 +63,7 @@ class Config:
 
         with open(self.filepath, 'r') as file:
             try:
-                self.config = yaml.load(file)
+                self.config = yaml.safe_load(file)
             except yaml.YAMLError as err:
                 raise ConfigError("Error reading config: {}".format(err), "setup")
 
