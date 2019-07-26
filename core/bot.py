@@ -9,8 +9,9 @@ from .users import UserRepo
 
 
 class Borealis(commands.Bot):
-    def __init__(self, command_prefix, config, api, formatter=None, description=None, pm_help=False, **options):
-        super().__init__(command_prefix, formatter=formatter, description=description, pm_help=pm_help, **options)
+    def __init__(self, command_prefix, config, api, formatter=None, description=None, **options):
+        super().__init__(command_prefix, help_command=commands.DefaultHelpCommand(dm_help=True),
+                         formatter=formatter, description=description, **options)
 
         self._api = api
         self._config = config

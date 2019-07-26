@@ -56,8 +56,7 @@ except ApiError as err:
 
 ## BOT INIT
 bot = Borealis(config.bot["prefix"], config, api,
-               description="Borealis version 3.5.0, here to assist in any SS13 related matters!",
-               pm_help=True)
+               description="Borealis version 3.5.0, here to assist in any SS13 related matters!")
 
 try:
     scheduler = subsystems.TaskScheduler(bot, config.scheduler["interval"])
