@@ -179,6 +179,10 @@ class ServerCog(commands.Cog):
         api = self.bot.Api()
         repo = self.bot.UserRepo()
 
+        if !len(args):
+            await ctx.send("You didn't give me anything to send.")
+            return
+
         msg = " ".join(args)
         sender = repo.get_ckey(ctx.author.id)
         await api.query_game("send_adminmsg", params={"ckey": ckey,
@@ -193,6 +197,10 @@ class ServerCog(commands.Cog):
         """Sends an announcement to the server."""
         api = self.bot.Api()
         repo = self.bot.UserRepo()
+
+        if !len(text):
+            await ctx.send("You didn't give me anything to send.")
+            return
 
         msg = " ".join(text)
         sender = repo.get_ckey(ctx.author.id)
