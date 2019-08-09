@@ -248,6 +248,19 @@ class ServerCog(commands.Cog):
 
         await ctx.send("Ticket successfully closed!")
 
+    @commands.command(aliases=["sexauth","sexternalauth"])
+    @auth.check_auths([AuthPerms.R_ADMIN])
+    async def server_ticket_close(self, ctx, state: int):
+        """Sets state of external authentication"""
+        api = self.bot.Api()
+
+        data = await api.query_game("set_extenal_auth", params={"state": state})
+
+        if(data)
+            await ctx.send("External authentication has been enabled.")
+        else
+            await ctx.send("External authentication has been disabled.")
+
 
 def setup(bot):
     bot.add_cog(ServerCog(bot))
