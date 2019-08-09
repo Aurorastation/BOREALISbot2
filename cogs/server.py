@@ -250,7 +250,7 @@ class ServerCog(commands.Cog):
 
     @commands.command(aliases=["sexauth","sexternalauth"])
     @auth.check_auths([AuthPerms.R_ADMIN])
-    async def external_auth(self, ctx, state: int):
+    async def server_external_auth(self, ctx, state: int):
         """Sets state of external authentication"""
         api = self.bot.Api()
 
