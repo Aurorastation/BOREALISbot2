@@ -84,7 +84,7 @@ class ServerCog(commands.Cog):
         embed.add_field(name="Mode:", value=data["mode"])
         embed.add_field(name="Players:", value=data["players"])
         embed.add_field(name="Staff:", value=data["staff"])
-        embed.add_field(name="Admins:", value=data["admins"])
+        embed.add_field(name="Transferring:", value="Yes" if bool(data["transferring"]) else "No")
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["serverrestart", "srestart"])
@@ -96,7 +96,21 @@ class ServerCog(commands.Cog):
         await api.query_game("restart_round", params={"senderkey":
                                                           f"{ctx.author.name}/{ctx.author.id}"})
 
-        await ctx.send("Server successfully restarted.")
+        await ctx.send("Server restart command sent.")
+
+    @commands.command(aliases=["serverhardrestart", "shardrestart"])
+    @auth.check_auths([AuthPerms.R_ADMIN])
+    async def server_hard_restart(self, ctx):
+        """
+        Issues an immediate restart command to the server, by also killing DreamDaemon.
+        Use for major fuck-ups and lock-ups.
+        """
+
+        api = self.bot.Api()
+
+        await api.query_game("restart_tgs", params={"senderkey": f"{ctx.author.name}/{ctx.author.id}"})
+
+        await ctx.send("Server restart command sent.")
 
     @commands.command(aliases=["serverstaff", "sstaff"])
     async def server_staff(self, ctx):
@@ -165,6 +179,10 @@ class ServerCog(commands.Cog):
         api = self.bot.Api()
         repo = self.bot.UserRepo()
 
+        if !len(args):
+            await ctx.send("You didn't give me anything to send.")
+            return
+
         msg = " ".join(args)
         sender = repo.get_ckey(ctx.author.id)
         await api.query_game("send_adminmsg", params={"ckey": ckey,
@@ -172,6 +190,25 @@ class ServerCog(commands.Cog):
                                                       "msg": msg})
 
         await ctx.send("PM successfully sent!")
+
+    @commands.command(aliases=["serverannounce", "sannounce"])
+    @auth.check_auths([AuthPerms.R_ADMIN])
+    async def server_announce(self, ctx, *text):
+        """Sends an announcement to the server."""
+        api = self.bot.Api()
+        repo = self.bot.UserRepo()
+
+        if !len(text):
+            await ctx.send("You didn't give me anything to send.")
+            return
+
+        msg = " ".join(text)
+        sender = repo.get_ckey(ctx.author.id)
+
+        await api.query_game("broadcast_text", params={"senderkey": sender,
+                                                       "text": msg})
+
+        await ctx.send("Announcement successfully sent.")
 
     @commands.command(aliases=["stinfo"])
     @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
