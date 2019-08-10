@@ -6,13 +6,10 @@ bot:
   autoload_cogs:
     - cogs.channel
     - cogs.discord
-    - cogs.monitor
     - cogs.players
     - cogs.server
     - cogs.silly
     - cogs.users
-    - cogs.git
-    - cogs.dm_eval
     - cogs.wiki
 
 api:
@@ -32,10 +29,6 @@ server:
 
 scheduler:
   interval: 60
-
-monitor:
-  host: ""
-  port: 6666
 
 github:
   api_token: null
