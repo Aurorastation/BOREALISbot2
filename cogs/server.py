@@ -179,7 +179,7 @@ class ServerCog(commands.Cog):
         api = self.bot.Api()
         repo = self.bot.UserRepo()
 
-        if !len(args):
+        if not len(args):
             await ctx.send("You didn't give me anything to send.")
             return
 
@@ -198,7 +198,7 @@ class ServerCog(commands.Cog):
         api = self.bot.Api()
         repo = self.bot.UserRepo()
 
-        if !len(text):
+        if not len(text):
             await ctx.send("You didn't give me anything to send.")
             return
 
