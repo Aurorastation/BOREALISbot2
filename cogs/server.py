@@ -293,9 +293,9 @@ class ServerCog(commands.Cog):
 
         data = await api.query_game("set_extenal_auth", params={"state": state})
 
-        if(data)
+        if data:
             await ctx.send("External authentication has been enabled.")
-        else
+        else:
             await ctx.send("External authentication has been disabled.")
 
 
