@@ -101,7 +101,7 @@ class SillyCog(commands.Cog):
         await ctx.send(None, embed=lawEmbed)
 
     @commands.command()
-    @auth.check_auths([AuthPerms.R_ADMIN])
+    @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_DEV])
     async def memetype(self, ctx, *args):
         """They hate him for many things. But specially for this."""
         msg = []
