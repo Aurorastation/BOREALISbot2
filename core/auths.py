@@ -26,7 +26,6 @@ class AuthPerms(Enum):
     def __str__(self):
         return self.value
 
-
 class AuthType(Enum):
     ALL = 1
     ONE = 2

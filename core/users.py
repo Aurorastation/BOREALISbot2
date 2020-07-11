@@ -1,22 +1,9 @@
+import aiohttp
+
 from .subsystems import ApiMethods
 from .borealis_exceptions import BotError, ApiError
 from .auths import AuthPerms
-
-
-class User:
-    """
-    A user class for assisting with storage.
-    """
-    def __init__(self, uid, ckey, auths=[]):
-        self.uid = uid
-        self.ckey = ckey
-
-        self.g_auths = auths
-
-    def update(self, ckey, auths=[]):
-        self.ckey = ckey
-        self.g_auths = auths
-
+from .subsystems.apiobjects.ForumUser import ForumUser
 
 class UserRepo:
     """
@@ -30,7 +17,7 @@ class UserRepo:
         if not bot:
             raise BotError("No bot sent to AuthRepo.", "__init__")
 
-        self.bot = bot
+        self._conf = bot.Config().users_api
 
         self._user_dict = {}
         self._authed_groups = {} # {serverid: {group_id: [auths], group_id2: [auths]}}
@@ -158,3 +145,33 @@ class UserRepo:
             ret.append(AuthPerms(auth))
 
         return ret
+
+    async def _get_staff_with_role(self, role):
+        async with aiohttp.ClientSession() as session:
+            token = self._conf["auth"]
+            url = self._conf["path"]
+            headers = {"Authorization" : f"Bearer {token}"}
+
+            async with session.get(f"{url}/getStaff/{role}", headers=headers) as resp:
+                try:
+                    data = await resp.json()
+                except Exception as err:
+                    raise ApiError(f"Exception deserializing JSON from ForumUsers API: {err}",
+                                    "_get_staff_with_role")
+
+                return [self._parse_auths(ForumUser(u)) for u in data]
+
+    def _parse_auths(self, user):
+        for group in [user.forum_primary_group] + user.forum_secondary_groups:
+            if group not in self._conf["roles"].keys():
+                continue
+
+            perms = self._conf["roles"][group]
+
+            for permission in perms:
+                auth = AuthPerms(permission)
+
+                if auth not in user.auths:
+                    user.auths.append(auth)
+
+        return user

@@ -16,6 +16,38 @@ api:
   auth: ""
   path: ""
 
+users_api:
+  auth: ""
+  path: ""
+  roles:
+    "Head Admins / Devs":
+      - R_ADMIN
+      - R_MOD
+      - R_DEV
+      - R_CCIAA
+      - R_WIKI
+    "Primary Administrators":
+      - R_ADMIN
+      - R_MOD
+      - R_DEV
+      - R_CCIAA
+      - R_WIKI
+    "Secondary Administrators":
+      - R_ADMIN
+      - R_MOD
+      - R_DEV
+      - R_CCIAA
+      - R_WIKI
+    "Moderators":
+      - R_MOD
+    "Developers":
+      - R_DEV
+    "Lore Writers":
+    "CCIA":
+      - R_CCIAA
+    "Wiki Maintainers":
+      - R_WIKI
+
 forum:
   auth: ""
   path: ""

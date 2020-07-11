@@ -1,5 +1,5 @@
 {
 	"editor.insertSpaces": true,
     "editor.detectIndentation": false,
-    "python.pythonPath": "${workspaceFolder}\\venv\\Scripts\\python.exe"
+    "python.pythonPath": "venv/bin/python"
 }
