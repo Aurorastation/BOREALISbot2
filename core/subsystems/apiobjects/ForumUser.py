@@ -26,6 +26,12 @@ class ForumUser:
     def __init__(self, userdata):
         self.parse(userdata)
 
+    def __eq__(self, other):
+        if not isinstance(other, ForumUser):
+            return NotImplemented
+        
+        return self.ckey == other.ckey and self.discord_id == other.discord_id
+
     def parse(self, userdata):
         self.member_id = userdata["member_id"]
         self.forum_name = userdata["forum_name"]

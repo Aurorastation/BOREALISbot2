@@ -77,7 +77,7 @@ class UserCog(commands.Cog):
         if not fields["Ckey:"]:
             fields["Ckey:"] = "N/A"
 
-        auths = repo.get_auths(tgt.id, ctx.guild.id, tgt.roles)
+        auths = repo.get_auths(tgt.id)
         if not auths:
             fields["Auths:"] = "N/A"
         else:
@@ -115,7 +115,7 @@ class UserCog(commands.Cog):
         if not fields["Ckey:"]:
             fields["Ckey:"] = "N/A"
 
-        auths = repo.get_auths(tgt.id, ctx.guild.id, tgt.roles)
+        auths = repo.get_auths(tgt.id)
         if not auths:
             fields["Auths:"] = "N/A"
         else:
