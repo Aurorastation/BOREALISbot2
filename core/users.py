@@ -7,15 +7,15 @@ from .auths import AuthPerms
 from .subsystems.apiobjects.ForumUser import ForumUser
 
 class UserRole:
-    def __init__(self, data, name):
-        self.role_id = 0
-        self.name = name
+    def __init__(self, data, role_id):
+        self.role_id = role_id
+        self.name = None
         self.auths = []
 
         self.parse(data)
 
     def parse(self, data):
-        self.role_id = data["id"]
+        self.name = data["name"]
 
         for auth in data["auths"]:
             self.auths.append(AuthPerms(auth))
@@ -125,8 +125,8 @@ class UserRepo:
         self._roles = []
         self._id_to_role = {}
 
-        for role in self._conf["roles"]:
-            role_object = UserRole(self._conf["roles"][role], role)
+        for role_id in self._conf["roles"]:
+            role_object = UserRole(self._conf["roles"][role_id], role_id)
 
             self._roles.append(role_object)
             self._id_to_role[role_object.role_id] = role_object
