@@ -1,5 +1,0 @@
-{
-	"editor.insertSpaces": true,
-    "editor.detectIndentation": false,
-    "python.pythonPath": "venv/bin/python"
-}
