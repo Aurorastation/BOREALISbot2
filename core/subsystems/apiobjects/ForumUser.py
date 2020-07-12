@@ -30,7 +30,7 @@ class ForumUser:
         if not isinstance(other, ForumUser):
             return NotImplemented
         
-        return self.ckey == other.ckey and self.discord_id == other.discord_id
+        return self.member_id == other.member_id
 
     def parse(self, userdata):
         self.member_id = userdata["forum_member_id"]
