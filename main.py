@@ -60,8 +60,6 @@ bot = Borealis(config.bot["prefix"], config, api,
 
 try:
     scheduler = subsystems.TaskScheduler(bot, config.scheduler["interval"])
-    scheduler.add_task(43200, bot.UserRepo().update_auths, "update_users", init_now=True,
-                       is_coro=True)
     scheduler.add_task(43200, config.update_channels, "update_channels", init_now=True,
                        args=[api], is_coro=True)
     scheduler.add_task(1800, bot.process_temporary_bans, "process_bans", init_now=True, is_coro=True)
@@ -78,12 +76,11 @@ async def on_ready():
         for ext in INIT_EXT:
             try:
                 bot.load_extension(ext)
-            except Exception as e:
+            except Exception:
                 logger.error("MAIN: Failed to load extension: %s.", ext, exc_info=True)
 
     logger.info("Bot up and running.")
 
     bot.loop.create_task(scheduler.run_loop())
-
 
 bot.run(config.bot["token"], bot=True, reconnect=True)

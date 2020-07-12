@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from core import ConfigError, ApiError, ApiMethods
 
 from .utils import auth, AuthPerms, AuthType
@@ -8,6 +8,14 @@ from .utils.byond import get_ckey
 class UserCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.update_users.start()
+
+    def cog_unload(self):
+        self.update_users.cancel()
+
+    @tasks.loop(hours=24.0)
+    async def update_users(self):
+        await self.bot.UserRepo().update_auths()
 
     @commands.command(aliases=["userupdate", "uupdate"])
     @auth.check_auths([AuthPerms.R_ADMIN])
@@ -16,44 +24,6 @@ class UserCog(commands.Cog):
         await self.bot.UserRepo().update_auths()
 
         await ctx.send("Users successfully updated.")
-
-    @commands.command(aliases=["userremove", "uremove"])
-    @auth.check_auths([AuthPerms.R_ADMIN])
-    async def user_remove(self, ctx, tgt):
-        """Removes the specified user from being linked with the bot."""
-        api = self.bot.Api()
-
-        data = {}
-        if ctx.message.mentions:
-            data["discord_id"] = ctx.message.mentions[0].id
-        else:
-            data["ckey"] = get_ckey(tgt)
-
-        await api.query_web("/users", ApiMethods.DELETE, data=data)
-        await self.bot.UserRepo().update_auths()
-
-        await ctx.send("User's auths successfully removed.")
-
-    @commands.command(aliases=["useradd", "uadd"])
-    @commands.guild_only()
-    @auth.check_auths([AuthPerms.R_ADMIN])
-    async def user_add(self, ctx, tgt: discord.Member, key: get_ckey):
-        """Links the specified user to the bot.
-        
-        The link is to allow for ingame perms to be read by the bot. Some permissions
-        may already be applied by virtue of the Discord groups the person is in.
-        """
-        api = self.bot.Api()
-
-        data = {
-            "discord_id": tgt.id,
-            "ckey": key
-        }
-
-        await api.query_web("/users", ApiMethods.PUT, data=data)
-        await self.bot.UserRepo().update_auths()
-
-        await ctx.send("User's auths successfully added.")
 
     @commands.command(aliases=["userinfo", "uinfo"])
     @commands.guild_only()

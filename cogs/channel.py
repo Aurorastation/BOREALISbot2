@@ -10,6 +10,7 @@ class ChannelCog(commands.Cog):
 
     @commands.command(aliases=["channelinfo", "cinfo"])
     @commands.guild_only()
+    @commands.has_permissions(manage_channels=True)
     @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_DEV])
     async def channel_info(self, ctx):
         """Displays information regarding the present channel."""
@@ -32,6 +33,7 @@ class ChannelCog(commands.Cog):
 
     @commands.command(aliases=["channeladd", "cadd"])
     @commands.guild_only()
+    @commands.has_permissions(manage_channels=True)
     @auth.check_auths([AuthPerms.R_ADMIN])
     async def channel_add(self, ctx, group: str):
         """Adds the current channel to a specified channel group."""
@@ -44,6 +46,7 @@ class ChannelCog(commands.Cog):
 
     @commands.command(aliases=["channelremove", "cremove"])
     @commands.guild_only()
+    @commands.has_permissions(manage_channels=True)
     @auth.check_auths([AuthPerms.R_ADMIN])
     async def channel_remove(self, ctx, group: str):
         """Removes the current channel from a specified group."""

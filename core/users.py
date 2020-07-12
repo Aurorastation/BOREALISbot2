@@ -6,6 +6,20 @@ from .borealis_exceptions import BotError, ApiError
 from .auths import AuthPerms
 from .subsystems.apiobjects.ForumUser import ForumUser
 
+class UserRole:
+    def __init__(self, data, name):
+        self.role_id = 0
+        self.name = name
+        self.auths = []
+
+        self.parse(data)
+
+    def parse(self, data):
+        self.role_id = data["id"]
+
+        for auth in data["auths"]:
+            self.auths.append(AuthPerms(auth))
+
 class UserRepo:
     """
     A repository class for handling the regular refreshing and storage of user
@@ -19,6 +33,10 @@ class UserRepo:
             raise BotError("No bot sent to AuthRepo.", "__init__")
 
         self._conf = bot.Config().users_api
+        self._roles = []
+        self._id_to_role = {}
+
+        self._generate_roles()
 
         self._current_users = []
         self._logger = logging.getLogger(__name__)
@@ -27,9 +45,10 @@ class UserRepo:
         """
         Worker method for updating the user dictionary and authed groups dictionary.
         """
+        self._logger.info("Updating user auths.")
         new_users = []
 
-        for role in self._conf["roles"]:
+        for role in self._roles:
             for user in await self._get_staff_with_role(role):
                 if user not in new_users:
                     new_users.append(user)
@@ -80,29 +99,34 @@ class UserRepo:
             url = self._conf["path"]
             headers = {"Authorization" : f"Bearer {token}"}
 
-            async with session.get(f"{url}/getStaff/{role}", headers=headers) as resp:
+            async with session.get(f"{url}/staff/{role.role_id}", headers=headers) as resp:
                 try:
                     data = await resp.json()
                 except Exception as err:
                     raise ApiError(f"Exception deserializing JSON from ForumUsers API: {err}",
                                     "_get_staff_with_role")
-
+                
                 return [self._parse_auths(ForumUser(u)) for u in data]
 
     def _parse_auths(self, user):
         for group in [user.forum_primary_group] + user.forum_secondary_groups:
-            if group not in self._conf["roles"].keys():
+            if group not in self._id_to_role.keys():
                 continue
 
-            perms = self._conf["roles"][group]
+            auths = self._id_to_role[group].auths
 
-            for permission in perms:
-                try:
-                    auth = AuthPerms(permission)
-
-                    if auth not in user.auths:
-                        user.auths.append(auth)
-                except ValueError as e:
-                    self._logger.warning(f"Unrecognized permission configured: {e}.")
+            for auth in auths:
+                if auth not in user.auths:
+                    user.auths.append(auth)
 
         return user
+
+    def _generate_roles(self):
+        self._roles = []
+        self._id_to_role = {}
+
+        for role in self._conf["roles"]:
+            role_object = UserRole(self._conf["roles"][role], role)
+
+            self._roles.append(role_object)
+            self._id_to_role[role_object.role_id] = role_object
