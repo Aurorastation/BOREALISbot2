@@ -1,5 +1,6 @@
 import logging
 import aiohttp
+import copy
 
 from .subsystems import ApiMethods
 from .borealis_exceptions import BotError, ApiError
@@ -79,7 +80,7 @@ class UserRepo:
         """Returns a clone of a user object for outside evaluation."""
         for user in self._current_users:
             if user.discord_id == uid:
-                return user
+                return copy.copy(user)
 
         return None
 
@@ -97,7 +98,7 @@ class UserRepo:
     async def _get_staff_with_role(self, role):
         async with aiohttp.ClientSession() as session:
             token = self._conf["auth"]
-            url = self._conf["path"]
+            url = self._conf["url"]
             headers = {"Authorization" : f"Bearer {token}"}
 
             async with session.get(f"{url}/staff/{role.role_id}", headers=headers) as resp:

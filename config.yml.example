@@ -18,8 +18,7 @@ api:
 
 users_api:
   auth: ""
-  path: ""
-  roles:
+  url: ""
   roles:
     - role_id: 4
       name: "Head Admins / Devs"
