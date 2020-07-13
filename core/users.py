@@ -84,6 +84,10 @@ class UserRepo:
 
         return None
 
+    def get_roles(self):
+        """Returns a cloned list of all roles currently loaded into the repo."""
+        return copy.deepcopy(self._roles)
+
     def str_to_auths(self, auths):
         """Converts either a singular string, or a list of string into authperm objects."""
         if isinstance(auths, str):

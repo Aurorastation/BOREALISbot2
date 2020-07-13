@@ -4,6 +4,7 @@ from core import ConfigError, ApiError, ApiMethods
 
 from .utils import auth, AuthPerms, AuthType
 from .utils.byond import get_ckey
+from .utils.paginator import FieldPages
 
 class UserCog(commands.Cog):
     def __init__(self, bot):
@@ -13,7 +14,7 @@ class UserCog(commands.Cog):
     def cog_unload(self):
         self.update_users.cancel()
 
-    @tasks.loop(hours=24.0)
+    @tasks.loop(hours=2.0)
     async def update_users(self):
         await self.bot.UserRepo().update_auths()
 
@@ -103,6 +104,22 @@ class UserCog(commands.Cog):
         await ctx.author.send(embed=embed)
 
         await ctx.send("Sending info now!")
+
+    @commands.command()
+    @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
+    async def roles_list(self, ctx):
+        """Lists all available roles as recognized by the bot."""
+        roles = self.bot.UserRepo().get_roles()
+
+        data = []
+        for role in roles:
+            auths_str = ", ".join(role.auths)
+            data.append((f"{role.name}", f"ID: {role.role_id}\n"
+                                         f"Auths: {auths_str}"))
+        
+        p = FieldPages(ctx, entries=data)
+        p.embed.title = "Available Access Roles"
+        await p.paginate()
 
 def setup(bot):
     bot.add_cog(UserCog(bot))
