@@ -13,6 +13,7 @@ class DiscordCog(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
+    @commands.has_permissions(kick_members=True)
     @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
     async def strike(self, ctx, tgt: discord.Member, *reason):
         """Applies a 2 month warning to the tagged user."""
@@ -25,7 +26,7 @@ class DiscordCog(commands.Cog):
             await ctx.send("I cannot strike myself!")
             return
 
-        holder = AuthHolder(tgt, ctx.guild, self.bot)
+        holder = AuthHolder(tgt, self.bot)
         if holder.verify([AuthPerms.R_ADMIN, AuthPerms.R_MOD]):
             await ctx.send("I can't strike someone with mod/admin permissions!")
             return
@@ -98,6 +99,7 @@ class DiscordCog(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
+    @commands.has_permissions(kick_members=True)
     @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
     async def ban(self, ctx, tgt: discord.Member, duration: int, *reason):
         """Bans someone for a given duration."""
@@ -112,7 +114,7 @@ class DiscordCog(commands.Cog):
             await ctx.send("I cannot ban myself!")
             return
 
-        holder = AuthHolder(tgt, ctx.guild, self.bot)
+        holder = AuthHolder(tgt, self.bot)
         if holder.verify([AuthPerms.R_ADMIN, AuthPerms.R_MOD]):
             await ctx.send("I can't ban someone with mod/admin permissions!")
             return

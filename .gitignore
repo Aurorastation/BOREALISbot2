@@ -1,6 +1,9 @@
+# IDE/Editor stuff
+.vscode
+
 # Project-specifics:
-/config.yml
-/logging.yml
+config.yml
+logging.yml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

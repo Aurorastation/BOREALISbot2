@@ -16,6 +16,55 @@ api:
   auth: ""
   path: ""
 
+users_api:
+  auth: ""
+  url: ""
+  roles:
+    - role_id: 4
+      name: "Head Admins / Devs"
+      auths:
+        - R_ADMIN
+        - R_MOD
+        - R_DEV
+        - R_CCIAA
+        - R_WIKI
+    - role_id: 18
+      name: "Primary Administrators"
+      auths:
+        - R_ADMIN
+        - R_MOD
+        - R_DEV
+        - R_CCIAA
+        - R_WIKI
+    - role_id: 8
+      name: "Secondary Administrators"
+      auths:
+        - R_ADMIN
+        - R_MOD
+        - R_DEV
+        - R_CCIAA
+        - R_WIKI
+    - role_id: 6
+      name: "Moderators"
+      auths:
+        - R_MOD
+    - role_id: 9
+      name: "Developers"
+      auths:
+        - R_DEV
+    - role_id: 13
+      name: "CCIA"
+      auths:
+        - R_CCIAA
+    - role_id: 16
+      name: "CCIA Leader"
+      auths:
+        - R_CCIAA
+    - role_id: 15
+      name: "Wiki Maintainers"
+      auths:
+        - R_WIKI
+
 forum:
   auth: ""
   path: ""
