@@ -113,7 +113,7 @@ class UserCog(commands.Cog):
 
         data = []
         for role in roles:
-            auths_str = ", ".join(role.auths)
+            auths_str = ", ".join([str(a) for a in role.auths])
             data.append((f"{role.name}", f"ID: {role.role_id}\n"
                                          f"Auths: {auths_str}"))
         
