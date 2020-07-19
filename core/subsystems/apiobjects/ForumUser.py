@@ -60,3 +60,6 @@ class ForumUser:
             fields["Auths:"] = ", ".join(str_l)
         else:
             fields["Auths:"] = "N/A"
+
+        fields["Forum user:"] = f"{self.forum_name}"
+        fields["Forum user ID:"] = f"{self.member_id}"

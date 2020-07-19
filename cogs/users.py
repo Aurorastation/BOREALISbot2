@@ -115,7 +115,9 @@ class UserCog(commands.Cog):
             "Nickname:": na,
             "Discord ID:": na,
             "Joined at:": na,
-            "Strikes:": na
+            "Strikes:": na,
+            "Forum user:": na,
+            "Forum user ID:": na
         }
 
         if discord_user:
