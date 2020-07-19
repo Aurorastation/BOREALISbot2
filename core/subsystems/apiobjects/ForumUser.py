@@ -45,3 +45,18 @@ class ForumUser:
 
         if userdata["ckey"]:
             self.ckey = userdata["ckey"]
+
+    def add_info_fields(self, fields):
+        if self.ckey:
+            fields["Ckey:"] = self.ckey
+        else:
+            fields["Ckey:"] = "N/A"
+
+        if len(self.auths):
+            str_l = []
+            for perm in self.auths:
+                str_l.append(str(perm))
+
+            fields["Auths:"] = ", ".join(str_l)
+        else:
+            fields["Auths:"] = "N/A"

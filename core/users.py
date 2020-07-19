@@ -1,6 +1,7 @@
 import logging
-import aiohttp
 import copy
+import re
+import aiohttp
 
 from .subsystems import ApiMethods
 from .borealis_exceptions import BotError, ApiError
@@ -43,6 +44,12 @@ class UserRepo:
         self._current_users = []
         self._logger = logging.getLogger(__name__)
 
+    @staticmethod
+    def sanitize_ckey(ckey):
+        ckey = str(ckey).lower()
+
+        return re.sub(r"\W+", "", ckey)
+
     async def update_auths(self):
         """
         Worker method for updating the user dictionary and authed groups dictionary.
@@ -68,21 +75,55 @@ class UserRepo:
 
         return []
 
-    def get_ckey(self, uid):
-        """Returns the ckey of the user."""
-        for user in self._current_users:
-            if user.discord_id == uid:
-                return user.ckey
+    async def user_from_discord(self, uid):
+        """
+        Returns a ForumUser object from the API, queried by the Discord ID.
         
-        return None
+        A cached copy from the self._current_users list is used if available.
+        """
 
-    def get_user(self, uid):
-        """Returns a clone of a user object for outside evaluation."""
         for user in self._current_users:
             if user.discord_id == uid:
                 return copy.copy(user)
 
-        return None
+        async with aiohttp.ClientSession() as session:
+            token = self._conf["auth"]
+            url = self._conf["url"]
+            headers = {"Authorization" : f"Bearer {token}"}
+
+            async with session.get(f"{url}/user/discord/{uid}", headers=headers) as resp:
+                try:
+                    data = await resp.json()
+                except Exception as err:
+                    raise ApiError(f"Exception deserializing JSON from ForumUsers API: {err}",
+                                    "user_from_discord")
+                
+                if data:
+                    return self._parse_auths(ForumUser(data[0]))
+                else:
+                    return None
+
+    async def user_from_ckey(self, ckey):
+        """"Returns a ForumUser object from the API, queried by the ckey."""
+
+        ckey = self.sanitize_ckey(ckey)
+
+        async with aiohttp.ClientSession() as session:
+            token = self._conf["auth"]
+            url = self._conf["url"]
+            headers = {"Authorization" : f"Bearer {token}"}
+
+            async with session.get(f"{url}/user/ckey/{ckey}", headers=headers) as resp:
+                try:
+                    data = await resp.json()
+                except Exception as err:
+                    raise ApiError(f"Exception deserializing JSON from ForumUsers API: {err}",
+                                    "user_from_ckey")
+                
+                if data:
+                    return self._parse_auths(ForumUser(data[0]))
+                else:
+                    return None
 
     def get_roles(self):
         """Returns a cloned list of all roles currently loaded into the repo."""

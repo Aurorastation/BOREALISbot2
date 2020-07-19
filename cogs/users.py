@@ -31,32 +31,13 @@ class UserCog(commands.Cog):
     @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
     async def user_info(self, ctx, tgt: discord.Member):
         """Displays information regarding the mentioned user."""
-        api = self.bot.Api()
         repo = self.bot.UserRepo()
-        fields = {
-            "Nickname:": tgt.name,
-            "Discord ID:": tgt.id,
-            "Joined at:": tgt.joined_at.strftime("%m.%d.%Y")
-        }
 
-        data = await api.query_web("/discord/strike", ApiMethods.GET, data={"discord_id": tgt.id},
-                                   return_keys=["strike_count"], enforce_return_keys=True)
+        user = await repo.user_from_discord(tgt.id)
+        
+        fields = await self._prepare_user_info(user, tgt)
 
-        fields["Strikes:"] = data["strike_count"]
-
-        fields["Ckey:"] = repo.get_ckey(tgt.id)
-        if not fields["Ckey:"]:
-            fields["Ckey:"] = "N/A"
-
-        auths = repo.get_auths(tgt.id)
-        if not auths:
-            fields["Auths:"] = "N/A"
-        else:
-            str_l = []
-            for perm in auths:
-                str_l.append(str(perm))
-
-            fields["Auths:"] = ", ".join(str_l)
+        fields["Joined at:"] = tgt.joined_at.strftime("%m.%d.%Y")
 
         embed = discord.Embed(title="User Info")
 
@@ -68,33 +49,12 @@ class UserCog(commands.Cog):
     @commands.command(aliases=["myinfo"])
     async def my_info(self, ctx):
         """Displays your info!"""
-        api = self.bot.Api()
         repo = self.bot.UserRepo()
         tgt = ctx.author
 
-        fields = {
-            "Nickname:": tgt.name,
-            "Discord ID:": tgt.id
-        }
+        user = await repo.user_from_discord(tgt.id)
 
-        data = await api.query_web("/discord/strike", ApiMethods.GET, data={"discord_id": tgt.id},
-                                   return_keys=["strike_count"], enforce_return_keys=True)
-
-        fields["Strikes:"] = data["strike_count"]
-
-        fields["Ckey:"] = repo.get_ckey(tgt.id)
-        if not fields["Ckey:"]:
-            fields["Ckey:"] = "N/A"
-
-        auths = repo.get_auths(tgt.id)
-        if not auths:
-            fields["Auths:"] = "N/A"
-        else:
-            str_l = []
-            for perm in auths:
-                str_l.append(str(perm))
-
-            fields["Auths:"] = ", ".join(str_l)
+        fields = await self._prepare_user_info(user, tgt)
 
         embed = discord.Embed(title="Your Info")
 
@@ -104,6 +64,30 @@ class UserCog(commands.Cog):
         await ctx.author.send(embed=embed)
 
         await ctx.send("Sending info now!")
+
+    @commands.command(aliases=["uckey"])
+    async def user_info_ckey(self, ctx, ckey: get_ckey):
+        """Displays information about a user with the given ckey, if they are linked."""
+        repo = self.bot.UserRepo()
+
+        user = await repo.user_from_ckey(ckey)
+
+        if not user:
+            await ctx.send(f"No forum user linked with the ckey `{ckey}`.")
+            return
+
+        discord_user = None
+        if user.discord_id:
+            discord_user = discord.utils.get(self.bot.get_all_members(), id=user.discord_id)
+
+        fields = await self._prepare_user_info(user, discord_user)
+
+        embed = discord.Embed(title="User Info")
+
+        for field in fields:
+            embed.add_field(name=field, value=fields[field])
+
+        await ctx.send(embed=embed)
 
     @commands.command()
     @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
@@ -120,6 +104,32 @@ class UserCog(commands.Cog):
         p = FieldPages(ctx, entries=data)
         p.embed.title = "Available Access Roles"
         await p.paginate()
+
+    async def _prepare_user_info(self, forum_user, discord_user):
+        api = self.bot.Api()
+
+        na = "N/A"
+
+        fields = {
+            "Nickname:": na,
+            "Discord ID:": na,
+            "Joined at:": na,
+            "Strikes:": na
+        }
+
+        if discord_user:
+            fields["Nickname:"] = discord_user.name
+            fields["Discord ID:"] = discord_user.id
+
+            data = await api.query_web("/discord/strike", ApiMethods.GET, data={"discord_id": discord_user.id},
+                                    return_keys=["strike_count"], enforce_return_keys=True)
+
+            fields["Strikes:"] = data["strike_count"]
+
+        if forum_user:
+            forum_user.add_info_fields(fields)
+
+        return fields
 
 def setup(bot):
     bot.add_cog(UserCog(bot))
