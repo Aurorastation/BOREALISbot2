@@ -84,3 +84,10 @@ github:
   wiki_org: null
   wiki_repo: null
   wiki_label: null
+
+guildconfig:
+  123123123123: # Guild ID -> make sure this is not a string
+    reactionroles:
+      454545454545: # Message ID -> make sure this is not a string
+        ":world_map_selector:": 565656565656 # Role id -> make sure this is not a string
+        ":laptop_computer:": 7878787878
