@@ -20,6 +20,20 @@ import logging
 from ..borealis_exceptions import ConfigError, ApiError
 from .api import ApiMethods
 
+class GuildConfig:
+    guildid = None  # ID of the guild this config object is for
+
+    reactionroles = {}
+
+    def __init__(self, guildid, configdict):
+        self.guildid = guildid
+
+        # Parses the passed configdict into a a GuildConfig Object
+        # Add other guild relevant options here
+
+        # Configuration for the reacitonroles
+        # TODO: validate the format (message -> dict(emojiid -> roleid))
+        self.reactionroles = configdict["reactionroles"]
 
 class Config:
     """
@@ -47,6 +61,9 @@ class Config:
         self.channels = {"channel_admin" : [], "channel_cciaa" : [],
                          "channel_announce" : [], "channel_log" : []}
 
+        # Guild Configuration dict.
+        self.guilds = {}
+
     def __getattr__(self, name):
         """Fetch a value from the config dictionary."""
 
@@ -66,6 +83,12 @@ class Config:
                 self.config = yaml.safe_load(file)
             except yaml.YAMLError as err:
                 raise ConfigError("Error reading config: {}".format(err), "setup")
+
+            # Parse the config into GuildConfigObjects
+            for g in self.config["guildconfig"]:
+                # Initialize a GuildConfig Object with the guild settings from the file
+                # And store it in the guilds variable
+                self.guilds[g] = GuildConfig(g, self.config["guildconfig"][g])
 
     def get_channels(self, channel_group):
         """Get a list of channel ids that are grouped together. The actual channels still have to be gathered via the bot"""
@@ -122,7 +145,7 @@ class Config:
         try:
             await api.query_web("/channels", ApiMethods.PUT, data={"channel_id": channel_id,
                                                                "channel_group": group})
-            self.update_channels(api)
+            await self.update_channels(api)
         except ApiError as err:
             raise ConfigError("API error encountered: {}".format(err.message), "add_channel")
 
@@ -135,7 +158,7 @@ class Config:
 
         try:
             api.query_web("/channels", ApiMethods.DELETE, data)
-            self.update_channels(api)
+            await self.update_channels(api)
         except ApiError as err:
             # Bad query error.
             raise ConfigError("API error encountered: {}".format(err.message), "remove_channel")
