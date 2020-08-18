@@ -184,9 +184,9 @@ class ServerCog(commands.Cog):
             return
 
         msg = " ".join(args)
-        sender = repo.user_from_discord(ctx.author.id).ckey
+        sender = await repo.user_from_discord(ctx.author.id)
         await api.query_game("send_adminmsg", params={"ckey": ckey,
-                                                      "senderkey": sender,
+                                                      "senderkey": sender.ckey,
                                                       "msg": msg})
 
         await ctx.send("PM successfully sent!")
@@ -203,9 +203,9 @@ class ServerCog(commands.Cog):
             return
 
         msg = " ".join(text)
-        sender = repo.user_from_discord(ctx.author.id).ckey
+        sender = await repo.user_from_discord(ctx.author.id)
 
-        await api.query_game("broadcast_text", params={"senderkey": sender,
+        await api.query_game("broadcast_text", params={"senderkey": sender.ckey,
                                                        "text": msg})
 
         await ctx.send("Announcement successfully sent.")
@@ -279,9 +279,9 @@ class ServerCog(commands.Cog):
         api = self.bot.Api()
         repo = self.bot.UserRepo()
 
-        sender = repo.user_from_discord(ctx.author.id).ckey
+        sender = await repo.user_from_discord(ctx.author.id)
         await api.query_game("tickets_close", params={"id": id,
-                                                      "admin": sender})
+                                                      "admin": sender.ckey})
 
         await ctx.send("Ticket successfully closed!")
 
