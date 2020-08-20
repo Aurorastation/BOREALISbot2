@@ -6,19 +6,19 @@ import yaml
 from core import *
 
 def setup_logging(
-    default_path='logging.yml',
+    default_path="logging.yml",
     default_level=logging.INFO,
-    env_key='LOG_CFG'
+    env_key="LOG_CFG"
 ):
-    """Setup logging configuration
-
+    """
+    Setup logging configuration
     """
     path = default_path
     value = os.getenv(env_key, None)
     if value:
         path = value
     if os.path.exists(path):
-        with open(path, 'rt') as f:
+        with open(path, "rt") as f:
             config = yaml.safe_load(f.read())
         logging.config.dictConfig(config)
     else:
@@ -31,20 +31,11 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 ## GLOBALS
-config = None
+config = FileConfig.create(logger, "config.yml")
 api = None
 scheduler = None
 
 INIT_EXT = {"cogs.owner"}
-
-## CONFIG INIT
-try:
-    config = subsystems.Config("config.yml")
-    config.setup()
-except ConfigError as err:
-    logger.exception("Error initializing Config object.")
-    raise RuntimeError("Stopping now.")
-
 INIT_EXT = INIT_EXT.union(set(config.bot["autoload_cogs"]))
 
 ## API INIT
@@ -56,7 +47,7 @@ except ApiError as err:
 
 ## BOT INIT
 bot = Borealis(config.bot["prefix"], config, api,
-               description="Borealis version 3.6.0, here to assist in any SS13 related matters!")
+               description="Borealis version 3.7.0, here to assist in any SS13 related matters!")
 
 try:
     scheduler = subsystems.TaskScheduler(bot, config.scheduler["interval"])

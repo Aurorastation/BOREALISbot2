@@ -2,7 +2,7 @@ import discord
 import logging
 import emoji
 from discord.ext import commands
-from core.subsystems.config import GuildConfig
+#from core.subsystems.sqlobjects import GuildConfig
 
 class RoleAssigner(commands.Cog):
     def __init__(self, bot):
@@ -12,7 +12,7 @@ class RoleAssigner(commands.Cog):
     def _emoji_to_name(self, react_emoji):
         # If we have a custom emoji return the name
         if react_emoji.id is not None:
-            return ":{}:".format(react_emoji.name)
+            return f":{react_emoji.name}:"
         # If we dont have a custom emoji, we need to use emoji.py to convert the emoji to a name
         return emoji.unicode_codes.UNICODE_EMOJI[react_emoji.name]
 
@@ -39,17 +39,13 @@ class RoleAssigner(commands.Cog):
         guild = self.bot.get_guild(payload.guild_id)
         member = discord.utils.get(guild.members, id=payload.user_id)
         emoji_name = self._emoji_to_name(payload.emoji)
-        self._logger.debug("Got the following data from the reaction - guild:{} - member:{} - emoji_id:{}".format(
-            guild,
-            member,
-            emoji_name
-        ))
+        self._logger.debug(f"Got the following data from the reaction - guild:{guild} - member:{member} - emoji_id:{emoji_name}")
 
         # Get the config for the guild and return if there is no config for it
         config = self.bot.Config()
         guildconfig = config.guilds[payload.guild_id]
         if not isinstance(guildconfig, GuildConfig):
-            self._logger.debug("Could not find configuration for guild id: {}".format(payload.guild_id))
+            self._logger.debug(f"Could not find configuration for guild id: {payload.guild_id}")
             return
 
         # Ignore if the user who sent the reaction is a bot
@@ -59,19 +55,19 @@ class RoleAssigner(commands.Cog):
 
         # Check if a role for the combination of emote and message id exists
         if payload.message_id not in guildconfig.reactionroles:
-            self._logger.debug("Could not find message id in guildconfig: {}".format(payload.message_id))
+            self._logger.debug(f"Could not find message id in guildconfig: {payload.message_id}")
             return
 
         # Check if the emoji exists for the messageid in the guildconfig
         if emoji_name not in guildconfig.reactionroles[payload.message_id]:
-            self._logger.debug("Could not find emote for messageid in guildconfig: emote: {} - message: 70".format(emoji_name, payload.message_id))
+            self._logger.debug(f"Could not find emote for messageid in guildconfig: emote: {emoji_name} - message: {payload.message_id}")
             return
 
         rrole_id = guildconfig.reactionroles[payload.message_id][emoji_name]
         role = discord.utils.get(guild.roles, id=rrole_id)
 
         if not role:
-            self._logger.debug("Role with specified role id does not exist: {}".format(rrole_id))
+            self._logger.debug(f"Role with specified role id does not exist: {rrole_id}")
             return
 
         return member, role
