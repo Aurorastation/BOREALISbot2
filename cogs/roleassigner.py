@@ -56,46 +56,5 @@ class RoleAssigner(commands.Cog):
 
         return discord.utils.get(guild.roles, id=role_id)
 
-    async def _process_reaction_event(self, payload: discord.RawReactionActionEvent):
-        if not payload.guild_id:
-            return
-
-        guild = self.bot.get_guild(payload.guild_id)
-        member = discord.utils.get(guild.members, id=payload.user_id)
-        emoji_name = self._emoji_to_name(payload.emoji)
-        self._logger.debug(f"Got the following data from the reaction - guild:{guild} - member:{member} - emoji_id:{emoji_name}")
-
-        # Get the config for the guild and return if there is no config for it
-        config = self.bot.Config()
-        guildconfig = config.guilds[payload.guild_id]
-        if not isinstance(guildconfig, GuildConfig):
-            self._logger.debug(f"Could not find configuration for guild id: {payload.guild_id}")
-            return
-
-        # Ignore if the user who sent the reaction is a bot
-        if member.bot:
-            self._logger.debug("Ignoring reactions - Author is Bot")
-            return
-
-        # Check if a role for the combination of emote and message id exists
-        if payload.message_id not in guildconfig.reactionroles:
-            self._logger.debug(f"Could not find message id in guildconfig: {payload.message_id}")
-            return
-
-        # Check if the emoji exists for the messageid in the guildconfig
-        if emoji_name not in guildconfig.reactionroles[payload.message_id]:
-            self._logger.debug(f"Could not find emote for messageid in guildconfig: emote: {emoji_name} - message: {payload.message_id}")
-            return
-
-        rrole_id = guildconfig.reactionroles[payload.message_id][emoji_name]
-        role = discord.utils.get(guild.roles, id=rrole_id)
-
-        if not role:
-            self._logger.debug(f"Role with specified role id does not exist: {rrole_id}")
-            return
-
-        return member, role
-
-
 def setup(bot):
     bot.add_cog(RoleAssigner(bot))

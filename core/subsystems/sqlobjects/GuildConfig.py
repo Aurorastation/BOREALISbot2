@@ -56,9 +56,14 @@ class GuildConfig(Base):
 
     def _populate_controlled_roles(self, message: discord.Message):
         self._controlled_roles = {}
+        guild = message.guild
         for line in message.content.split("\n"):
             try:
                 emoji, role_name = line.split(": ")
-                
+                role = discord.utils.get(guild.roles, name=role_name)
+                if not role:
+                    continue
+
+                self._controlled_roles[emoji] = role.id
             except ValueError:
                 pass
