@@ -15,9 +15,10 @@
 #    along with this program.  If not, see http://www.gnu.org/licenses/.
 
 import discord
+import emoji
 from typing import Dict, Optional
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Boolean
 
 Base = declarative_base()
 
@@ -25,10 +26,18 @@ class GuildConfig(Base):
     __tablename__ = "guilds"
 
     id = Column(Integer, primary_key=True, autoincrement=False)
+    admin_actions_enabled = Column(Boolean, default=False)
     role_control_message_id = Column(Integer)
 
     def __init__(self):
-        self._controlled_roles: Optional[Dict[str, int]] = None
+        self._controlled_roles: Dict[str, int] = None
+
+    @staticmethod
+    def emoji_to_name(self, react_emoji: discord.Emoji) -> str:
+        if react_emoji.id:
+            return f":{react_emoji.name}:"
+        else:
+            return emoji.unicode_codes.UNICODE_EMOJI[react_emoji.name]
 
     def is_control_message(self, message: discord.Message) -> bool:
         if not self.role_control_message_id:
@@ -36,5 +45,20 @@ class GuildConfig(Base):
 
         return message.id == self.role_control_message_id
 
-    def get_selected_role(self, control_message: discord.Message) -> Optional[discord.Role]:
-        return 1
+    def get_selected_role_id(self, emoji_name: str, message: discord.Message) -> Optional[int]:
+        if not self._controlled_roles:
+            self._populate_controlled_roles(message)
+
+        if emoji_name in self._controlled_roles:
+            return self._controlled_roles[emoji_name]
+        else:
+            return None
+
+    def _populate_controlled_roles(self, message: discord.Message):
+        self._controlled_roles = {}
+        for line in message.content.split("\n"):
+            try:
+                emoji, role_name = line.split(": ")
+                
+            except ValueError:
+                pass

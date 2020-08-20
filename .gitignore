@@ -1,5 +1,6 @@
 # IDE/Editor stuff
 .vscode
+.mypy_cache
 
 # Project-specifics:
 config.yml

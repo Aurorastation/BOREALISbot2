@@ -2,7 +2,8 @@ import discord
 import logging
 import emoji
 from discord.ext import commands
-#from core.subsystems.sqlobjects import GuildConfig
+from typing import Union, Optional
+from core.subsystems.sqlobjects import GuildConfig
 
 class RoleAssigner(commands.Cog):
     def __init__(self, bot):
@@ -17,20 +18,43 @@ class RoleAssigner(commands.Cog):
         return emoji.unicode_codes.UNICODE_EMOJI[react_emoji.name]
 
     @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
-        ret = await self._process_reaction_event(payload)
-        if not isinstance(ret, tuple):
+    async def on_reaction_add(self, reaction: discord.Reaction, user: Union[discord.Member, discord.User]):
+        if not isinstance(user, discord.Member):
             return
-        member, role = ret
-        await member.add_roles(role)
+
+        message = reaction.message
+        role = await self._get_controlled_role(message, reaction, user)
+        if role:
+            await user.add_roles(role)
 
     @commands.Cog.listener()
-    async def on_raw_reaction_remove(self, payload: discord.RawReactionActionEvent):
-        ret = await self._process_reaction_event(payload)
-        if not isinstance(ret, tuple):
+    async def on_reaction_remove(self, reaction: discord.Reaction, user: Union[discord.Member, discord.User]):
+        if not isinstance(user, discord.Member):
             return
-        member, role = ret
-        await member.remove_roles(role)
+
+        message = reaction.message
+        role = await self._get_controlled_role(message, reaction, user)
+        if role:
+            await user.remove_roles(role)
+
+    async def _get_controlled_role(self, message: discord.Message, reaction: discord.Reaction, user: discord.Member) -> Optional[discord.Role]:
+        guild = message.guild
+        if not guild:
+            return None
+
+        guild_config: Optional[GuildConfig] = self.bot.Config().guilds[guild.id]
+        if not guild_config:
+            return None
+
+        if not guild_config.is_control_message(message):
+            return None
+
+        emoji_name = self._emoji_to_name(reaction.emoji)
+        role_id: Optional[int] = guild_config.get_selected_role_id(emoji_name, message)
+        if not role_id:
+            return None
+
+        return discord.utils.get(guild.roles, id=role_id)
 
     async def _process_reaction_event(self, payload: discord.RawReactionActionEvent):
         if not payload.guild_id:
