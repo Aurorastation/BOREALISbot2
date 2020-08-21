@@ -37,7 +37,7 @@ class Borealis(commands.Bot):
         elif isinstance(error, commands.CommandOnCooldown):
             await ctx.send(f"Command on cooldown. Retry again in {int(error.retry_after)} seconds.")
         elif isinstance(error, commands.CheckFailure):
-            await ctx.send("Command execution checks failed. Most likely due to missing permissions.")
+            await ctx.send(f"Command execution checks failed. {error}")
         elif isinstance(error, commands.CommandNotFound):
             pass
         elif isinstance(error, commands.CommandInvokeError):

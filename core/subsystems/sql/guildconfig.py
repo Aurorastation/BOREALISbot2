@@ -46,11 +46,22 @@ class GuildConfig(Base):
     admin_actions_enabled = Column(sqlalchemy.Boolean, default=False)
     subscribes_enabled = Column(sqlalchemy.Boolean, default=False)
 
-    channels = relationship("ChannelConfig", back_populates="guild")
-    role_control_messages = relationship("RoleControlMessage", back_populates="guild")
+    channels = relationship("ChannelConfig", back_populates="guild",
+                            cascade="all, delete, delete-orphan")
+    role_control_messages = relationship("RoleControlMessage", back_populates="guild",
+                                         cascade="all, delete, delete-orphan")
 
     def __init__(self):
         self._controlled_roles: Dict[int, Dict[str, int]] = {}
+
+    def to_embed(self) -> Dict[str, str]:
+        fields: Dict[str, str] = {}
+
+        fields["ID:"] = f"{self.id}"
+        fields["Moderation enabled:"] = "Yes" if self.admin_actions_enabled else "No"
+        fields["Subscribing enabled:"] = "Yes" if self.subscribes_enabled else "No"
+
+        return fields
 
     def is_control_message(self, message: discord.Message) -> bool:
         for msg in self.role_control_messages:

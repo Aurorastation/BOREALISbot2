@@ -14,33 +14,20 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see http://www.gnu.org/licenses/.
 
-import enum
-from typing import Optional
+from discord.ext import commands
 
-import sqlalchemy
-from sqlalchemy import Column
-from sqlalchemy.orm import relationship
+from core import Borealis
 
-from .base import Base
+def guild_is_setup():
+    def decorator(ctx: commands.Context):
+        if not ctx.message.guild:
+            return False
 
-class ChannelType(enum.Enum):
-    ADMIN = 1
-    CCIAA = 2
-    ANNOUNCEMENT = 3
-    LOG = 4
+        bot: Borealis = ctx.bot
 
-    @staticmethod
-    def from_string(arg: str) -> Optional["ChannelType"]:
-        try:
-            return ChannelType[arg]
-        except:
-            return None
+        if bot.Config().get_guild(ctx.message.guild.id):
+            return True
+        else:
+            raise commands.CheckFailure("Guild is not configured.")
 
-class ChannelConfig(Base):
-    __tablename__ = "channels"
-
-    id = Column(sqlalchemy.Integer, primary_key=True, autoincrement=False)
-    guild_id = Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("guilds.id"))
-    channel_type = Column(sqlalchemy.Enum(ChannelType))
-
-    guild = relationship("GuildConfig", back_populates="channels")
+    return commands.check(decorator)
