@@ -15,12 +15,11 @@
 #    along with this program.  If not, see http://www.gnu.org/licenses/.
 
 import enum
-
-from sqlalchemy import Column, Enum, ForeignKey, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
+import sqlalchemy
+from sqlalchemy import Column
 from sqlalchemy.orm import relationship
 
-Base = declarative_base()
+from .base import Base
 
 class ChannelType(enum.Enum):
     ADMIN = 1
@@ -31,8 +30,8 @@ class ChannelType(enum.Enum):
 class ChannelConfig(Base):
     __tablename__ = "channels"
 
-    id = Column(Integer, primary_key=True, autoincrement=False)
-    guild_id = Column(Integer, ForeignKey("guilds.id"))
-    channel_type = Column(Enum(ChannelType))
+    id = Column(sqlalchemy.Integer, primary_key=True, autoincrement=False)
+    guild_id = Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("guilds.id"))
+    channel_type = Column(sqlalchemy.Enum(ChannelType))
 
     guild = relationship("GuildConfig", back_populates="channels")

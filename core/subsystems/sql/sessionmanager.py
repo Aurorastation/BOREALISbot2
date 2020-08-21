@@ -19,8 +19,6 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from .FileConfig import FileConfig
-
 """
 The SQL Session. Use this for SQL interactions.
 
@@ -28,12 +26,13 @@ DO NOT use the default SQLAlchemy Session class!
 """
 Session = sessionmaker()
 
-class SqlManager:
+class SessionManager:
     """
-    Manager for SQL shenanigans.
+    Manager for SQL shenanigans. Must be created before any SQL queries are
+    made by the bot.
     """
-    def __init__(self, config: FileConfig):
-        self._engine = create_engine(config.sql["url"])
+    def __init__(self, conn_str: str):
+        self._engine = create_engine(conn_str)
 
         Session.configure(bind=self._engine)
 

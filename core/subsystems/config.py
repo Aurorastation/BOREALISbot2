@@ -19,11 +19,10 @@ import yaml
 import logging
 
 from discord.ext import commands
-from typing import Any
+from typing import Any, Optional, Mapping
 
-from .SqlManager import Session
-from .sqlobjects import *
-from ..borealis_exceptions import ConfigError
+from core.borealis_exceptions import ConfigError
+from core.subsystems import sql
 
 class Config:
     """
@@ -42,10 +41,10 @@ class Config:
         self.filepath: str = config_path
 
         # The master dictionary with configuration options.
-        self.config = {}
+        self.config: Mapping[str, Any] = {}
 
         # The logger from the bot.
-        self._logger = logging.getLogger(__name__)
+        self._logger: logging.Logger = logging.getLogger(__name__)
 
     def __getattr__(self, name: str) -> Any:
         """Fetch a value from the config dictionary."""
@@ -73,6 +72,7 @@ class Config:
         with open(self.filepath, "r") as file:
             try:
                 self.config = yaml.safe_load(file)
+                self._logger.debug("Config loaded from file '%s'.", name)
             except yaml.YAMLError as err:
                 raise ConfigError(f"Error reading config: {err}", "setup")
 
@@ -81,8 +81,19 @@ class Config:
         sess = Session()
 
         ch_dict = {}
-
         for ch in sess.query(ChannelConfig).all():
             ch_dict[ch.id] = ch
 
         self.config["channels"] = ch_dict
+
+        guild_dict = {}
+        for guild in sess.query(GuildConfig).all():
+            guild_dict[guild.id] = guild
+
+        self.config["guilds"] = guild_dict
+
+    def get_guild(self, guild_id: int) -> Optional[sql.GuildConfig]:
+        if guild_id not in self.config["guilds"]:
+            return None
+
+        return self.config["guilds"][guild_id]
