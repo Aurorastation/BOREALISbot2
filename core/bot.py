@@ -3,7 +3,7 @@ import logging
 
 from discord.ext import commands
 
-from .subsystems import ApiMethods
+import core.subsystems as ss
 from .borealis_exceptions import BotError, ApiError, BorealisError
 from .users import UserRepo
 
@@ -22,13 +22,13 @@ class Borealis(commands.Bot):
 
         self._user_repo = UserRepo(self)
 
-    def Api(self):
+    def Api(self) -> ss.API:
         return self._api
 
-    def Config(self):
+    def Config(self) -> ss.Config:
         return self._config
 
-    def UserRepo(self):
+    def UserRepo(self) -> UserRepo:
         return self._user_repo
 
     async def on_command_error(self, ctx, error):

@@ -1,17 +1,20 @@
-import discord
 from typing import Optional
+
+import discord
 from discord.ext import commands
 
+from core import Borealis
+
 class ConfigCog(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
+    def __init__(self, bot: Borealis):
+        self.bot: Borealis = bot
 
     @commands.group(pass_context=True)
     async def config(self, ctx):
         """General configuration commands."""
         pass
 
-    @commands.group(pass_context=True)
+    @config.group(pass_context=True)
     async def guild(self, ctx):
         """Guild configuration commands."""
         pass
@@ -41,12 +44,15 @@ class ConfigCog(commands.Cog):
     async def guild_edit(self, ctx, guild: Optional[discord.Guild], param, value):
         pass
 
-    @commands.group(pass_context=True)
+    @config.group(pass_context=True)
     async def channel(self, ctx):
         """Channel editing commands. Guild must be set up first."""
         # TODO: validate if the channel is set up.
         pass
 
     @channel.command(name="add")
-    async def channel_add(self, ctx, channel: Optional[discord.Channel], ch_type: str):
+    async def channel_add(self, ctx, channel: Optional[discord.TextChannel], ch_type: str):
         pass
+
+def setup(bot: Borealis):
+    bot.add_cog(ConfigCog(bot))

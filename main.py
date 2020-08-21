@@ -31,9 +31,12 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 ## GLOBALS
-config = FileConfig.create(logger, "config.yml")
+config = Config.create(logger, "config.yml")
 api = None
 scheduler = None
+sql_manager = subsystems.sql.SessionManager(config.sql["url"])
+
+config.load_sql()
 
 INIT_EXT = {"cogs.owner"}
 INIT_EXT = INIT_EXT.union(set(config.bot["autoload_cogs"]))
@@ -51,8 +54,8 @@ bot = Borealis(config.bot["prefix"], config, api,
 
 try:
     scheduler = subsystems.TaskScheduler(bot, config.scheduler["interval"])
-    scheduler.add_task(43200, config.update_channels, "update_channels", init_now=True,
-                       args=[api], is_coro=True)
+    # scheduler.add_task(43200, config.update_channels, "update_channels", init_now=True,
+    #                    args=[api], is_coro=True)
     scheduler.add_task(1800, bot.process_temporary_bans, "process_bans", init_now=True, is_coro=True)
 except SchedulerError as err:
     logger.exception("Error initializing scheduler object.")

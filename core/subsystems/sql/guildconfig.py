@@ -24,7 +24,7 @@ from sqlalchemy.orm import relationship
 
 from .base import Base
 
-def _emoji_to_name(self, react_emoji: discord.Emoji) -> str:
+def _emoji_to_name(react_emoji: discord.Emoji) -> str:
     if react_emoji.id:
         return f":{react_emoji.name}:"
     else:
@@ -59,9 +59,11 @@ class GuildConfig(Base):
 
         return False
 
-    def get_selected_role_id(self, emoji_name: str, message: discord.Message) -> Optional[int]:
+    def get_selected_role_id(self, raw_emoji: discord.Emoji, message: discord.Message) -> Optional[int]:
         if not self.is_control_message(message):
             return None
+
+        emoji_name = _emoji_to_name(raw_emoji)
 
         if message.id not in self._controlled_roles:
             self._controlled_roles[message.id] = self._get_controlled_roles(message)

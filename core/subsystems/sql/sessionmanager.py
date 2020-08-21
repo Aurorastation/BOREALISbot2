@@ -19,6 +19,8 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from .base import Base
+
 """
 The SQL Session. Use this for SQL interactions.
 
@@ -36,3 +38,8 @@ class SessionManager:
 
         Session.configure(bind=self._engine)
 
+    def create_all_tables(self):
+        Base.metadata.create_all(self._engine)
+
+    def drop_all_tables(self):
+        Base.metadata.drop_all(self._engine)

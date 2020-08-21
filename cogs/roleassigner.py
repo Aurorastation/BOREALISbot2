@@ -1,13 +1,15 @@
-import discord
 import logging
-import emoji
+from typing import Optional, Union
+
+import discord
 from discord.ext import commands
-from typing import Union, Optional
-from core.subsystems.sqlobjects import GuildConfig
+
+from core.bot import Borealis
+from core.subsystems.sql import GuildConfig
 
 class RoleAssigner(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
+    def __init__(self, bot: Borealis):
+        self.bot: Borealis = bot
         self._logger = logging.getLogger(__name__)
 
     def _emoji_to_name(self, react_emoji):
@@ -42,19 +44,15 @@ class RoleAssigner(commands.Cog):
         if not guild:
             return None
 
-        guild_config: Optional[GuildConfig] = self.bot.Config().guilds[guild.id]
+        guild_config: Optional[GuildConfig] = self.bot.Config().get_guild(guild.id)
         if not guild_config:
             return None
 
-        if not guild_config.is_control_message(message):
-            return None
-
-        emoji_name = self._emoji_to_name(reaction.emoji)
-        role_id: Optional[int] = guild_config.get_selected_role_id(emoji_name, message)
+        role_id: Optional[int] = guild_config.get_selected_role_id(reaction.emoji, message)
         if not role_id:
             return None
 
         return discord.utils.get(guild.roles, id=role_id)
 
-def setup(bot):
+def setup(bot: Borealis):
     bot.add_cog(RoleAssigner(bot))

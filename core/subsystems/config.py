@@ -72,22 +72,16 @@ class Config:
         with open(self.filepath, "r") as file:
             try:
                 self.config = yaml.safe_load(file)
-                self._logger.debug("Config loaded from file '%s'.", name)
+                self._logger.debug("Config loaded from file '%s'.", self.filepath)
             except yaml.YAMLError as err:
                 raise ConfigError(f"Error reading config: {err}", "setup")
 
     def load_sql(self):
         """Updates various entries from the SQL database."""
-        sess = Session()
-
-        ch_dict = {}
-        for ch in sess.query(ChannelConfig).all():
-            ch_dict[ch.id] = ch
-
-        self.config["channels"] = ch_dict
+        sess = sql.Session()
 
         guild_dict = {}
-        for guild in sess.query(GuildConfig).all():
+        for guild in sess.query(sql.GuildConfig).all():
             guild_dict[guild.id] = guild
 
         self.config["guilds"] = guild_dict

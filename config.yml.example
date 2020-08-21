@@ -4,6 +4,7 @@ bot:
   subscriber_server: None
   subscriber_role: None
   autoload_cogs:
+    - cogs.config
     - cogs.channel
     - cogs.discord
     - cogs.players
