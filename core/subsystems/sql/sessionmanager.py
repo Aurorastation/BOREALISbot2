@@ -16,6 +16,8 @@
 
 import logging
 
+from contextlib import contextmanager
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -37,6 +39,19 @@ class SessionManager:
         self._engine = create_engine(conn_str)
 
         Session.configure(bind=self._engine)
+
+    @staticmethod
+    @contextmanager
+    def scoped_session():
+        session = Session()
+        try:
+            yield session
+            session.commit()
+        except:
+            session.rollback()
+            raise
+        finally:
+            session.close()
 
     def create_all_tables(self):
         Base.metadata.create_all(self._engine)

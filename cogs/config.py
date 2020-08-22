@@ -68,6 +68,8 @@ class ConfigCog(commands.Cog):
         author = ctx.author
         channel = ctx.message.channel
 
+        permissions = ctx.message.guild.get_member(self.bot.client.id).guild_permissions
+
         def check(m: discord.Message) -> bool:
             return m.author == author and m.channel == channel
 
@@ -79,9 +81,17 @@ class ConfigCog(commands.Cog):
             msg = await self.bot.wait_for("message", timeout=30.0, check=check)
             guild_conf.admin_actions_enabled = is_yes(msg)
 
+            if not permissions.kick_members or not permissions.ban_members:
+                await ctx.send("Missing kick and ban permissions. Cannot moderate the server. Cancelled.")
+                return
+
             await ctx.send("Should the server have subscribing enabled? (`yes`/`no`)")
             msg = await self.bot.wait_for("message", timeout=30.0, check=check)
             guild_conf.subscribes_enabled = is_yes(msg)
+
+            if not permissions.manage_roles:
+                await ctx.send("Missing manage roles permissions. Cannot edit subscribers. Cancelled.")
+                return
 
             embed = discord.Embed(title="Guild Config")
             for name, value in guild_conf.to_embed().items():
@@ -155,9 +165,9 @@ class ConfigCog(commands.Cog):
             await ctx.send(f"Guild with ID `{guild.id}` is not configured.")
             return
 
-        session = self.bot.Config().session
-        session.delete(guild_conf)
-        session.commit()
+        with sql.SessionManager.scoped_session() as session:
+            session.delete(guild_conf)
+
         self.bot.Config().load_sql()
 
         await ctx.send(f"Guild setup deleted.")
@@ -254,9 +264,9 @@ class ConfigCog(commands.Cog):
             await ctx.send(f"Channel with ID `{channel.id}` is not configured.")
             return
 
-        session = self.bot.Config().session
-        session.delete(ch)
-        session.commit()
+        with sql.SessionManager.scoped_session() as session:
+            session.delete(ch)
+
         self.bot.Config().load_sql()
 
         await ctx.send("Channel deleted.")

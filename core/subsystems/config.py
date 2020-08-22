@@ -46,9 +46,6 @@ class Config:
         # The logger from the bot.
         self._logger: logging.Logger = logging.getLogger(__name__)
 
-        # The SQL session.
-        self.session: sql.Session = None
-
     def __getattr__(self, name: str) -> Any:
         """Fetch a value from the config dictionary."""
         if name in self.config:
@@ -81,18 +78,17 @@ class Config:
 
     def load_sql(self):
         """Updates various entries from the SQL database."""
-        self.session = sql.Session()
+        with sql.SessionManager.scoped_session() as session:
+            guild_dict = {}
+            channel_dict = {}
+            for guild in session.query(sql.GuildConfig).all():
+                guild_dict[guild.id] = guild
 
-        guild_dict = {}
-        channel_dict = {}
-        for guild in self.session.query(sql.GuildConfig).all():
-            guild_dict[guild.id] = guild
+                for channel in guild.channels:
+                    channel_dict[channel.id] = channel
 
-            for channel in guild.channels:
-                channel_dict[channel.id] = channel
-
-        self.config["guilds"] = guild_dict
-        self.config["channels"] = channel_dict
+            self.config["guilds"] = guild_dict
+            self.config["channels"] = channel_dict
 
     def get_guild(self, guild_id: int) -> Optional[sql.GuildConfig]:
         if guild_id not in self.config["guilds"]:
@@ -103,11 +99,11 @@ class Config:
     def commit_guild(self, guild: sql.GuildConfig) -> None:
         reload_after = False
 
-        if guild.id not in self.config["guilds"]:
-            self.session.add(guild)
-            reload_after = True
+        with sql.SessionManager.scoped_session() as session:
+            if guild.id not in self.config["guilds"]:
+                reload_after = True
 
-        self.session.commit()
+            self.session.add(guild)
 
         if reload_after:
             self.load_sql()
@@ -120,12 +116,12 @@ class Config:
 
     def commit_channel(self, channel: sql.ChannelConfig) -> None:
         reload_after = False
-        
-        if channel.id not in self.config["channels"]:
-            self.session.add(channel)
-            reload_after = True
 
-        self.session.commit()
+        with sql.SessionManager.scoped_session() as session:
+            if channel.id not in self.config["channels"]:
+                reload_after = True
+
+            self.session.add(channel)
 
         if reload_after:
             self.load_sql()
