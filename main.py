@@ -54,8 +54,6 @@ bot = Borealis(config.bot["prefix"], config, api,
 
 try:
     scheduler = subsystems.TaskScheduler(bot, config.scheduler["interval"])
-    # scheduler.add_task(43200, config.update_channels, "update_channels", init_now=True,
-    #                    args=[api], is_coro=True)
     scheduler.add_task(1800, bot.process_temporary_bans, "process_bans", init_now=True, is_coro=True)
 except SchedulerError as err:
     logger.exception("Error initializing scheduler object.")

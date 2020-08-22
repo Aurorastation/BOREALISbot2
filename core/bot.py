@@ -1,10 +1,13 @@
-import discord
 import logging
+from typing import List
 
+import discord
 from discord.ext import commands
 
 import core.subsystems as ss
-from .borealis_exceptions import BotError, ApiError, BorealisError
+import core.subsystems.sql as sql
+
+from .borealis_exceptions import ApiError, BorealisError, BotError
 from .users import UserRepo
 
 
@@ -47,7 +50,7 @@ class Borealis(commands.Bot):
         else:
             self._logger.error("Unrecognized error in command. %s - %s", error, type(error))
 
-    async def forward_message(self, msg, channel_str=None, channel_objs=None):
+    async def forward_message(self, msg, channel_type: sql.ChannelType) -> None:
         """
         Forwards a message to a set of channels described by channel_str, or set
         via channel_objs argument.
@@ -55,20 +58,14 @@ class Borealis(commands.Bot):
         if not len(msg):
             return
 
-        if channel_objs is None:
-            channel_objs = []
+        channel_objs: List[discord.TextChannel] = []
 
-        if channel_str:
-            config = self.Config()
-            if not config:
-                raise BotError("No Config accessible to bot.", "forward_message")
+        config = self.Config()
 
-            channel_ids = config.get_channels(channel_str)
-            self._logger.debug("Fetched Channel IDs: %s", channel_ids)
-            for cid in channel_ids:
-                channel = self.get_channel(cid)
-                self._logger.debug("Fetched Channel %s from Channel ID %s ", channel, cid)
-                if channel is not None:
+        for channel in self.Config().channels:
+            if channel.channel_type == channel_type:
+                channel_obj = self.get_channel(channel.id)
+                if channel:
                     channel_objs.append(channel)
 
         if not len(channel_objs):
@@ -124,12 +121,7 @@ class Borealis(commands.Bot):
             data["user_id"] = subject.id
             str_list.append(f"SUBJECT: {subject.name}/{subject.id}")
 
-        try:
-            await self.Api().query_web("/log", ApiMethods.PUT, data)
-        except ApiError:
-            pass
-
-        await self.forward_message(" | ".join(str_list), "channel_log")
+        await self.forward_message(" | ".join(str_list), sql.ChannelType.LOG)
 
     async def register_ban(self, user_obj, ban_type, duration, server_obj,
                            author_obj=None, reason="You have been banned by an administrator"):

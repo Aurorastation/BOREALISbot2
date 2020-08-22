@@ -238,11 +238,15 @@ class ConfigCog(commands.Cog):
         pass
 
     @commands.guild_only()
-    @commands.has_permissions(send_messages=True)
     @guildchecks.guild_is_setup()
     @channel.command(name="add")
     async def channel_add(self, ctx, ch_type: sql.ChannelType.from_string):
         author = ctx.author
+
+        permissions = ctx.channel.get_member(self.bot.client.id)
+        if not permissions.send_messages:
+            await author.send(f"I cannot send messages in that channel.")
+            return
 
         existing_channel: Optional[sql.ChannelConfig] = self.bot.Config().get_channel(ctx.channel.id)
         if existing_channel:
