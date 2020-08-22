@@ -139,6 +139,14 @@ class ConfigCog(commands.Cog):
                 guild_conf.admin_actions_enabled = util.strtobool(value)
             elif param == "subscribes_enabled":
                 guild_conf.subscribes_enabled = util.strtobool(value)
+            elif param == "subscriber_role_id":
+                param = int(param)
+                role = guild.get_role(param)
+                if not role:
+                    await ctx.send(f"No role with ID `{param}` found.")
+                    return
+
+                guild_conf.subscriber_role_id = param
             else:
                 await ctx.send(f"Unknown parameter: `{param}`.")
                 return

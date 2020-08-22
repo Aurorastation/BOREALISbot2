@@ -45,6 +45,7 @@ class GuildConfig(Base):
     id = Column(sqlalchemy.Integer, primary_key=True, autoincrement=False)
     admin_actions_enabled = Column(sqlalchemy.Boolean, default=False)
     subscribes_enabled = Column(sqlalchemy.Boolean, default=False)
+    subscriber_role_id = Column(sqlalchemy.Integer)
 
     channels = relationship("ChannelConfig", back_populates="guild",
                             cascade="all, delete, delete-orphan")
@@ -60,6 +61,7 @@ class GuildConfig(Base):
         fields["ID:"] = f"{self.id}"
         fields["Moderation enabled:"] = "Yes" if self.admin_actions_enabled else "No"
         fields["Subscribing enabled:"] = "Yes" if self.subscribes_enabled else "No"
+        fields["Subscriber role:"] = self.subscriber_role_id
 
         return fields
 
