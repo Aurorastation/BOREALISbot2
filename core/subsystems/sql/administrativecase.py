@@ -15,9 +15,11 @@
 #    along with this program.  If not, see http://www.gnu.org/licenses/.
 
 import enum
+from datetime import datetime
 from typing import Dict
 
 import sqlalchemy
+from dateutil.relativedelta import relativedelta
 from sqlalchemy import Column
 
 from .base import Base
@@ -52,6 +54,15 @@ class AdministrativeCase(Base):
     created_at = Column(sqlalchemy.DateTime)
     expires_at = Column(sqlalchemy.DateTime, default=None)
     deleted_at = Column(sqlalchemy.DateTime, default=None)
+
+    @staticmethod
+    def count_active_strikes(subject: int, session) -> int:
+        cut_off = datetime.now() - relativedelta(months=2)
+        return session.query(AdministrativeCase)\
+               .filter(AdministrativeCase.subject_id == subject)\
+               .filter(AdministrativeCase.created_at >= cut_off)\
+               .filter(AdministrativeCase.deleted_at.is_(None))\
+               .filter(AdministrativeCase.is_active == True).count()
 
     def to_embed(self) -> Dict[str, str]:
         data: Dict[str, str] = {

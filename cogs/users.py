@@ -1,10 +1,14 @@
 import discord
 from discord.ext import commands, tasks
-from core import ConfigError, ApiError, ApiMethods
 
-from .utils import authchecks, AuthPerms, AuthType
+from core import ApiError, ApiMethods, ConfigError
+from core.subsystems import sql
+import datetime
+
+from .utils import AuthPerms, AuthType, authchecks
 from .utils.byond import get_ckey
 from .utils.paginator import FieldPages
+
 
 class UserCog(commands.Cog):
     def __init__(self, bot):
@@ -124,10 +128,10 @@ class UserCog(commands.Cog):
             fields["Nickname:"] = discord_user.name
             fields["Discord ID:"] = discord_user.id
 
-            data = await api.query_web("/discord/strike", ApiMethods.GET, data={"discord_id": discord_user.id},
-                                    return_keys=["strike_count"], enforce_return_keys=True)
+            with sql.SessionManager.scoped_session() as session:
+                strike_count = sql.AdministrativeCase.count_active_strikes(discord_user.id, session)
 
-            fields["Strikes:"] = data["strike_count"]
+            fields["Strikes:"] = strike_count
 
         if forum_user:
             forum_user.add_info_fields(fields)

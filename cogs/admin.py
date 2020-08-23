@@ -84,12 +84,7 @@ class AdministrativeCaseFactory:
         return f"Issued a {self.action_type}. Case ID: `[{self.case.id}]`."
 
     def _strike_should_be_escalated(self) -> sql.AdminAction:
-        cut_off = datetime.now() - relativedelta(months=2)
-
-        active_strikes = self.session.query(sql.AdministrativeCase)\
-                             .filter(sql.AdministrativeCase.created_at >= cut_off)\
-                             .filter(sql.AdministrativeCase.deleted_at.is_(None))\
-                             .filter(sql.AdministrativeCase.is_active == True).count()
+        active_strikes = sql.AdministrativeCase.count_active_strikes(self.subject.id, self.session)
 
         if active_strikes > 3:
             return sql.AdminAction.PERMA_BAN
