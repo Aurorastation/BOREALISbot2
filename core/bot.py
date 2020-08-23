@@ -21,8 +21,6 @@ class Borealis(commands.Bot):
 
         self._logger = logging.getLogger(__name__)
 
-        self.add_listener(self.process_unsubscribe, "on_message")
-
         self._user_repo = UserRepo(self)
 
     def Api(self) -> ss.API:
@@ -141,33 +139,3 @@ class Borealis(commands.Bot):
             str_list.append(f"SUBJECT: {subject.name}/{subject.id}")
 
         await self.forward_message(" | ".join(str_list), sql.ChannelType.LOG)
-
-    async def process_unsubscribe(self, message):
-        """
-        A listener for a message mentioning the subcribers. Used to trigger automatic
-        unsubscribing when needed.
-        """
-        if not self.Config().bot["subscriber_server"] or not self.Config().bot["subscriber_role"]:
-            return
-
-        if not message.guild or message.guild.id != self.Config().bot["subscriber_server"]:
-            return
-
-        if message.author != self.user:
-            return
-
-        role = discord.Object(id=self.Config().bot["subscriber_role"])
-        if role in message.role_mentions:
-            users = await self.Api().query_web("/subscriber", ApiMethods.GET, return_keys=["users"])
-
-            if not users or not users["users"]:
-                return
-
-            for _, uid in enumerate(users["users"]):
-                user = message.guild.get_member(int(uid))
-
-                if user:
-                    await user.remove_roles(role, "Automatically unsubscribed.")
-
-                await self.Api().query_web("/subscribe", ApiMethods.DELETE, {"user_id": uid})
-                user = None

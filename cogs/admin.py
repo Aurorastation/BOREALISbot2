@@ -27,7 +27,7 @@ import core.subsystems.sql as sql
 from core import Borealis
 from core.auths import AuthPerms
 
-from .utils import guildchecks, authchecks
+from .utils import authchecks, guildchecks
 
 
 class AdministrativeCaseFactory:

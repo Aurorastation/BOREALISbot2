@@ -34,14 +34,13 @@ def initialize_components() -> Tuple[logging.Logger, Config, subsystems.sql.Sess
     config = Config.create(logger, "config.yml")
     sql_manager = subsystems.sql.SessionManager(config.sql["url"])
 
-    config.load_sql()
-
     return (logger, config, sql_manager)
 
 def run_bot() -> None:
     api = None
 
     logger, config, sql_manager = initialize_components()
+    config.load_sql()
 
     ## API INIT
     try:

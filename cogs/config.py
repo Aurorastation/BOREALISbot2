@@ -88,7 +88,7 @@ class ConfigCog(commands.Cog):
 
             await ctx.send("Should the server have subscribing enabled? (`yes`/`no`)")
             msg = await self.bot.wait_for("message", timeout=30.0, check=check)
-            guild_conf.subscribes_enabled = is_yes(msg)
+            guild_conf.subscribers_enabled = is_yes(msg)
 
             if not permissions.manage_roles:
                 await ctx.send("Missing manage roles permissions. Cannot edit subscribers. Cancelled.")
@@ -138,16 +138,16 @@ class ConfigCog(commands.Cog):
         try:
             if param == "admin_actions_enabled":
                 guild_conf.admin_actions_enabled = util.strtobool(value)
-            elif param == "subscribes_enabled":
-                guild_conf.subscribes_enabled = util.strtobool(value)
+            elif param == "subscribers_enabled":
+                guild_conf.subscribers_enabled = util.strtobool(value)
             elif param == "subscriber_role_id":
-                param = int(param)
-                role = guild.get_role(param)
+                value = int(value)
+                role = guild.get_role(value)
                 if not role:
-                    await ctx.send(f"No role with ID `{param}` found.")
+                    await ctx.send(f"No role with ID `{value}` found.")
                     return
 
-                guild_conf.subscriber_role_id = param
+                guild_conf.subscriber_role_id = value
             else:
                 await ctx.send(f"Unknown parameter: `{param}`.")
                 return
