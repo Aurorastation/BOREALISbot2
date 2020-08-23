@@ -48,6 +48,7 @@ class AdministrativeCase(Base):
     subject_id = Column(sqlalchemy.Integer)
     action_type = Column(sqlalchemy.Enum(AdminAction))
     reason = Column(sqlalchemy.String)
+    is_active = Column(sqlalchemy.Boolean, default=True)
     created_at = Column(sqlalchemy.DateTime)
     expires_at = Column(sqlalchemy.DateTime, default=None)
     deleted_at = Column(sqlalchemy.DateTime, default=None)

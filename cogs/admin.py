@@ -21,7 +21,7 @@ from typing import Optional
 
 import discord
 from dateutil.relativedelta import relativedelta
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 import core.subsystems.sql as sql
 from core import Borealis
@@ -88,7 +88,8 @@ class AdministrativeCaseFactory:
 
         active_strikes = self.session.query(sql.AdministrativeCase)\
                              .filter(sql.AdministrativeCase.created_at >= cut_off)\
-                             .filter(sql.AdministrativeCase.deleted_at.is_(None)).count()
+                             .filter(sql.AdministrativeCase.deleted_at.is_(None))\
+                             .filter(sql.AdministrativeCase.is_active == True).count()
 
         if active_strikes > 3:
             return sql.AdminAction.PERMA_BAN
@@ -136,12 +137,15 @@ class AdminCog(commands.Cog):
     def __init__(self, bot: Borealis):
         self.bot = bot
         self._logger = logging.getLogger(__name__)
+        self.process_unbans.start()
+
+    def cog_unload(self):
+        self.process_unbans.stop()
 
     async def _is_valid_target(self, ctx: commands.Context, target: discord.Member) -> bool:
-        # TODO: Uncomment these.
-        # if target == ctx.author:
-        #     await ctx.send("You cannot strike yourself.")
-        #     return False
+        if target == ctx.author:
+            await ctx.send("You cannot strike yourself.")
+            return False
 
         if target == self.bot.user:
             await ctx.send("I cannot strike myself.")
@@ -151,9 +155,9 @@ class AdminCog(commands.Cog):
             await ctx.send("I cannot strike another bot.")
             return False
 
-        # if target.guild_permissions.kick_members:
-        #     await ctx.send("You cannot strike a fellow moderator.")
-        #     return False
+        if target.guild_permissions.kick_members:
+            await ctx.send("You cannot strike a fellow moderator.")
+            return False
 
         return True
 
@@ -174,7 +178,71 @@ class AdminCog(commands.Cog):
             self._logger.error(f"Error logging action. {e}")
 
     async def _enforce_case(self, case: sql.AdministrativeCase) -> None:
-        pass
+        if case.action_type != sql.AdminAction.PERMA_BAN and case.action_type != sql.AdminAction.TEMP_BAN:
+            return
+
+        for guild_id, guild_conf in self.bot.Config().guilds.items():
+            if guild_conf.admin_actions_enabled == True:
+                guild: discord.Guild = self.bot.get_guild(guild_id)
+
+                if not guild:
+                    self._logger.warning(f"Error attempting to enforce ban: no longer in guild {guild_id}.")
+                    continue
+
+                subject: discord.Member = guild.get_member(case.subject_id)
+                if not subject:
+                    self._logger.debug(f"Unable to enforce ban in {guild_id}, user {case.subject_id} not present.")
+                    continue
+
+                await subject.ban(reason=case.reason, delete_message_days=0)
+
+    async def _lift_punishment(self, case: sql.AdministrativeCase, reason="Expired.") -> None:
+        if case.action_type != sql.AdminAction.PERMA_BAN and case.action_type != sql.AdminAction.TEMP_BAN:
+            return
+
+        user: discord.User = await self.bot.fetch_user(case.subject_id)
+
+        if not user:
+            self._logger.info(f"Unable to lift punishment for case {case.id}, no user with id {case.subject_id} found.")
+            return
+
+        for guild_id, guild_conf in self.bot.Config().guilds.items():
+            if guild_conf.admin_actions_enabled == True:
+                guild: discord.Guild = self.bot.get_guild(guild_id)
+
+                if not guild:
+                    self._logger.warning(f"Error attempting to enforce ban: no longer in guild {guild_id}.")
+                    continue
+
+                ban: discord.BanEntry = await guild.fetch_ban(user)
+
+                if not ban:
+                    self._logger.debug(f"User {case.subject_id} not banned in guild {guild.id}.")
+                    continue
+
+                await guild.unban(user, reason=reason)
+                self._logger.info(f"User {case.subject_id} unbanned from {guild.id}.")
+
+    @tasks.loop(hours=1.0)
+    async def process_unbans(self):
+        with sql.SessionManager.scoped_session() as session:
+            query = session.query(sql.AdministrativeCase)\
+                    .filter(sql.AdministrativeCase.action_type == sql.AdminAction.TEMP_BAN)\
+                    .filter(sql.AdministrativeCase.is_active == True)\
+                    .filter(sql.AdministrativeCase.expires_at <= datetime.now())
+            
+            case: sql.AdministrativeCase
+
+            for case in query.all():
+                case.is_active = False
+                try:
+                    await self._lift_punishment(case)
+                except:
+                    pass
+
+                now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                log_msg = f"`[{now}]` `[{case.id}]` has expired. Punishment ({case.action_type}) lifted."
+                await self.bot.forward_message(log_msg, sql.ChannelType.LOG)
 
     @commands.command()
     @commands.guild_only()
@@ -285,6 +353,9 @@ class AdminCog(commands.Cog):
             now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             log_msg = f"`[{now}]` `[{case.id}]` ({ctx.author} `{ctx.author.id}`) has deleted the case."
             case.deleted_at = datetime.now()
+            case.is_active = False
+
+            await self._lift_punishment(case, reason="Case deleted by admin.")
 
         await self.bot.forward_message(log_msg, sql.ChannelType.LOG)
         await ctx.send("Case deleted.")
