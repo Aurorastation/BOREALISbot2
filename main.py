@@ -1,12 +1,17 @@
-import logging.config
 import argparse
-
+import logging.config
+import os
+import sys
 from typing import Tuple
 
-import os
+import alembic.command
 import yaml
 
+from alembic.config import Config as AlembicConfig
+
 from core import *
+
+logger = logging.getLogger(__name__)
 
 def setup_logging(
     default_path="logging.yml",
@@ -27,22 +32,19 @@ def setup_logging(
     else:
         logging.basicConfig(level=default_level)
 
-def initialize_components() -> Tuple[logging.Logger, Config]:
-    setup_logging()
-    logger = logging.getLogger(__name__)
-
+def initialize_components() -> Config:
     config = Config.create(logger, "config.yml")
     subsystems.sql.bot_sql.configure(config.sql["url"])
 
     if config.sql["game_url"]:
         subsystems.gamesql.game_sql.configure(config.sql["game_url"])
 
-    return (logger, config)
+    return config
 
 def run_bot() -> None:
     api = None
 
-    logger, config = initialize_components()
+    config = initialize_components()
     config.load_sql()
 
     ## API INIT
@@ -59,10 +61,18 @@ def run_bot() -> None:
     bot.run(config.bot["token"], bot=True, reconnect=True)
 
 def reinit_db() -> None:
-    logger, _ = initialize_components()
+    _ = initialize_components()
 
     subsystems.sql.bot_sql.drop_all_tables()
     subsystems.sql.bot_sql.create_all_tables()
+
+def run_migrations() -> None:
+    config = AlembicConfig("alembic.ini")
+    config.attributes["configure_logger"] = False
+
+    logger.info("Running migrations.")
+    alembic.command.upgrade(config, "head")
+    logger.info("Migrations successfully applied.")
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--migrate_only", help="Only applies the migrations.",
@@ -70,12 +80,20 @@ parser.add_argument("--migrate_only", help="Only applies the migrations.",
 parser.add_argument("--reinit_db", help="TEST COMMAND. Drops all SQL tables and sets them up again.",
                     action="store_true")
 
+setup_logging()
+
 if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.reinit_db:
+        logger.info("Reinitializing database and exiting.")
         reinit_db()
-    elif args.migrate_only:
-        raise NotImplementedError("Migrate only mode not implemented.")
-    else:
-        run_bot()
+        exit(0)
+
+    run_migrations()
+
+    if args.migrate_only:
+        logger.info("Exiting due to --migrate_only flag.")
+        exit(0)
+
+    run_bot()
