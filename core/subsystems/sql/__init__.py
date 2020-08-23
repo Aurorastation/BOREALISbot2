@@ -1,9 +1,10 @@
-from .subscriber import Subscriber
 from .administrativecase import AdminAction, AdministrativeCase
-from .channelconfig import ChannelType, ChannelConfig
-from .guildconfig import GuildConfig
 from .base import Base
+from .channelconfig import ChannelConfig, ChannelType
+from .guildconfig import GuildConfig
 from .sessionmanager import SessionManager, bot_sql
+from .subscriber import Subscriber
+from .whitelistedcog import WhitelistedCog
 
 __all__ = ["ChannelType", "ChannelConfig", "GuildConfig", "Base", "Subscriber",
-           "SessionManager", "bot_sql", "AdminAction", "AdministrativeCase"]
+           "SessionManager", "bot_sql", "AdminAction", "AdministrativeCase", "WhitelistedCog"]

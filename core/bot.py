@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, Optional
 
 import discord
 from discord.ext import commands
@@ -22,6 +22,8 @@ class Borealis(commands.Bot):
         self._logger = logging.getLogger(__name__)
 
         self._user_repo = UserRepo(self)
+
+        self.add_check(self.cog_is_whitelisted, call_once=True)
 
     def Api(self) -> ss.API:
         return self._api
@@ -47,6 +49,27 @@ class Borealis(commands.Bot):
                 self._logger.error("Failed to load extension: %s.", ext, exc_info=True)
 
         self._logger.info("Bot up and running.")
+
+    async def cog_is_whitelisted(self, ctx: commands.Context):
+        guild: Optional[discord.Guild] = ctx.guild
+
+        if not guild or not ctx.cog:
+            return True
+
+        guild_conf: Optional[sql.GuildConfig] = self._config.get_guild(guild.id)
+        
+        if ctx.cog.qualified_name in ["ConfigCog", "OwnerCog"]:
+            return True
+        
+        if not guild_conf:
+            return False
+
+        cog: sql.WhitelistedCog
+        for cog in guild_conf.whitelisted_cogs:
+            if cog.name == ctx.cog.qualified_name:
+                return True
+
+        return False
 
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.NoPrivateMessage):

@@ -24,24 +24,11 @@ from sqlalchemy.orm import relationship
 from .base import Base
 
 
-class ChannelType(enum.Enum):
-    ADMIN = 1
-    CCIAA = 2
-    ANNOUNCEMENT = 3
-    LOG = 4
+class WhitelistedCog(Base):
+    __tablename__ = "whitelisted_cogs"
 
-    @staticmethod
-    def from_string(arg: str) -> Optional["ChannelType"]:
-        try:
-            return ChannelType[arg]
-        except:
-            raise ValueError(f"Invalid ChannelType enum: {arg}.")
-
-class ChannelConfig(Base):
-    __tablename__ = "channels"
-
-    id = Column(sqlalchemy.Integer, primary_key=True, autoincrement=False)
+    id = Column(sqlalchemy.Integer, primary_key=True)
     guild_id = Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("guilds.id"))
-    channel_type = Column(sqlalchemy.Enum(ChannelType))
+    name = Column(sqlalchemy.String(100))
 
-    guild = relationship("GuildConfig", back_populates="channels")
+    guild = relationship("GuildConfig", back_populates="whitelisted_cogs")

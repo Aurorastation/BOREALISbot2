@@ -1,6 +1,6 @@
 import asyncio
 from distutils import util
-from typing import List, Optional
+from typing import List, Mapping, Optional
 
 import discord
 from discord.ext import commands
@@ -234,6 +234,87 @@ class ConfigCog(commands.Cog):
         p.embed.title = f"Configured Channels ({guild_obj.id})"
         p.embed.description = f"All configured channels for guild {guild_obj.id}."
         await p.paginate()
+
+    @guild.command(name="enable_cogs")
+    async def guild_enable_cogs(self, ctx, guild_id: Optional[int], *cogs):
+        """
+        Enables a list of cogs for the specified server.
+        
+        Specify the first argument as 'all' to enable all available cogs.
+        """
+        guild = _get_optional_guild(ctx, guild_id)
+
+        if not guild:
+            if guild_id:
+                await ctx.send(f"No guild with ID {guild_id} found.")
+            else:
+                await ctx.send("We are not in a guild and no guild ID provided.")
+            return
+
+        guild_obj: Optional[sql.GuildConfig] = self.bot.Config().get_guild(guild.id)
+        if not guild_obj:
+            await ctx.send(f"Guild is not set up.")
+            return
+
+        enabled_names = [c.name for c in guild_obj.whitelisted_cogs]
+
+        if cogs[0] == "all":
+            cogs = []
+            for name, _ in self.bot.cogs.items():
+                if not name in enabled_names:
+                    cogs.append(name)
+        else:
+            permitted_names: Mapping[str, commands.Cog] = self.bot.cogs
+            for cog_name in cogs:
+                if not cog_name in permitted_names:
+                    await ctx.send(f"{cog_name} is not a valid cog.")
+                    return
+                
+                if cog_name in enabled_names:
+                    await ctx.send(f"{cog_name} is already enabled for the specified guild.")
+                    return
+
+        with sql.bot_sql.scoped_session() as session:
+            for cog_name in cogs:
+                entry = sql.WhitelistedCog()
+                entry.name = cog_name
+                entry.guild_id = guild_obj.id
+
+                session.add(entry)
+
+        self.bot.Config().load_sql()
+        await ctx.send("Cogs enabled.")
+
+    @guild.command(name="disable_cogs")
+    async def guild_disable_cogs(self, ctx, guild_id: Optional[int], *cogs):
+        """Disables a list of cogs for the specified server."""
+        guild = _get_optional_guild(ctx, guild_id)
+
+        if not guild:
+            if guild_id:
+                await ctx.send(f"No guild with ID {guild_id} found.")
+            else:
+                await ctx.send("We are not in a guild and no guild ID provided.")
+            return
+
+        guild_obj: Optional[sql.GuildConfig] = self.bot.Config().get_guild(guild.id)
+        if not guild_obj:
+            await ctx.send(f"Guild is not set up.")
+            return
+
+        enabled_cogs: List[str] = [c.name for c in guild_obj.whitelisted_cogs]
+        for cog_name in cogs:
+            if not cog_name in enabled_cogs:
+                await ctx.send(f"Cog {cog_name} is not enabled for the guild.")
+                return
+
+        with sql.bot_sql.scoped_session() as session:
+            for enabled_cog in guild_obj.whitelisted_cogs:
+                if enabled_cog.name in cogs:
+                    session.delete(enabled_cog)
+
+        self.bot.Config().load_sql()
+        await ctx.send("Cogs enabled.")
 
     @config.group(pass_context=True)
     async def channel(self, ctx):

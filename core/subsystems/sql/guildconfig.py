@@ -53,6 +53,8 @@ class GuildConfig(Base):
                                          cascade="all, delete, delete-orphan", lazy="joined")
     active_subscribers = relationship("Subscriber", back_populates="guild",
                                       cascade="all, delete, delete-orphan")
+    whitelisted_cogs = relationship("WhitelistedCog", back_populates="guild",
+                                    cascade="all, delete, delete-orphan", lazy="joined")
 
     def __init__(self):
         self._controlled_roles: Dict[int, Dict[str, int]] = {}
@@ -64,6 +66,7 @@ class GuildConfig(Base):
         fields["Moderation enabled:"] = "Yes" if self.admin_actions_enabled else "No"
         fields["Subscribing enabled:"] = "Yes" if self.subscribers_enabled else "No"
         fields["Subscriber role:"] = self.subscriber_role_id
+        fields["Enabled cogs:"] = [c.name for c in self.whitelisted_cogs]
 
         return fields
 
