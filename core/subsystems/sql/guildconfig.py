@@ -48,9 +48,9 @@ class GuildConfig(Base):
     subscriber_role_id = Column(sqlalchemy.Integer)
 
     channels = relationship("ChannelConfig", back_populates="guild",
-                            cascade="all, delete, delete-orphan")
+                            cascade="all, delete, delete-orphan", lazy="joined")
     role_control_messages = relationship("RoleControlMessage", back_populates="guild",
-                                         cascade="all, delete, delete-orphan")
+                                         cascade="all, delete, delete-orphan", lazy="joined")
 
     def __init__(self):
         self._controlled_roles: Dict[int, Dict[str, int]] = {}

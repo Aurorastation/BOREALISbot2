@@ -14,15 +14,16 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see http://www.gnu.org/licenses/.
 
-import os.path
-import yaml
 import logging
+import os.path
+from typing import Any, Mapping, Optional
 
+import yaml
 from discord.ext import commands
-from typing import Any, Optional, Mapping
 
 from core.borealis_exceptions import ConfigError
 from core.subsystems import sql
+
 
 class Config:
     """
@@ -87,6 +88,8 @@ class Config:
                 for channel in guild.channels:
                     channel_dict[channel.id] = channel
 
+                session.expunge(guild)
+
             self.config["guilds"] = guild_dict
             self.config["channels"] = channel_dict
 
@@ -103,7 +106,7 @@ class Config:
             if guild.id not in self.config["guilds"]:
                 reload_after = True
 
-            self.session.add(guild)
+            session.add(guild)
 
         if reload_after:
             self.load_sql()
@@ -121,7 +124,7 @@ class Config:
             if channel.id not in self.config["channels"]:
                 reload_after = True
 
-            self.session.add(channel)
+            session.add(channel)
 
         if reload_after:
             self.load_sql()

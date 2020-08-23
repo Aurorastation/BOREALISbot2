@@ -1,4 +1,7 @@
 import logging.config
+import argparse
+
+from typing import Tuple
 
 import os
 import yaml
@@ -24,55 +27,68 @@ def setup_logging(
     else:
         logging.basicConfig(level=default_level)
 
+def initialize_components() -> Tuple[logging.Logger, Config, subsystems.sql.SessionManager]:
+    setup_logging()
+    logger = logging.getLogger(__name__)
 
-## LOGGER
-setup_logging()
+    config = Config.create(logger, "config.yml")
+    sql_manager = subsystems.sql.SessionManager(config.sql["url"])
 
-logger = logging.getLogger(__name__)
+    config.load_sql()
 
-## GLOBALS
-config = Config.create(logger, "config.yml")
-api = None
-scheduler = None
-sql_manager = subsystems.sql.SessionManager(config.sql["url"])
+    return (logger, config, sql_manager)
 
-config.load_sql()
+def run_bot() -> None:
+    api = None
 
-INIT_EXT = {"cogs.owner"}
-INIT_EXT = INIT_EXT.union(set(config.bot["autoload_cogs"]))
+    logger, config, sql_manager = initialize_components()
 
-## API INIT
-try:
-    api = subsystems.API(config)
-except ApiError as err:
-    logger.exception("Error initializing API object.")
-    raise RuntimeError("Stopping now.")
+    ## API INIT
+    try:
+        api = subsystems.API(config)
+    except ApiError as err:
+        logger.exception("Error initializing API object.")
+        raise RuntimeError("Stopping now.")
 
-## BOT INIT
-bot = Borealis(config.bot["prefix"], config, api,
-               description="Borealis version 3.7.0, here to assist in any SS13 related matters!")
+    ## BOT INIT
+    bot = Borealis(config.bot["prefix"], config, api,
+                description="Borealis version 3.7.0, here to assist in any SS13 related matters!")
 
-try:
-    scheduler = subsystems.TaskScheduler(bot, config.scheduler["interval"])
-    scheduler.add_task(1800, bot.process_temporary_bans, "process_bans", init_now=True, is_coro=True)
-except SchedulerError as err:
-    logger.exception("Error initializing scheduler object.")
-    raise RuntimeError("Stopping now.")
+    bot.run(config.bot["token"], bot=True, reconnect=True)
 
+    @bot.event
+    async def on_ready():
+        logger.info("Bot ready. Logged in as: %s - %s", bot.user.name, bot.user.id)
 
-@bot.event
-async def on_ready():
-    logger.info("Bot ready. Logged in as: %s - %s", bot.user.name, bot.user.id)
+        initial_extensions = {"cogs.owner"}
+        initial_extensions = initial_extensions.union(set(bot.Config().bot["autoload_cogs"]))
 
-    if __name__ == '__main__':
-        for ext in INIT_EXT:
+        for ext in initial_extensions:
             try:
                 bot.load_extension(ext)
             except Exception:
                 logger.error("MAIN: Failed to load extension: %s.", ext, exc_info=True)
 
-    logger.info("Bot up and running.")
+        logger.info("Bot up and running.")
 
-    bot.loop.create_task(scheduler.run_loop())
+def reinit_db() -> None:
+    logger, _, sql_manager = initialize_components()
 
-bot.run(config.bot["token"], bot=True, reconnect=True)
+    sql_manager.drop_all_tables()
+    sql_manager.create_all_tables()
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--migrate_only", help="Only applies the migrations.",
+                    action="store_true")
+parser.add_argument("--reinit_db", help="TEST COMMAND. Drops all SQL tables and sets them up again.",
+                    action="store_true")
+
+if __name__ == "__main__":
+    args = parser.parse_args()
+
+    if args.reinit_db:
+        reinit_db()
+    elif args.migrate_only:
+        raise NotImplementedError("Migrate only mode not implemented.")
+    else:
+        run_bot()

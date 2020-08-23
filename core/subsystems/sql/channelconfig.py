@@ -34,7 +34,7 @@ class ChannelType(enum.Enum):
         try:
             return ChannelType[arg]
         except:
-            return None
+            raise ValueError(f"Invalid ChannelType enum: {arg}.")
 
 class ChannelConfig(Base):
     __tablename__ = "channels"

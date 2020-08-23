@@ -34,6 +34,22 @@ class Borealis(commands.Bot):
     def UserRepo(self) -> UserRepo:
         return self._user_repo
 
+    async def on_ready(self):
+        self._logger.info("Bot ready. Logged in as: %s - %s", self.user.name, self.user.id)
+
+        initial_extensions = {"cogs.owner"}
+        initial_extensions = initial_extensions.union(set(self._config.bot["autoload_cogs"]))
+
+        self._logger.info("Loading initial cogs: %s", initial_extensions)
+
+        for ext in initial_extensions:
+            try:
+                self.load_extension(ext)
+            except Exception:
+                self._logger.error("Failed to load extension: %s.", ext, exc_info=True)
+
+        self._logger.info("Bot up and running.")
+
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.NoPrivateMessage):
             await ctx.author.send("This command cannot be used in private messages.")
@@ -44,9 +60,11 @@ class Borealis(commands.Bot):
         elif isinstance(error, commands.CommandNotFound):
             pass
         elif isinstance(error, commands.CommandInvokeError):
-            await ctx.send(f"Command execution failed. {error.original}")
+            await ctx.send(f"Command execution failed. {error}")
         elif isinstance(error, commands.BadArgument):
-            await ctx.send(f"Bad argument provided. {error.original}")
+            await ctx.send(f"Bad argument provided. {error}")
+        elif isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send(f"Argument missing. {error}")
         else:
             self._logger.error("Unrecognized error in command. %s - %s", error, type(error))
 
@@ -62,11 +80,11 @@ class Borealis(commands.Bot):
 
         config = self.Config()
 
-        for channel in self.Config().channels:
+        for channel_id, channel in self.Config().channels.items():
             if channel.channel_type == channel_type:
                 channel_obj = self.get_channel(channel.id)
                 if channel:
-                    channel_objs.append(channel)
+                    channel_objs.append(channel_obj)
 
         if not len(channel_objs):
             return

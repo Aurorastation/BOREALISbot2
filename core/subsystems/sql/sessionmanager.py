@@ -37,6 +37,7 @@ class SessionManager:
     """
     def __init__(self, conn_str: str):
         self._engine = create_engine(conn_str)
+        self._logger = logging.getLogger(__name__)
 
         Session.configure(bind=self._engine)
 
@@ -55,6 +56,8 @@ class SessionManager:
 
     def create_all_tables(self):
         Base.metadata.create_all(self._engine)
+        self._logger.warning("Creating all tables without migrations.")
 
     def drop_all_tables(self):
         Base.metadata.drop_all(self._engine)
+        self._logger.warning("All SQL tables dropped.")

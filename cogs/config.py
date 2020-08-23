@@ -1,6 +1,6 @@
 import asyncio
 from distutils import util
-from typing import Optional, List
+from typing import List, Optional
 
 import discord
 from discord.ext import commands
@@ -10,6 +10,7 @@ from core import Borealis
 
 from .utils import guildchecks
 from .utils.paginator import Pages
+
 
 def _get_optional_guild(ctx: commands.Context, arg: Optional[int]) -> Optional[discord.Guild]:
     if arg:
@@ -38,7 +39,6 @@ class ConfigCog(commands.Cog):
     @guild.command(name="info")
     async def guild_info(self, ctx, guild_id: Optional[int]):
         """Prints the current guild's info."""
-
         guild = _get_optional_guild(ctx, guild_id)
 
         if not guild:
@@ -62,13 +62,14 @@ class ConfigCog(commands.Cog):
     @commands.guild_only()
     @guild.command(name="setup")
     async def guild_setup(self, ctx):
+        """Sets up the current guild."""
         guild_conf = sql.GuildConfig()
         guild_conf.id = ctx.message.guild.id
 
         author = ctx.author
         channel = ctx.message.channel
 
-        permissions = ctx.message.guild.get_member(self.bot.client.id).guild_permissions
+        permissions = ctx.message.guild.get_member(self.bot.user.id).guild_permissions
 
         def check(m: discord.Message) -> bool:
             return m.author == author and m.channel == channel
@@ -159,6 +160,7 @@ class ConfigCog(commands.Cog):
 
     @guild.command(name="delete")
     async def guild_delete(self, ctx, guild_id: Optional[int]):
+        """Deletes the current guild or the specified guild."""
         guild = _get_optional_guild(ctx, guild_id)
 
         if not guild:
@@ -182,6 +184,7 @@ class ConfigCog(commands.Cog):
 
     @guild.command(name="list")
     async def guild_list(self, ctx):
+        """Lists all guilds currently registered."""
         data: List[str] = []
 
         for _, guild in self.bot.Config().guilds.items():
@@ -241,9 +244,10 @@ class ConfigCog(commands.Cog):
     @guildchecks.guild_is_setup()
     @channel.command(name="add")
     async def channel_add(self, ctx, ch_type: sql.ChannelType.from_string):
+        """Registers the channel as the specified type."""
         author = ctx.author
 
-        permissions = ctx.channel.get_member(self.bot.client.id)
+        permissions = ctx.me.permissions_in(ctx.channel)
         if not permissions.send_messages:
             await author.send(f"I cannot send messages in that channel.")
             return
