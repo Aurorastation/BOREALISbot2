@@ -33,7 +33,7 @@ class PlayerNote(GameBase):
     ip = Column(sqlalchemy.String(18))
     computerid = Column(sqlalchemy.String(32))
     a_ckey = Column(sqlalchemy.String(32))
-    content = Column(sqlalchemy.String)
+    content = Column(sqlalchemy.Text)
     visible = Column(sqlalchemy.Boolean)
     edited = Column(sqlalchemy.Boolean)
     lasteditor = Column(sqlalchemy.String(32))

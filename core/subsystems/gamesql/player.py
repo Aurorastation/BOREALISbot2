@@ -34,7 +34,7 @@ class Player(GameBase):
     computerid = Column(sqlalchemy.String(32))
     byond_version = Column(sqlalchemy.Integer)
     byond_build = Column(sqlalchemy.Integer)
-    lastadminrank = Column(sqlalchemy.String)
+    lastadminrank = Column(sqlalchemy.Text)
     whitelist_status = Column(sqlalchemy.Integer)
     account_join_date = Column(sqlalchemy.DateTime)
     migration_status = Column(sqlalchemy.Boolean)

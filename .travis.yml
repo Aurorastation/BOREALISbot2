@@ -1,0 +1,15 @@
+language: python
+dist: focal
+python:
+  - "3.8"
+
+addons:
+  mariadb: "10.5"
+
+install:
+  - pip install -r requirements.txt
+  - cp ./travis/alembic.ini.travis ./alembic.ini
+  - mysql -e 'CREATE DATABASE borealis;'
+
+script:
+  - python3 main.py --migrate_only
