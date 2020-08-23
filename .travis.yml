@@ -9,7 +9,7 @@ addons:
 install:
   - pip install -r requirements.txt
   - cp ./travis/alembic.ini.travis ./alembic.ini
-  - mysql -e 'CREATE DATABASE borealis;'
+  - mariadb -e 'CREATE DATABASE borealis;'
 
 script:
   - python3 main.py --migrate_only
