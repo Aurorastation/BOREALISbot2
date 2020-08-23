@@ -1,7 +1,11 @@
+from typing import List
+
 from discord.ext import commands
+
 from core import auths
 
-def check_auths(req_auths, req_type=auths.AuthType.ONE):
+
+def has_auths(req_auths: List[auths.AuthPerms], req_type: auths.AuthType=auths.AuthType.ONE):
     def decorator(ctx):
         holder = auths.AuthHolder(ctx.author, ctx.bot)
 

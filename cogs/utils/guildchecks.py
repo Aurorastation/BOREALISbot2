@@ -16,16 +16,24 @@
 
 from discord.ext import commands
 
+from typing import Optional
+from core.subsystems import sql
 from core import Borealis
 
-def guild_is_setup():
+def guild_is_setup(**attrs):
     def decorator(ctx: commands.Context):
         if not ctx.message.guild:
             return False
 
         bot: Borealis = ctx.bot
 
-        if bot.Config().get_guild(ctx.message.guild.id):
+        guild: Optional[sql.GuildConfig] = bot.Config().get_guild(ctx.message.guild.id)
+
+        if guild:
+            for attr_name, value in attrs.items():
+                if getattr(guild, attr_name) != value:
+                    raise commands.CheckFailure(f"Option {attr_name} not set for this guild.")
+
             return True
         else:
             raise commands.CheckFailure("Guild is not configured.")

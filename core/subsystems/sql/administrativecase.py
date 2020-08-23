@@ -15,6 +15,7 @@
 #    along with this program.  If not, see http://www.gnu.org/licenses/.
 
 import enum
+from typing import Dict
 
 import sqlalchemy
 from sqlalchemy import Column
@@ -50,3 +51,16 @@ class AdministrativeCase(Base):
     created_at = Column(sqlalchemy.DateTime)
     expires_at = Column(sqlalchemy.DateTime, default=None)
     deleted_at = Column(sqlalchemy.DateTime, default=None)
+
+    def to_embed(self) -> Dict[str, str]:
+        data: Dict[str, str] = {
+            "ID:": str(self.id),
+            "Guild:": str(self.guild_id),
+            "Author:": str(self.author_id),
+            "Action:": str(self.action_type),
+            "Created:": self.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "Expires:": self.expires_at.strftime("%Y-%m-%d %H:%M:%S") if self.expires_at else "No",
+            "Deleted:": self.deleted_at.strftime("%Y-%m-%d %H:%M:%S") if self.deleted_at else "No"
+        }
+
+        return data

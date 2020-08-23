@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands, tasks
 from core import ConfigError, ApiError, ApiMethods
 
-from .utils import auth, AuthPerms, AuthType
+from .utils import authchecks, AuthPerms, AuthType
 from .utils.byond import get_ckey
 from .utils.paginator import FieldPages
 
@@ -19,7 +19,7 @@ class UserCog(commands.Cog):
         await self.bot.UserRepo().update_auths()
 
     @commands.command(aliases=["userupdate", "uupdate"])
-    @auth.check_auths([AuthPerms.R_ADMIN])
+    @authchecks.has_auths([AuthPerms.R_ADMIN])
     async def user_update(self, ctx):
         """Updates all user auths of the bot."""
         await self.bot.UserRepo().update_auths()
@@ -28,7 +28,7 @@ class UserCog(commands.Cog):
 
     @commands.command(aliases=["userinfo", "uinfo"])
     @commands.guild_only()
-    @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
+    @authchecks.has_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
     async def user_info(self, ctx, tgt: discord.Member):
         """Displays information regarding the mentioned user."""
         repo = self.bot.UserRepo()
@@ -66,7 +66,7 @@ class UserCog(commands.Cog):
         await ctx.send("Sending info now!")
 
     @commands.command(aliases=["uckey"])
-    @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
+    @authchecks.has_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
     async def user_info_ckey(self, ctx, ckey: get_ckey):
         """Displays information about a user with the given ckey, if they are linked."""
         repo = self.bot.UserRepo()
@@ -91,7 +91,7 @@ class UserCog(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command()
-    @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
+    @authchecks.has_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
     async def roles_list(self, ctx):
         """Lists all available roles as recognized by the bot."""
         roles = self.bot.UserRepo().get_roles()

@@ -2,7 +2,7 @@ import discord
 import logging
 from discord.ext import commands
 
-from .utils import auth, AuthPerms, AuthType
+from .utils import authchecks, AuthPerms, AuthType
 from .utils.paginator import Pages, FieldPages
 from .utils.byond import get_ckey
 from core import ApiError
@@ -14,7 +14,7 @@ class ServerCog(commands.Cog):
         self._logger = logging.getLogger(__name__)
 
     @commands.command(aliases=["faxlist", "flist"])
-    @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_CCIAA])
+    @authchecks.has_auths([AuthPerms.R_ADMIN, AuthPerms.R_CCIAA])
     async def fax_list(self, ctx, param: str):
         """List all sent or received faxes in the current round."""
         param = param.lower()
@@ -34,7 +34,7 @@ class ServerCog(commands.Cog):
         await p.paginate()
 
     @commands.command(aliases=["faxget", "fget"])
-    @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_CCIAA])
+    @authchecks.has_auths([AuthPerms.R_ADMIN, AuthPerms.R_CCIAA])
     async def fax_get(self, ctx, sent: str, idnr: int):
         """Get a fax with a specified ID."""
         sent = sent.lower()
@@ -88,7 +88,7 @@ class ServerCog(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["serverrestart", "srestart"])
-    @auth.check_auths([AuthPerms.R_ADMIN])
+    @authchecks.has_auths([AuthPerms.R_ADMIN])
     async def server_restart(self, ctx):
         """Issues a restart command to the server."""
         api = self.bot.Api()
@@ -99,7 +99,7 @@ class ServerCog(commands.Cog):
         await ctx.send("Server restart command sent.")
 
     @commands.command(aliases=["serverhardrestart", "shardrestart"])
-    @auth.check_auths([AuthPerms.R_ADMIN])
+    @authchecks.has_auths([AuthPerms.R_ADMIN])
     async def server_hard_restart(self, ctx):
         """
         Issues an immediate restart command to the server, by also killing DreamDaemon.
@@ -173,7 +173,7 @@ class ServerCog(commands.Cog):
         await p.paginate()
 
     @commands.command(aliases=["serverpm", "spm"])
-    @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
+    @authchecks.has_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
     async def server_pm(self, ctx, ckey: get_ckey, *args):
         """Sends a PM to the specified player on the server."""
         api = self.bot.Api()
@@ -192,7 +192,7 @@ class ServerCog(commands.Cog):
         await ctx.send("PM successfully sent!")
 
     @commands.command(aliases=["serverannounce", "sannounce"])
-    @auth.check_auths([AuthPerms.R_ADMIN])
+    @authchecks.has_auths([AuthPerms.R_ADMIN])
     async def server_announce(self, ctx, *text):
         """Sends an announcement to the server."""
         api = self.bot.Api()
@@ -211,7 +211,7 @@ class ServerCog(commands.Cog):
         await ctx.send("Announcement successfully sent.")
 
     @commands.command(aliases=["stinfo"])
-    @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
+    @authchecks.has_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
     async def server_tickets_info(self, ctx):
         """Lists how many tickets are open, assigned, unassigned and closed on the server."""
         api = self.bot.Api()
@@ -226,7 +226,7 @@ class ServerCog(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["stlist"])
-    @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
+    @authchecks.has_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
     async def server_tickets_list(self, ctx, type="open"):
         """Provides general information about all the tickets on the server
 
@@ -273,7 +273,7 @@ class ServerCog(commands.Cog):
         await p.paginate()
 
     @commands.command(aliases=["stclose"])
-    @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
+    @authchecks.has_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
     async def server_ticket_close(self, ctx, id: int):
         """Closes a specified ticket."""
         api = self.bot.Api()
@@ -286,7 +286,7 @@ class ServerCog(commands.Cog):
         await ctx.send("Ticket successfully closed!")
 
     @commands.command(aliases=["sexauth","sexternalauth"])
-    @auth.check_auths([AuthPerms.R_ADMIN])
+    @authchecks.has_auths([AuthPerms.R_ADMIN])
     async def server_external_auth(self, ctx, state: int):
         """Sets state of external authentication"""
         api = self.bot.Api()

@@ -66,6 +66,7 @@ class Borealis(commands.Bot):
         elif isinstance(error, commands.MissingRequiredArgument):
             await ctx.send(f"Argument missing. {error}")
         else:
+            await ctx.send(f"Unknown error! Unable to execute command.")
             self._logger.error("Unrecognized error in command. %s - %s", error, type(error))
 
     async def forward_message(self, msg, channel_type: sql.ChannelType) -> None:

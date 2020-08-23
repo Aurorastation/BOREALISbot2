@@ -4,7 +4,7 @@ from discord.ext import commands
 
 from core import ApiMethods, ApiError, BotError
 from core.auths import *
-from .utils import auth, AuthPerms
+from .utils import authchecks, AuthPerms
 
 class DiscordCog(commands.Cog):
     def __init__(self, bot):
@@ -14,7 +14,7 @@ class DiscordCog(commands.Cog):
     @commands.command()
     @commands.guild_only()
     @commands.has_permissions(kick_members=True)
-    @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
+    @authchecks.has_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
     async def strike(self, ctx, tgt: discord.Member, *reason):
         """Applies a 2 month warning to the tagged user."""
         api = self.bot.Api()
@@ -100,7 +100,7 @@ class DiscordCog(commands.Cog):
     @commands.command()
     @commands.guild_only()
     @commands.has_permissions(kick_members=True)
-    @auth.check_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
+    @authchecks.has_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
     async def ban(self, ctx, tgt: discord.Member, duration: int, *reason):
         """Bans someone for a given duration."""
         if not reason:

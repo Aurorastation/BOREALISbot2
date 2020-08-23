@@ -5,7 +5,7 @@ bot:
   subscriber_role: None
   autoload_cogs:
     - cogs.config
-    - cogs.discord
+    - cogs.admin
     - cogs.players
     - cogs.server
     - cogs.silly

@@ -25,8 +25,9 @@ from discord.ext import commands
 
 import core.subsystems.sql as sql
 from core import Borealis
+from core.auths import AuthPerms
 
-from .utils import guildchecks
+from .utils import guildchecks, authchecks
 
 
 class AdministrativeCaseFactory:
@@ -137,6 +138,7 @@ class AdminCog(commands.Cog):
         self._logger = logging.getLogger(__name__)
 
     async def _is_valid_target(self, ctx: commands.Context, target: discord.Member) -> bool:
+        # TODO: Uncomment these.
         # if target == ctx.author:
         #     await ctx.send("You cannot strike yourself.")
         #     return False
@@ -176,8 +178,9 @@ class AdminCog(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
-    @guildchecks.guild_is_setup()
+    @guildchecks.guild_is_setup(admin_actions_enabled=True)
     @commands.has_permissions(kick_members=True)
+    @authchecks.has_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
     async def strike(self, ctx, subject: discord.Member, *, reason):
         """Applies a 2 month warning to the tagged user."""
         if not await self._is_valid_target(ctx, subject):
@@ -195,8 +198,9 @@ class AdminCog(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
-    @guildchecks.guild_is_setup()
+    @guildchecks.guild_is_setup(admin_actions_enabled=True)
     @commands.has_permissions(kick_members=True)
+    @authchecks.has_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
     async def ban(self, ctx, subject: discord.Member, hours: int, *, reason):
         """Applies a temporary ban of given length to the subject."""
         if not await self._is_valid_target(ctx, subject):
@@ -214,8 +218,9 @@ class AdminCog(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
-    @guildchecks.guild_is_setup()
+    @guildchecks.guild_is_setup(admin_actions_enabled=True)
     @commands.has_permissions(kick_members=True)
+    @authchecks.has_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
     async def perma_ban(self, ctx, subject: discord.Member, *, reason):
         """Applies a permanent ban of to the subject."""
         if not await self._is_valid_target(ctx, subject):
@@ -237,14 +242,52 @@ class AdminCog(commands.Cog):
         pass
 
     @case.command(name="show")
+    @authchecks.has_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
     async def case_show(self, ctx, id_num: int):
         """Show the details of a case."""
-        pass
+        with sql.SessionManager.scoped_session() as session:
+            case: sql.AdministrativeCase = session.query(sql.AdministrativeCase).filter(sql.AdministrativeCase.id == id_num).first()
+            if not case:
+                await ctx.send(f"Case with id `[{id_num}]` not found.")
+                return
+
+            embed = discord.Embed(title="Case Information")
+
+            for name, value in case.to_embed().items():
+                embed.add_field(name=name, value=value)
+
+        await ctx.send(embed=embed)
+
+    @case.command(name="reason")
+    @authchecks.has_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
+    async def case_reason(self, ctx, id_num: int):
+        """Shows the reason of the given case."""
+        with sql.SessionManager.scoped_session() as session:
+            case: sql.AdministrativeCase = session.query(sql.AdministrativeCase).filter(sql.AdministrativeCase.id == id_num).first()
+            if not case:
+                await ctx.send(f"Case with id `[{id_num}]` not found.")
+                return
+
+            reason = case.reason
+
+        await ctx.send(f"Reason for case `[{id_num}]`:\n```{reason}```")
 
     @case.command(name="delete")
+    @authchecks.has_auths([AuthPerms.R_ADMIN])
     async def case_delete(self, ctx, id_num: int):
         """Deletes a case of the given ID."""
-        pass
+        with sql.SessionManager.scoped_session() as session:
+            case: sql.AdministrativeCase = session.query(sql.AdministrativeCase).filter(sql.AdministrativeCase.id == id_num).first()
+            if not case:
+                await ctx.send(f"Case with id `[{id_num}]` not found.")
+                return
+
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            log_msg = f"`[{now}]` `[{case.id}]` ({ctx.author} `{ctx.author.id}`) has deleted the case."
+            case.deleted_at = datetime.now()
+
+        await self.bot.forward_message(log_msg, sql.ChannelType.LOG)
+        await ctx.send("Case deleted.")
 
 def setup(bot: Borealis):
     bot.add_cog(AdminCog(bot))

@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from .utils import auth, AuthPerms
+from .utils import authchecks, AuthPerms
 from .utils.paginator import FieldPages
 from .utils.byond import get_ckey
 from core import ApiMethods, ApiError
@@ -11,7 +11,7 @@ class PlayerCog(commands.Cog):
         self.bot = bot
 
     @commands.command(aliases=["playerinfo", "pinfo"])
-    @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
+    @authchecks.has_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
     async def player_info(self, ctx, ckey: get_ckey):
         """Information regarding a given player."""
         api = self.bot.Api()
@@ -35,7 +35,7 @@ class PlayerCog(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["playernotes", "pnotes"])
-    @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
+    @authchecks.has_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
     async def player_notes(self, ctx, ckey: get_ckey):
         """Display notes issued to the specified player."""
         api = self.bot.Api()

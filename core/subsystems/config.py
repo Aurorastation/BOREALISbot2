@@ -100,16 +100,10 @@ class Config:
         return self.config["guilds"][guild_id]
 
     def commit_guild(self, guild: sql.GuildConfig) -> None:
-        reload_after = False
-
         with sql.SessionManager.scoped_session() as session:
-            if guild.id not in self.config["guilds"]:
-                reload_after = True
-
             session.add(guild)
 
-        if reload_after:
-            self.load_sql()
+        self.load_sql()
 
     def get_channel(self, channel_id: int) -> Optional[sql.ChannelConfig]:
         if channel_id not in self.config["channels"]:
@@ -118,13 +112,7 @@ class Config:
         return self.config["channels"][channel_id]
 
     def commit_channel(self, channel: sql.ChannelConfig) -> None:
-        reload_after = False
-
         with sql.SessionManager.scoped_session() as session:
-            if channel.id not in self.config["channels"]:
-                reload_after = True
-
             session.add(channel)
 
-        if reload_after:
-            self.load_sql()
+        self.load_sql()

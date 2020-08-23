@@ -2,7 +2,7 @@ import github
 
 from discord.ext import commands
 
-from .utils import auth, AuthPerms, AuthType
+from .utils import authchecks, AuthPerms, AuthType
 from .utils.paginator import FieldPages
 from core import BotError
 
@@ -39,7 +39,7 @@ class WikiCog(commands.Cog):
         return repo
 
     @commands.command(aliases=["prtag"])
-    @auth.check_auths([AuthPerms.R_DEV, AuthPerms.R_WIKI])
+    @authchecks.has_auths([AuthPerms.R_DEV, AuthPerms.R_WIKI])
     async def pr_tag(self, ctx, *issues: int):
         """
         Adds the wiki update tag for the list of PR numbers given.
@@ -59,7 +59,7 @@ class WikiCog(commands.Cog):
             await ctx.send("Label(s) successfully added!")
 
     @commands.command(aliases=["pruntag"])
-    @auth.check_auths([AuthPerms.R_DEV, AuthPerms.R_WIKI])
+    @authchecks.has_auths([AuthPerms.R_DEV, AuthPerms.R_WIKI])
     async def pr_untag(self, ctx, *issues: int):
         """
         Removes the wiki update tag for the list of PR numbers given.
@@ -81,7 +81,7 @@ class WikiCog(commands.Cog):
             await ctx.send("Label(s) successfully removed!")
 
     @commands.command(aliases=["prlist"])
-    @auth.check_auths([AuthPerms.R_DEV, AuthPerms.R_WIKI])
+    @authchecks.has_auths([AuthPerms.R_DEV, AuthPerms.R_WIKI])
     async def pr_list(self, ctx, merged_only: bool=False):
         """
         Lists all PRs currently tagged with the wiki update tag.
