@@ -58,6 +58,10 @@ class PlayerCog(commands.Cog):
             await ctx.send("Connection to game's SQL server not configured. Feature not supported.")
             return
 
+        if not gamesql.Player.get_player(ckey):
+            await ctx.send(f"No player with ckey `{ckey}` found.")
+            return
+
         notes: List[gamesql.PlayerNote] = gamesql.PlayerNote.get_player_notes(ckey)
 
         entries = []

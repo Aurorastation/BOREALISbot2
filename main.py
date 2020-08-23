@@ -9,7 +9,8 @@ import yaml
 
 from alembic.config import Config as AlembicConfig
 
-from core import *
+from core import subsystems, Borealis, ApiError
+from core.subsystems import sql, gamesql
 
 logger = logging.getLogger(__name__)
 
@@ -32,12 +33,12 @@ def setup_logging(
     else:
         logging.basicConfig(level=default_level)
 
-def initialize_components() -> Config:
-    config = Config.create(logger, "config.yml")
-    subsystems.sql.bot_sql.configure(config.sql["url"])
+def initialize_components() -> subsystems.Config:
+    config = subsystems.Config.create(logger, "config.yml")
+    sql.bot_sql.configure(config.sql["url"])
 
     if config.sql["game_url"]:
-        subsystems.gamesql.game_sql.configure(config.sql["game_url"])
+        gamesql.game_sql.configure(config.sql["game_url"])
 
     return config
 
