@@ -9,7 +9,8 @@ addons:
 install:
   - pip install -r requirements.txt
   - cp ./travis/alembic.ini.travis ./alembic.ini
-  - sudo mariadb -u root -e 'CREATE DATABASE borealis;'
+  - sudo mariadb -u root -e "CREATE DATABASE borealis;"
+  - sudo mariadb -u root -e "CREATE USER 'travis'@'%' IDENTIFIED BY 'test';"
   - sudo mariadb -u root -e "GRANT ALL PRIVILEGES ON borealis.* TO 'travis'@'%';"
   - sudo mariadb -u root -e "FLUSH PRIVILEGES;"
 
