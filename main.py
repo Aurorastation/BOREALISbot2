@@ -27,19 +27,22 @@ def setup_logging(
     else:
         logging.basicConfig(level=default_level)
 
-def initialize_components() -> Tuple[logging.Logger, Config, subsystems.sql.SessionManager]:
+def initialize_components() -> Tuple[logging.Logger, Config]:
     setup_logging()
     logger = logging.getLogger(__name__)
 
     config = Config.create(logger, "config.yml")
-    sql_manager = subsystems.sql.SessionManager(config.sql["url"])
+    subsystems.sql.bot_sql.configure(config.sql["url"])
 
-    return (logger, config, sql_manager)
+    if config.sql["game_url"]:
+        subsystems.gamesql.game_sql.configure(config.sql["game_url"])
+
+    return (logger, config)
 
 def run_bot() -> None:
     api = None
 
-    logger, config, sql_manager = initialize_components()
+    logger, config = initialize_components()
     config.load_sql()
 
     ## API INIT
@@ -55,26 +58,11 @@ def run_bot() -> None:
 
     bot.run(config.bot["token"], bot=True, reconnect=True)
 
-    @bot.event
-    async def on_ready():
-        logger.info("Bot ready. Logged in as: %s - %s", bot.user.name, bot.user.id)
-
-        initial_extensions = {"cogs.owner"}
-        initial_extensions = initial_extensions.union(set(bot.Config().bot["autoload_cogs"]))
-
-        for ext in initial_extensions:
-            try:
-                bot.load_extension(ext)
-            except Exception:
-                logger.error("MAIN: Failed to load extension: %s.", ext, exc_info=True)
-
-        logger.info("Bot up and running.")
-
 def reinit_db() -> None:
-    logger, _, sql_manager = initialize_components()
+    logger, _ = initialize_components()
 
-    sql_manager.drop_all_tables()
-    sql_manager.create_all_tables()
+    subsystems.sql.bot_sql.drop_all_tables()
+    subsystems.sql.bot_sql.create_all_tables()
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--migrate_only", help="Only applies the migrations.",

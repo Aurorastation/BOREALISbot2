@@ -31,7 +31,7 @@ from .utils import authchecks, guildchecks
 
 
 class AdministrativeCaseFactory:
-    def __init__(self, session: sql.Session, author: discord.Member, subject: discord.Member):
+    def __init__(self, session, author: discord.Member, subject: discord.Member):
         self.case: sql.AdministrativeCase
         self.reason: str
         self.action_type: sql.AdminAction
@@ -220,7 +220,7 @@ class AdminCog(commands.Cog):
 
     @tasks.loop(hours=1.0)
     async def process_unbans(self):
-        with sql.SessionManager.scoped_session() as session:
+        with sql.bot_sql.scoped_session() as session:
             query = session.query(sql.AdministrativeCase)\
                     .filter(sql.AdministrativeCase.action_type == sql.AdminAction.TEMP_BAN)\
                     .filter(sql.AdministrativeCase.is_active == True)\
@@ -249,7 +249,7 @@ class AdminCog(commands.Cog):
         if not await self._is_valid_target(ctx, subject):
             return
 
-        with sql.SessionManager.scoped_session() as session:
+        with sql.bot_sql.scoped_session() as session:
 
             factory = AdministrativeCaseFactory(session, ctx.author, subject)
 
@@ -269,7 +269,7 @@ class AdminCog(commands.Cog):
         if not await self._is_valid_target(ctx, subject):
             return
 
-        with sql.SessionManager.scoped_session() as session:
+        with sql.bot_sql.scoped_session() as session:
 
             factory = AdministrativeCaseFactory(session, ctx.author, subject)
 
@@ -289,7 +289,7 @@ class AdminCog(commands.Cog):
         if not await self._is_valid_target(ctx, subject):
             return
 
-        with sql.SessionManager.scoped_session() as session:
+        with sql.bot_sql.scoped_session() as session:
 
             factory = AdministrativeCaseFactory(session, ctx.author, subject)
 
@@ -308,7 +308,7 @@ class AdminCog(commands.Cog):
     @authchecks.has_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
     async def case_show(self, ctx, id_num: int):
         """Show the details of a case."""
-        with sql.SessionManager.scoped_session() as session:
+        with sql.bot_sql.scoped_session() as session:
             case: sql.AdministrativeCase = session.query(sql.AdministrativeCase).filter(sql.AdministrativeCase.id == id_num).first()
             if not case:
                 await ctx.send(f"Case with id `[{id_num}]` not found.")
@@ -325,7 +325,7 @@ class AdminCog(commands.Cog):
     @authchecks.has_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
     async def case_reason(self, ctx, id_num: int):
         """Shows the reason of the given case."""
-        with sql.SessionManager.scoped_session() as session:
+        with sql.bot_sql.scoped_session() as session:
             case: sql.AdministrativeCase = session.query(sql.AdministrativeCase).filter(sql.AdministrativeCase.id == id_num).first()
             if not case:
                 await ctx.send(f"Case with id `[{id_num}]` not found.")
@@ -339,7 +339,7 @@ class AdminCog(commands.Cog):
     @authchecks.has_auths([AuthPerms.R_ADMIN])
     async def case_delete(self, ctx, id_num: int):
         """Deletes a case of the given ID."""
-        with sql.SessionManager.scoped_session() as session:
+        with sql.bot_sql.scoped_session() as session:
             case: sql.AdministrativeCase = session.query(sql.AdministrativeCase).filter(sql.AdministrativeCase.id == id_num).first()
             if not case:
                 await ctx.send(f"Case with id `[{id_num}]` not found.")

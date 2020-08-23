@@ -79,7 +79,7 @@ class Config:
 
     def load_sql(self):
         """Updates various entries from the SQL database."""
-        with sql.SessionManager.scoped_session() as session:
+        with sql.bot_sql.scoped_session() as session:
             guild_dict = {}
             channel_dict = {}
             for guild in session.query(sql.GuildConfig).all():
@@ -100,7 +100,7 @@ class Config:
         return self.config["guilds"][guild_id]
 
     def commit_guild(self, guild: sql.GuildConfig) -> None:
-        with sql.SessionManager.scoped_session() as session:
+        with sql.bot_sql.scoped_session() as session:
             session.add(guild)
 
         self.load_sql()
@@ -112,7 +112,7 @@ class Config:
         return self.config["channels"][channel_id]
 
     def commit_channel(self, channel: sql.ChannelConfig) -> None:
-        with sql.SessionManager.scoped_session() as session:
+        with sql.bot_sql.scoped_session() as session:
             session.add(channel)
 
         self.load_sql()

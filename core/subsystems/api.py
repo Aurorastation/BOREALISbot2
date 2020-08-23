@@ -44,14 +44,6 @@ class API:
         if not config:
             raise ApiError("No config given to constructor.", "__init__")
 
-        self._api_auth = ""
-        if config.api["auth"]:
-            self._api_auth = config.api["auth"]
-
-        self._api_path = ""
-        if config.api["path"]:
-            self._api_path = config.api["path"]
-
         self._forum_auth = ""
         if config.forum["auth"]:
             self._forum_auth = config.forum["auth"]
@@ -65,7 +57,7 @@ class API:
         self._server_auth = config.server["auth"]
 
     async def query_web(self, uri, method, data={}, return_keys=None,
-                        enforce_return_keys=False, api_dest="api"):
+                        enforce_return_keys=False, api_dest="forum"):
         """
         A method for querying the home API of the bot.
         """
@@ -86,13 +78,7 @@ class API:
         # Validate a different dataset based on api_dest
         arg_dict = {"url": None, "data": {}, "params": {}}
         error_message_key = "error_msg"
-        if api_dest == "api":
-            if not self._api_path:
-                self._logger.error("No API path specified.")
-                raise ApiError("No API path specified.", "query_web")
-            arg_dict["url"] = self._api_path + uri
-            data["auth_key"] = self._api_auth
-        elif api_dest == "forum":
+        if api_dest == "forum":
             error_message_key = "errorMessage1"
             if not self._forum_path:
                 self._logger.error("No Forum path specified.")
@@ -129,13 +115,6 @@ class API:
                                    .format(uri,
                                            data[error_message_key] if error_message_key in data else "none.",
                                            resp.status), "query_web")
-
-                # TODO: Change the old API to return a statuscode != 200 on error
-                if api_dest == "api" and data["error"] is True:
-                    self._logger.error("API error while querying {}: {}."
-                                       .format(uri, data[error_message_key]))
-                    raise ApiError("API error while querying {}: {}."
-                                   .format(uri, data[error_message_key]), "query_web")
 
                 if not return_keys:
                     return data

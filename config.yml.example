@@ -12,10 +12,6 @@ bot:
     - cogs.users
     - cogs.wiki
 
-api:
-  auth: ""
-  path: ""
-
 users_api:
   auth: ""
   url: ""
@@ -88,3 +84,5 @@ github:
 sql:
   # The SQLAlchemy URL string for connecting to the bot's database.
   url: ""
+  # The Game SQL server's connection string. May be left empty.
+  game_url: ""

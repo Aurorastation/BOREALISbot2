@@ -119,7 +119,7 @@ class SubscribeCog(commands.Cog):
         if not role in message.role_mentions:
             return
 
-        with sql.SessionManager.scoped_session() as session:
+        with sql.bot_sql.scoped_session() as session:
             query = session.query(sql.Subscriber).filter(sql.Subscriber.guild_id == message.guild.id)\
                     .filter(sql.Subscriber.once == True)
 
@@ -140,7 +140,7 @@ class SubscribeCog(commands.Cog):
         else:
             once_bool = False
 
-        with sql.SessionManager.scoped_session() as session:
+        with sql.bot_sql.scoped_session() as session:
             if await self._is_subscribed(session, ctx.author):
                 await ctx.send("You're already subscribed.")
                 return
@@ -156,7 +156,7 @@ class SubscribeCog(commands.Cog):
     @commands.guild_only()
     @guildchecks.guild_is_setup(subscribers_enabled=True)
     async def unsubscribe(self, ctx):
-        with sql.SessionManager.scoped_session() as session:
+        with sql.bot_sql.scoped_session() as session:
             if not await self._is_subscribed(session, ctx.author):
                 await ctx.send("You aren't subscribed.")
                 return

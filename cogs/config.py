@@ -175,7 +175,7 @@ class ConfigCog(commands.Cog):
             await ctx.send(f"Guild with ID `{guild.id}` is not configured.")
             return
 
-        with sql.SessionManager.scoped_session() as session:
+        with sql.bot_sql.scoped_session() as session:
             session.delete(guild_conf)
 
         self.bot.Config().load_sql()
@@ -280,7 +280,7 @@ class ConfigCog(commands.Cog):
             await ctx.send(f"Channel with ID `{channel.id}` is not configured.")
             return
 
-        with sql.SessionManager.scoped_session() as session:
+        with sql.bot_sql.scoped_session() as session:
             session.delete(ch)
 
         self.bot.Config().load_sql()

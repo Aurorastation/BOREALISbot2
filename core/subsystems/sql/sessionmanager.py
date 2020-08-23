@@ -15,7 +15,6 @@
 #    along with this program.  If not, see http://www.gnu.org/licenses/.
 
 import logging
-
 from contextlib import contextmanager
 
 from sqlalchemy import create_engine
@@ -23,28 +22,37 @@ from sqlalchemy.orm import sessionmaker
 
 from .base import Base
 
-"""
-The SQL Session. Use this for SQL interactions.
-
-DO NOT use the default SQLAlchemy Session class!
-"""
-Session = sessionmaker()
 
 class SessionManager:
     """
     Manager for SQL shenanigans. Must be created before any SQL queries are
     made by the bot.
+
+    One of these exists as sql.bot_sql, a static object; and the other exists
+    as the gamesql.game_sql static object. Use the one which connects to the
+    proper database.
     """
-    def __init__(self, conn_str: str):
-        self._engine = create_engine(conn_str)
+    def __init__(self, base):
         self._logger = logging.getLogger(__name__)
+        self._base = base
 
-        Session.configure(bind=self._engine)
+        self.setup = False
 
-    @staticmethod
+        """
+        The SQL Session. Use this for SQL interactions.
+
+        DO NOT use the default SQLAlchemy Session class!
+        """
+        self.Session = sessionmaker()
+
+    def configure(self, conn_str: str):
+        self._engine = create_engine(conn_str)
+        self.Session.configure(bind=self._engine)
+        self.setup = True
+
     @contextmanager
-    def scoped_session():
-        session = Session()
+    def scoped_session(self):
+        session = self.Session()
         try:
             yield session
             session.commit()
@@ -55,9 +63,11 @@ class SessionManager:
             session.close()
 
     def create_all_tables(self):
-        Base.metadata.create_all(self._engine)
+        self._base.metadata.create_all(self._engine)
         self._logger.warning("Creating all tables without migrations.")
 
     def drop_all_tables(self):
-        Base.metadata.drop_all(self._engine)
+        self._base.metadata.drop_all(self._engine)
         self._logger.warning("All SQL tables dropped.")
+
+bot_sql = SessionManager(Base)

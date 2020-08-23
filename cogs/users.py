@@ -128,7 +128,7 @@ class UserCog(commands.Cog):
             fields["Nickname:"] = discord_user.name
             fields["Discord ID:"] = discord_user.id
 
-            with sql.SessionManager.scoped_session() as session:
+            with sql.bot_sql.scoped_session() as session:
                 strike_count = sql.AdministrativeCase.count_active_strikes(discord_user.id, session)
 
             fields["Strikes:"] = strike_count
