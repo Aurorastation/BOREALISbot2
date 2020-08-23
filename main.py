@@ -54,7 +54,7 @@ def run_bot() -> None:
 
     ## BOT INIT
     bot = Borealis(config.bot["prefix"], config, api,
-                description="Borealis version 3.7.0, here to assist in any SS13 related matters!")
+                description="Borealis version 4.0.0, here to assist in any SS13 related matters!")
 
     bot.run(config.bot["token"], bot=True, reconnect=True)
 
