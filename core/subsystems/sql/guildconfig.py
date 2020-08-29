@@ -16,25 +16,19 @@
 
 from typing import Dict, Optional
 
-import discord
-import emoji
 import sqlalchemy
 from sqlalchemy import Column
 from sqlalchemy.orm import relationship
 
 from .base import Base
 
-def _emoji_to_name(react_emoji: discord.Emoji) -> str:
-    if react_emoji.id:
-        return f":{react_emoji.name}:"
-    else:
-        return emoji.unicode_codes.UNICODE_EMOJI[react_emoji.name]
 
 class RoleControlMessage(Base):
     __tablename__ = "role_control_messages"
 
     id = Column(sqlalchemy.Integer, primary_key=True)
     message_id = Column(sqlalchemy.Integer)
+    channel_id = Column(sqlalchemy.Integer)
     guild_id = Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("guilds.id"))
 
     guild = relationship("GuildConfig", back_populates="role_control_messages")
@@ -69,42 +63,3 @@ class GuildConfig(Base):
         fields["Enabled cogs:"] = [c.name for c in self.whitelisted_cogs]
 
         return fields
-
-    def is_control_message(self, message: discord.Message) -> bool:
-        for msg in self.role_control_messages:
-            if msg.message_id == message.id:
-                return True
-
-        return False
-
-    def get_selected_role_id(self, raw_emoji: discord.Emoji, message: discord.Message) -> Optional[int]:
-        if not self.is_control_message(message):
-            return None
-
-        emoji_name = _emoji_to_name(raw_emoji)
-
-        if message.id not in self._controlled_roles:
-            self._controlled_roles[message.id] = self._get_controlled_roles(message)
-
-        if emoji_name in self._controlled_roles[message.id]:
-            return self._controlled_roles[message.id][emoji_name]
-        else:
-            return None
-
-    def _get_controlled_roles(self, message: discord.Message) -> Dict[str, int]:
-        roles = {}
-        guild = message.guild
-
-        for line in message.content.split("\n"):
-            try:
-                emoji_str, role_name = line.split(": ")
-                role = discord.utils.get(guild.roles, name=role_name)
-
-                if not role:
-                    continue
-
-                roles[emoji_str] = role.id
-            except ValueError:
-                pass
-
-        return roles
