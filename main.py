@@ -78,6 +78,8 @@ def run_migrations() -> None:
 parser = argparse.ArgumentParser()
 parser.add_argument("--migrate_only", help="Only applies the migrations.",
                     action="store_true")
+parser.add_argument("--skip_migrations", help="Skips SQL migrations.",
+                    action="store_true")
 parser.add_argument("--reinit_db", help="TEST COMMAND. Drops all SQL tables and sets them up again.",
                     action="store_true")
 
@@ -91,7 +93,10 @@ if __name__ == "__main__":
         reinit_db()
         exit(0)
 
-    run_migrations()
+    if not args.skip_migrations:
+        run_migrations()
+    else:
+        logger.info("Migration skipped due to --skip_migrations flag.")
 
     if args.migrate_only:
         logger.info("Exiting due to --migrate_only flag.")
