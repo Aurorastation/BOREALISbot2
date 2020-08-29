@@ -41,7 +41,7 @@ def upgrade():
     op.create_table('channels',
     sa.Column('id', sa.Integer(), autoincrement=False, nullable=False),
     sa.Column('guild_id', sa.Integer(), nullable=True),
-    sa.Column('channel_type', sa.Enum('ADMIN', 'CCIAA', 'ANNOUNCEMENT', 'LOG', name='channeltype'), nullable=True),
+    sa.Column('channel_type', sa.Enum('LOG', 'MESSAGE_CHANGE_LOG', name='channeltype'), nullable=True),
     sa.ForeignKeyConstraint(['guild_id'], ['guilds.id'], ),
     sa.PrimaryKeyConstraint('id')
     )

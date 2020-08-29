@@ -25,10 +25,8 @@ from .base import Base
 
 
 class ChannelType(enum.Enum):
-    ADMIN = 1
-    CCIAA = 2
-    ANNOUNCEMENT = 3
-    LOG = 4
+    LOG = 1
+    MESSAGE_CHANGE_LOG = 2
 
     @staticmethod
     def from_string(arg: str) -> Optional["ChannelType"]:
