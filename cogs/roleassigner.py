@@ -8,6 +8,7 @@ class RoleAssigner(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self._logger = logging.getLogger(__name__)
+        #TODO Add configured reactions to all messages
 
     def _emoji_to_name(self, react_emoji):
         # If we have a custom emoji return the name
@@ -18,6 +19,7 @@ class RoleAssigner(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
+        #TODO: Remove reaction if not in list
         ret = await self._process_reaction_event(payload)
         if not isinstance(ret, tuple):
             return
@@ -39,17 +41,21 @@ class RoleAssigner(commands.Cog):
         guild = self.bot.get_guild(payload.guild_id)
         member = discord.utils.get(guild.members, id=payload.user_id)
         emoji_name = self._emoji_to_name(payload.emoji)
-        self._logger.debug("Got the following data from the reaction - guild:{} - member:{} - emoji_id:{}".format(
-            guild,
-            member,
+        self._logger.debug("Got the following data from the reaction - guild:{}-{payload.guild_id} - member:{}-{} - emoji_id:{}".format(
+            guild, payload.guild_id,
+            member, payload.user_id,
             emoji_name
         ))
 
         # Get the config for the guild and return if there is no config for it
         config = self.bot.Config()
+        if payload.guild_id not in config.guilds:
+            self._logger.debug("Could not find configuration for guild id: {}".format(payload.guild_id))
+            return
+
         guildconfig = config.guilds[payload.guild_id]
         if not isinstance(guildconfig, GuildConfig):
-            self._logger.debug("Could not find configuration for guild id: {}".format(payload.guild_id))
+            self._logger.debug("Could not find valid configuration for guild id: {}".format(payload.guild_id))
             return
 
         # Ignore if the user who sent the reaction is a bot

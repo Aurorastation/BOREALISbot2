@@ -17,6 +17,8 @@ loggers:
         level: ERROR
     core:
         level: INFO
+    cogs.roleassigner:
+        level: DEBUG
 
 root:
     level: INFO
