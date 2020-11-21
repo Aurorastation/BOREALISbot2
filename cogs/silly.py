@@ -3,7 +3,7 @@ import aiohttp
 import discord
 from discord.ext import commands
 
-from .utils import auth, AuthPerms, AuthType
+from .utils import authchecks, AuthPerms, AuthType
 
 class SillyCog(commands.Cog):
     def __init__(self, bot):
@@ -101,7 +101,7 @@ class SillyCog(commands.Cog):
         await ctx.send(None, embed=lawEmbed)
 
     @commands.command()
-    @auth.check_auths([AuthPerms.R_ADMIN])
+    @authchecks.has_auths([AuthPerms.R_ADMIN])
     async def memetype(self, ctx, *args):
         """They hate him for many things. But specially for this."""
         msg = []
@@ -137,7 +137,7 @@ class SillyCog(commands.Cog):
                         await ctx.send("No pingus. I cri.")
 
     @commands.command()
-    @auth.check_auths([AuthPerms.R_ANYSTAFF])
+    @authchecks.has_auths([AuthPerms.R_ANYSTAFF])
     @commands.cooldown(1, 15, commands.BucketType.channel)
     async def memes(self, ctx, *, meme: str):
         """Pick your poison: mod, ccia or dev memes. Or all of them!"""

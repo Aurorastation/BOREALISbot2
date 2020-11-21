@@ -1,10 +1,13 @@
-import discord
 import logging
+from typing import List, Optional
 
+import discord
 from discord.ext import commands
 
-from .subsystems import ApiMethods
-from .borealis_exceptions import BotError, ApiError, BorealisError
+import core.subsystems as ss
+import core.subsystems.sql as sql
+
+from .borealis_exceptions import ApiError, BorealisError, BotError
 from .users import UserRepo
 
 
@@ -18,18 +21,55 @@ class Borealis(commands.Bot):
 
         self._logger = logging.getLogger(__name__)
 
-        self.add_listener(self.process_unsubscribe, "on_message")
-
         self._user_repo = UserRepo(self)
 
-    def Api(self):
+        self.add_check(self.cog_is_whitelisted, call_once=True)
+
+    def Api(self) -> ss.API:
         return self._api
 
-    def Config(self):
+    def Config(self) -> ss.Config:
         return self._config
 
-    def UserRepo(self):
+    def UserRepo(self) -> UserRepo:
         return self._user_repo
+
+    async def on_ready(self):
+        self._logger.info("Bot ready. Logged in as: %s - %s", self.user.name, self.user.id)
+
+        initial_extensions = {"cogs.owner"}
+        initial_extensions = initial_extensions.union(set(self._config.bot["autoload_cogs"]))
+
+        self._logger.info("Loading initial cogs: %s", initial_extensions)
+
+        for ext in initial_extensions:
+            try:
+                self.load_extension(ext)
+            except Exception:
+                self._logger.error("Failed to load extension: %s.", ext, exc_info=True)
+
+        self._logger.info("Bot up and running.")
+
+    async def cog_is_whitelisted(self, ctx: commands.Context):
+        guild: Optional[discord.Guild] = ctx.guild
+
+        if not guild or not ctx.cog:
+            return True
+
+        guild_conf: Optional[sql.GuildConfig] = self._config.get_guild(guild.id)
+        
+        if ctx.cog.qualified_name in ["ConfigCog", "OwnerCog"]:
+            return True
+        
+        if not guild_conf:
+            return False
+
+        cog: sql.WhitelistedCog
+        for cog in guild_conf.whitelisted_cogs:
+            if cog.name == ctx.cog.qualified_name:
+                return True
+
+        return False
 
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.NoPrivateMessage):
@@ -37,17 +77,20 @@ class Borealis(commands.Bot):
         elif isinstance(error, commands.CommandOnCooldown):
             await ctx.send(f"Command on cooldown. Retry again in {int(error.retry_after)} seconds.")
         elif isinstance(error, commands.CheckFailure):
-            await ctx.send("Command execution checks failed. Most likely due to missing permissions.")
+            await ctx.send(f"Command execution checks failed. {error}")
         elif isinstance(error, commands.CommandNotFound):
             pass
         elif isinstance(error, commands.CommandInvokeError):
-            await ctx.send(f"Command execution failed. {error.original}")
+            await ctx.send(f"Command execution failed. {error}")
         elif isinstance(error, commands.BadArgument):
-            await ctx.send(f"Bad argument provided. {error.original}")
+            await ctx.send(f"Bad argument provided. {error}")
+        elif isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send(f"Argument missing. {error}")
         else:
+            await ctx.send(f"Unknown error! Unable to execute command.")
             self._logger.error("Unrecognized error in command. %s - %s", error, type(error))
 
-    async def forward_message(self, msg, channel_str=None, channel_objs=None):
+    async def forward_message(self, msg, channel_type: sql.ChannelType) -> None:
         """
         Forwards a message to a set of channels described by channel_str, or set
         via channel_objs argument.
@@ -55,21 +98,15 @@ class Borealis(commands.Bot):
         if not len(msg):
             return
 
-        if channel_objs is None:
-            channel_objs = []
+        channel_objs: List[discord.TextChannel] = []
 
-        if channel_str:
-            config = self.Config()
-            if not config:
-                raise BotError("No Config accessible to bot.", "forward_message")
+        config = self.Config()
 
-            channel_ids = config.get_channels(channel_str)
-            self._logger.debug("Fetched Channel IDs: %s", channel_ids)
-            for cid in channel_ids:
-                channel = self.get_channel(cid)
-                self._logger.debug("Fetched Channel %s from Channel ID %s ", channel, cid)
-                if channel is not None:
-                    channel_objs.append(channel)
+        for channel_id, channel in self.Config().channels.items():
+            if channel.channel_type == channel_type:
+                channel_obj = self.get_channel(channel.id)
+                if channel:
+                    channel_objs.append(channel_obj)
 
         if not len(channel_objs):
             return
@@ -124,125 +161,4 @@ class Borealis(commands.Bot):
             data["user_id"] = subject.id
             str_list.append(f"SUBJECT: {subject.name}/{subject.id}")
 
-        try:
-            await self.Api().query_web("/log", ApiMethods.PUT, data)
-        except ApiError:
-            pass
-
-        await self.forward_message(" | ".join(str_list), "channel_log")
-
-    async def register_ban(self, user_obj, ban_type, duration, server_obj,
-                           author_obj=None, reason="You have been banned by an administrator"):
-        """Bans a user from the Discord server and logs said ban in the API as well."""
-        if not user_obj or not duration or not server_obj:
-            raise BotError("Missing or invalid arguments.", "register_ban")
-
-        if user_obj == self.user:
-            raise BotError("I cannot ban myself.", "register_ban")
-
-        auths = self.Config().get_user_auths(str(user_obj.id))
-        if len(auths):
-            raise BotError("Unable to ban a staff member.", "register_ban")
-
-        if author_obj and author_obj is user_obj:
-            raise BotError("You cannot ban yourself.", "register_ban")
-
-        data = {
-            "user_id": user_obj.id,
-            "user_name": user_obj.name,
-            "server_id": server_obj.id,
-            "ban_type": ban_type,
-            "ban_duration": duration,
-            "admin_id": author_obj.id,
-            "admin_name": author_obj.name,
-            "ban_reason": reason
-        }
-
-        self._logger.info("Placing Ban: %s", data)
-
-        try:
-            await server_obj.ban(user_obj, reason=reason)
-            await self.Api().query_web("/discord/ban", ApiMethods.PUT, data)
-            await self.log_entry(f"PLACED BAN | Length: {duration} | Reason: {reason}",
-                                 author_obj, user_obj)
-        except ApiError as err:
-            raise BotError(err.message, "register_ban")
-        except discord.Forbidden:
-            raise BotError("Not enough permissions to apply a ban.", "register_ban")
-
-    async def register_unban(self, ban_id, user_id, server_id):
-        """Registers an unban for the API and actually lifts the ban."""
-        if not ban_id or not user_id or not server_id:
-            raise BotError("Insufficient arguments provided.", "register_unban")
-
-        server_obj = self.get_guild(int(server_id))
-        if not server_obj:
-            raise BotError("No server with that ID found.", "register_unban")
-
-        user_obj = None
-        try:
-            bans = await server_obj.bans()
-            for _, user in bans:
-                if str(user.id) == user_id:
-                    user_obj = user
-                    break
-        except discord.Forbidden:
-            raise BotError("Unable to pull bans.", "register_unban")
-
-        if user_obj:
-            try:
-                await server_obj.unban(user_obj)
-            except discord.Forbidden:
-                raise BotError("Unable to unban.", "register_unban")
-
-        self._logger.info("Removing Ban: %s", {"ban_id": ban_id,
-                                               "user_id": user_obj.id,
-                                               "user_name": user_obj.name,
-                                               "server_id": server_obj.id})
-
-        await self.Api().query_web("/discord/ban", ApiMethods.DELETE, {"ban_id": ban_id})
-        await self.log_entry(f"LIFTED BAN #{ban_id}", subject=user_obj)
-
-    async def process_temporary_bans(self):
-        """A scheduled coroutine for handling unbans."""
-        try:
-            bans = await self.Api().query_web("/discord/ban", ApiMethods.GET, return_keys=["expired_bans"])
-
-            if not bans or not bans["expired_bans"]:
-                return
-
-            for ban_id in bans["expired_bans"]:
-                await self.register_unban(ban_id, bans["expired_bans"][ban_id]["user_id"],
-                                          bans["expired_bans"][ban_id]["server_id"])
-        except BorealisError as err:
-            self._logger.error(f"Error handling unbans: {err}.")
-
-    async def process_unsubscribe(self, message):
-        """
-        A listener for a message mentioning the subcribers. Used to trigger automatic
-        unsubscribing when needed.
-        """
-        if not self.Config().bot["subscriber_server"] or not self.Config().bot["subscriber_role"]:
-            return
-
-        if not message.guild or message.guild.id != self.Config().bot["subscriber_server"]:
-            return
-
-        if message.author != self.user:
-            return
-
-        role = discord.Object(id=self.Config().bot["subscriber_role"])
-        if role in message.role_mentions:
-            users = await self.Api().query_web("/subscriber", ApiMethods.GET, return_keys=["users"])
-
-            if not users or not users["users"]:
-                return
-
-            for _, uid in enumerate(users["users"]):
-                user = message.guild.get_member(int(uid))
-
-                if user:
-                    await user.remove_roles(role, "Automatically unsubscribed.")
-
-                await self.Api().query_web("/subscribe", ApiMethods.DELETE, {"user_id": uid})
-                user = None
+        await self.forward_message(" | ".join(str_list), sql.ChannelType.LOG)

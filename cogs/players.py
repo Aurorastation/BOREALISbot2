@@ -1,61 +1,77 @@
+from typing import Dict, List, Optional
+
 import discord
 from discord.ext import commands
 
-from .utils import auth, AuthPerms
-from .utils.paginator import FieldPages
+from core import ApiError, ApiMethods
+from core.subsystems import gamesql
+
+from .utils import AuthPerms, authchecks
 from .utils.byond import get_ckey
-from core import ApiMethods, ApiError
+from .utils.paginator import FieldPages
+
 
 class PlayerCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=["playerinfo", "pinfo"])
-    @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
+    @commands.group(pass_context=True)
+    @authchecks.has_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
+    async def player(self, ctx):
+        """Display information from the game's database."""
+        pass
+
+    @player.command(aliases=["info"])
     async def player_info(self, ctx, ckey: get_ckey):
         """Information regarding a given player."""
-        api = self.bot.Api()
-
-        data = await api.query_web("/query/database/playerinfo", ApiMethods.GET,
-                                    data={"ckey": ckey}, return_keys=["data"],
-                                    enforce_return_keys=True)
-
-        data = data["data"]
-
-        if data["found"] is False:
-            await ctx.send("{}, no such player found.".format(ctx.author.mention))
+        if not gamesql.game_sql.setup:
+            await ctx.send("Connection to game's SQL server not configured. Feature not supported.")
             return
+
+        player: Optional[gamesql.Player] = gamesql.Player.get_player(ckey)
+
+        if not player:
+            await ctx.send(f"No player with ckey `{ckey}` found.")
+            return
+
+        data: Dict[str, str] = {
+            "First seen": player.firstseen.strftime("%m-%d-%Y"),
+            "Last seen": player.lastseen.strftime("%m-%d-%Y"),
+            "Rank": player.lastadminrank,
+            "Notes": str(gamesql.PlayerNote.get_note_count(ckey)),
+            "Warnings": str(gamesql.PlayerWarning.get_active_warning_count(ckey)),
+            "Is banned": "Yes" if gamesql.Ban.is_banned(ckey) else "No"
+        }
 
         embed = discord.Embed(title="Player Info",
                                 description="Information on ckey {}".format(ckey))
 
-        for key in data["sort_order"]:
-            embed.add_field(name=str(key), value=str(data[key]))
+        for key, value in data.items():
+            embed.add_field(name=key, value=value)
 
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=["playernotes", "pnotes"])
-    @auth.check_auths([AuthPerms.R_MOD, AuthPerms.R_ADMIN])
+    @player.command(aliases=["notes"])
     async def player_notes(self, ctx, ckey: get_ckey):
         """Display notes issued to the specified player."""
-        api = self.bot.Api()
-
-        data = await api.query_web("/query/database/playernotes", ApiMethods.GET,
-                                    data={"ckey": ckey}, return_keys=["data"],
-                                    enforce_return_keys=True)
-
-        if not data["data"]:
-            await ctx.send("No notes found with that ckey.")
+        if not gamesql.game_sql.setup:
+            await ctx.send("Connection to game's SQL server not configured. Feature not supported.")
             return
 
-        notes = []
-        for note in data["data"]:
-            points = note.split(" || ")
+        if not gamesql.Player.get_player(ckey):
+            await ctx.send(f"No player with ckey `{ckey}` found.")
+            return
 
-            notes.append((f"{points[1]} on {points[0]}", points[2]))
+        notes: List[gamesql.PlayerNote] = gamesql.PlayerNote.get_player_notes(ckey)
 
-        p = FieldPages(ctx, entries=notes, per_page=4)
-        p.embed.title = f"Notes for {ckey}"
+        entries = []
+        note: gamesql.PlayerNote
+        for note in notes:
+            heading = f"{note.a_ckey} on {note.adddate}"
+            entries.append((heading, note.content))
+
+        p = FieldPages(ctx, entries=entries, per_page=4)
+        p.embed.title = f"Notes for {ckey}:"
         await p.paginate()
 
 def setup(bot):

@@ -1,5 +1,5 @@
 #    BOREALISbot2 - a Discord bot to interface between SS13 and discord.
-#    Copyright (C) 2017 Skull132
+#    Copyright (C) 2020 Skull132
 
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -14,151 +14,105 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see http://www.gnu.org/licenses/.
 
-import os.path
-import yaml
 import logging
-from ..borealis_exceptions import ConfigError, ApiError
-from .api import ApiMethods
+import os.path
+from typing import Any, Mapping, Optional
 
-class GuildConfig:
-    guildid = None  # ID of the guild this config object is for
+import yaml
+from discord.ext import commands
 
-    reactionroles = {}
+from core.borealis_exceptions import ConfigError
+from core.subsystems import sql
 
-    def __init__(self, guildid, configdict):
-        self.guildid = guildid
-
-        # Parses the passed configdict into a a GuildConfig Object
-        # Add other guild relevant options here
-
-        # Configuration for the reacitonroles
-        # TODO: validate the format (message -> dict(emojiid -> roleid))
-        self.reactionroles = configdict["reactionroles"]
 
 class Config:
     """
-    A class for loading, and accessing at runtime the config settings of the bot.
+    Configuration loader. Values within this should be considered immutable and
+    edited either via the configuration file or via direct database interaction.
+    After either of which, this configuration object should be refreshed.
 
-    This describes the bot's state in most cases: channels, users, etcetera are stored
-    here, as opposed to being latched to the bot itself.
-
-    The attribute operator is overloaded to permit access to keys of the config array.
+    All config values are accessible via __getattr__ (so config.key), or via
+    the config property.
     """
-    def __init__(self, config_path):
+    def __init__(self, config_path: str):
         if config_path is None:
             raise ConfigError("No config path provided.", "__init__")
 
         # The filepath to the yml we want to read.
-        self.filepath = config_path
-
-        # The logger from the bot.
-        self.logger = logging.getLogger(__name__)
+        self.filepath: str = config_path
 
         # The master dictionary with configuration options.
-        self.config = {}
+        self.config: Mapping[str, Any] = {}
 
-        # Initial channels dictionary.
-        self.channels = {"channel_admin" : [], "channel_cciaa" : [],
-                         "channel_announce" : [], "channel_log" : []}
+        # The logger from the bot.
+        self._logger: logging.Logger = logging.getLogger(__name__)
 
-        # Guild Configuration dict.
-        self.guilds = {}
-
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         """Fetch a value from the config dictionary."""
-
         if name in self.config:
             return self.config[name]
 
-        return {}
+        return None
 
-    def setup(self):
+    @staticmethod
+    def create(logger: logging.Logger, name: str) -> "Config":
+        try:
+            config = Config("config.yml")
+            config.load_file()
+
+            return config
+        except ConfigError:
+            logger.exception("Error initializing Config object.")
+            raise RuntimeError("Error initializing Config object.")
+
+    def load_file(self):
         """Set up the config instance."""
-
         if os.path.isfile(self.filepath) is False:
             raise ConfigError("Unable to open configuration file.", "setup")
 
-        with open(self.filepath, 'r') as file:
+        with open(self.filepath, "r") as file:
             try:
                 self.config = yaml.safe_load(file)
+                self._logger.debug("Config loaded from file '%s'.", self.filepath)
             except yaml.YAMLError as err:
-                raise ConfigError("Error reading config: {}".format(err), "setup")
+                raise ConfigError(f"Error reading config: {err}", "setup")
 
-            # Parse the config into GuildConfigObjects
-            for g in self.config["guildconfig"]:
-                # Initialize a GuildConfig Object with the guild settings from the file
-                # And store it in the guilds variable
-                self.guilds[g] = GuildConfig(g, self.config["guildconfig"][g])
+    def load_sql(self):
+        """Updates various entries from the SQL database."""
+        with sql.bot_sql.scoped_session() as session:
+            guild_dict = {}
+            channel_dict = {}
+            for guild in session.query(sql.GuildConfig).all():
+                guild_dict[guild.id] = guild
 
-    def get_channels(self, channel_group):
-        """Get a list of channel ids that are grouped together. The actual channels still have to be gathered via the bot"""
-        self.logger.debug("Getting channels from channel group {0}".format(channel_group))
+                for channel in guild.channels:
+                    channel_dict[channel.id] = channel
 
-        if channel_group not in self.channels:
-            return []
+                session.expunge(guild)
 
-        return self.channels[channel_group]
+            self.config["guilds"] = guild_dict
+            self.config["channels"] = channel_dict
 
-    def get_channels_group(self, channel_id):
-        out = []
-        for group in self.channels:
-            if channel_id in self.channels[group]:
-                out.append(group)
+    def get_guild(self, guild_id: int) -> Optional[sql.GuildConfig]:
+        if guild_id not in self.config["guilds"]:
+            return None
 
-        return out
+        return self.config["guilds"][guild_id]
 
-    async def update_channels(self, api):
-        """Updates the list of channels stored in the config's datum."""
-        self.logger.info("Updating channels.")
+    def commit_guild(self, guild: sql.GuildConfig) -> None:
+        with sql.bot_sql.scoped_session() as session:
+            session.add(guild)
 
-        if not api:
-            raise ConfigError("No API object provided.", "update_channels")
+        self.load_sql()
 
-        try:
-            temporary_channels = await api.query_web("/channels", ApiMethods.GET,
-                                                     return_keys=["channels"],
-                                                     enforce_return_keys=True)
-            temporary_channels = temporary_channels["channels"]
-        except ApiError as err:
-            # Only one way to crash here. Bad API query.
-            raise ConfigError("API error encountered: {}".format(err.message), "update_channels")
+    def get_channel(self, channel_id: int) -> Optional[sql.ChannelConfig]:
+        if channel_id not in self.config["channels"]:
+            return None
 
-        self.channels = {"channel_admin" : [], "channel_cciaa" : [],
-                         "channel_announce" : [], "channel_log" : []}
+        return self.config["channels"][channel_id]
 
-        for group in temporary_channels:
-            if group not in self.channels:
-                continue
+    def commit_channel(self, channel: sql.ChannelConfig) -> None:
+        with sql.bot_sql.scoped_session() as session:
+            session.add(channel)
 
-            for channel in temporary_channels[group]:
-                channel_id = int(channel)
-                if channel_id is not None and channel_id is not 0:
-                    self.channels[group].append(channel_id)
-
-    async def add_channel(self, channel_id, group, api):
-        if not api:
-            raise ConfigError("No API object provided.", "add_channel")
-
-        if not channel_id or not group:
-            raise ConfigError("No channel ID or group sent.", "add_channel")
-
-        try:
-            await api.query_web("/channels", ApiMethods.PUT, data={"channel_id": channel_id,
-                                                               "channel_group": group})
-            await self.update_channels(api)
-        except ApiError as err:
-            raise ConfigError("API error encountered: {}".format(err.message), "add_channel")
-
-    async def remove_channel(self, channel_id, group, api):
-        """Removes a channel from the global channel listing and updates channels as necessary."""
-        data = {"channel_id" : channel_id, "channel_group" : group}
-
-        if not api:
-            raise ConfigError("No API object provided.", "remove_channel")
-
-        try:
-            api.query_web("/channels", ApiMethods.DELETE, data)
-            await self.update_channels(api)
-        except ApiError as err:
-            # Bad query error.
-            raise ConfigError("API error encountered: {}".format(err.message), "remove_channel")
+        self.load_sql()

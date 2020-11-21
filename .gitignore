@@ -1,9 +1,12 @@
 # IDE/Editor stuff
 .vscode
+.mypy_cache
+*.db
 
 # Project-specifics:
 config.yml
 logging.yml
+alembic.ini
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

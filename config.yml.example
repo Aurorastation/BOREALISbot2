@@ -1,20 +1,14 @@
 bot:
   prefix: "?"
   token: ""
-  subscriber_server: None
-  subscriber_role: None
   autoload_cogs:
-    - cogs.channel
-    - cogs.discord
+    - cogs.config
+    - cogs.admin
     - cogs.players
     - cogs.server
     - cogs.silly
     - cogs.users
     - cogs.wiki
-
-api:
-  auth: ""
-  path: ""
 
 users_api:
   auth: ""
@@ -85,9 +79,8 @@ github:
   wiki_repo: null
   wiki_label: null
 
-guildconfig:
-  123123123123: # Guild ID -> make sure this is not a string
-    reactionroles:
-      454545454545: # Message ID -> make sure this is not a string
-        ":world_map_selector:": 565656565656 # Role id -> make sure this is not a string
-        ":laptop_computer:": 7878787878
+sql:
+  # The SQLAlchemy URL string for connecting to the bot's database.
+  url: ""
+  # The Game SQL server's connection string. May be left empty.
+  game_url: ""

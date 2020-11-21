@@ -21,7 +21,7 @@ from discord.ext import commands
 
 from core.subsystems import ApiMethods
 from core.subsystems.apiobjects.CalendarEvent import CalendarEvent
-from .utils import auth, AuthPerms
+from .utils import authchecks, AuthPerms
 from .utils.paginator import FieldPages
 
 
