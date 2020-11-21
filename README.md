@@ -33,6 +33,10 @@ Migrations are ran every time you boot the bot via main.py, but you can also exc
 run migrations by using the `--migrate_only` switch on main.py.
 
 ### Creating Migrations
+**Important**: make sure you have the previous migrations **applied** before generating
+a new one. The system diffs the current code versus the current database, and an outdated
+database will generate a duplicating migration!
+
 Assuming you've got all of the dependencies installed. Creating migrations should
 be as easy as modifying/adding to the models present in `core/subsystems/sql`, and
 then executing:
@@ -40,3 +44,12 @@ then executing:
 > `alembic revision --autogenerate -m "Some migration message"`
 
 Then modify the output files in `alembic/versions`.
+
+## Updating Dependencies
+requirements.txt is fun and all, but updating is annoying. Here's how:
+```
+> pip install pur
+> pur -r requirements.txt
+```
+
+And then commit the new requirements.txt.
