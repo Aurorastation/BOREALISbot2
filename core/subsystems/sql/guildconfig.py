@@ -23,16 +23,6 @@ from sqlalchemy.orm import relationship
 from .base import Base
 
 
-class RoleControlMessage(Base):
-    __tablename__ = "role_control_messages"
-
-    id = Column(sqlalchemy.Integer, primary_key=True)
-    message_id = Column(sqlalchemy.Integer)
-    channel_id = Column(sqlalchemy.Integer)
-    guild_id = Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("guilds.id"))
-
-    guild = relationship("GuildConfig", back_populates="role_control_messages")
-
 class GuildConfig(Base):
     __tablename__ = "guilds"
 
@@ -40,18 +30,16 @@ class GuildConfig(Base):
     admin_actions_enabled = Column(sqlalchemy.Boolean, default=False)
     subscribers_enabled = Column(sqlalchemy.Boolean, default=False)
     subscriber_role_id = Column(sqlalchemy.Integer)
+    role_management_enabled = Column(sqlalchemy.Boolean, default=False)
 
     channels = relationship("ChannelConfig", back_populates="guild",
                             cascade="all, delete, delete-orphan", lazy="joined")
-    role_control_messages = relationship("RoleControlMessage", back_populates="guild",
-                                         cascade="all, delete, delete-orphan", lazy="joined")
     active_subscribers = relationship("Subscriber", back_populates="guild",
                                       cascade="all, delete, delete-orphan")
     whitelisted_cogs = relationship("WhitelistedCog", back_populates="guild",
                                     cascade="all, delete, delete-orphan", lazy="joined")
-
-    def __init__(self):
-        self._controlled_roles: Dict[int, Dict[str, int]] = {}
+    managed_roles = relationship("ManagedRole", back_populates="guild",
+                                 cascade="all, delete, delete-orphan", lazy="joined")
 
     def to_embed(self) -> Dict[str, str]:
         fields: Dict[str, str] = {}
@@ -59,6 +47,7 @@ class GuildConfig(Base):
         fields["ID:"] = f"{self.id}"
         fields["Moderation enabled:"] = "Yes" if self.admin_actions_enabled else "No"
         fields["Subscribing enabled:"] = "Yes" if self.subscribers_enabled else "No"
+        fields["Role man. enabled:"] = "Yes" if self.role_management_enabled else "No"
         fields["Subscriber role:"] = self.subscriber_role_id
         fields["Enabled cogs:"] = [c.name for c in self.whitelisted_cogs]
 

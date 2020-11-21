@@ -14,14 +14,19 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see http://www.gnu.org/licenses/.
 
-from .administrativecase import AdminAction, AdministrativeCase
-from .base import Base
-from .channelconfig import ChannelConfig, ChannelType
-from .guildconfig import GuildConfig
-from .sessionmanager import SessionManager, bot_sql
-from .subscriber import Subscriber
-from .whitelistedcog import WhitelistedCog
-from .managedrole import ManagedRole
+import sqlalchemy
+from sqlalchemy import Column
+from sqlalchemy.orm import relationship
 
-__all__ = ["ChannelType", "ChannelConfig", "GuildConfig", "Base", "Subscriber", "ManagedRole",
-           "SessionManager", "bot_sql", "AdminAction", "AdministrativeCase", "WhitelistedCog"]
+from .base import Base
+
+
+class ManagedRole(Base):
+    __tablename__ = "managed_roles"
+
+    id = Column(sqlalchemy.Integer, primary_key=True)
+    guild_id = Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("guilds.id"))
+    role_id = Column(sqlalchemy.Integer)
+    name = Column(sqlalchemy.String(100))
+
+    guild = relationship("GuildConfig", back_populates="managed_roles")

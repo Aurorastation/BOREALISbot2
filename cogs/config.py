@@ -82,17 +82,28 @@ class ConfigCog(commands.Cog):
             msg = await self.bot.wait_for("message", timeout=30.0, check=check)
             guild_conf.admin_actions_enabled = is_yes(msg)
 
-            if not permissions.kick_members or not permissions.ban_members:
-                await ctx.send("Missing kick and ban permissions. Cannot moderate the server. Cancelled.")
-                return
+            if guild_conf.admin_actions_enabled:
+                if not permissions.kick_members or not permissions.ban_members:
+                    await ctx.send("Missing kick and ban permissions. Cannot moderate the server. Cancelled.")
+                    return
 
             await ctx.send("Should the server have subscribing enabled? (`yes`/`no`)")
             msg = await self.bot.wait_for("message", timeout=30.0, check=check)
             guild_conf.subscribers_enabled = is_yes(msg)
 
-            if not permissions.manage_roles:
-                await ctx.send("Missing manage roles permissions. Cannot edit subscribers. Cancelled.")
-                return
+            if guild_conf.subscribers_enabled:
+                if not permissions.manage_roles:
+                    await ctx.send("Missing manage roles permissions. Cannot edit subscribers. Cancelled.")
+                    return
+
+            await ctx.send("Should the server have role management enabled? (`yes`/`no`)")
+            msg = await self.bot.wait_for("message", timeout=30.0, check=check)
+            guild_conf.role_management_enabled = is_yes(msg)
+
+            if guild_conf.role_management_enabled:
+                if not permissions.manage_roles:
+                    await ctx.send("Missing manage roles permissions. Cannot assign roles. Cancelled.")
+                    return
 
             embed = discord.Embed(title="Guild Config")
             for name, value in guild_conf.to_embed().items():
@@ -115,7 +126,7 @@ class ConfigCog(commands.Cog):
             await ctx.send("Invalid input provided. Please answer as required. Cancelled.")
             return
         except RuntimeError as err:
-            await ctx.send(err.message)
+            await ctx.send(str(err))
             return
 
     @guild.command(name="edit")

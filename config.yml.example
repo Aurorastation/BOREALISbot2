@@ -1,8 +1,6 @@
 bot:
   prefix: "?"
   token: ""
-  subscriber_server: None
-  subscriber_role: None
   autoload_cogs:
     - cogs.config
     - cogs.admin

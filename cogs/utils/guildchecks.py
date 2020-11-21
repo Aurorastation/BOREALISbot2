@@ -21,7 +21,7 @@ from core.subsystems import sql
 from core import Borealis
 
 def guild_is_setup(**attrs):
-    def decorator(ctx: commands.Context):
+    def decorator(ctx: commands.Context) -> bool:
         if not ctx.message.guild:
             return False
 

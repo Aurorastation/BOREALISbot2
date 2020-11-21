@@ -14,9 +14,6 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see http://www.gnu.org/licenses/.
 
-import enum
-from typing import Optional
-
 import sqlalchemy
 from sqlalchemy import Column
 from sqlalchemy.orm import relationship
