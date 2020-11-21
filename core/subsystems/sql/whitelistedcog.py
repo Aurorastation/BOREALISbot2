@@ -25,7 +25,7 @@ class WhitelistedCog(Base):
     __tablename__ = "whitelisted_cogs"
 
     id = Column(sqlalchemy.Integer, primary_key=True)
-    guild_id = Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("guilds.id"))
+    guild_id = Column(sqlalchemy.BigInteger, sqlalchemy.ForeignKey("guilds.id"))
     name = Column(sqlalchemy.String(100))
 
     guild = relationship("GuildConfig", back_populates="whitelisted_cogs")

@@ -26,10 +26,10 @@ from .base import Base
 class GuildConfig(Base):
     __tablename__ = "guilds"
 
-    id = Column(sqlalchemy.Integer, primary_key=True, autoincrement=False)
+    id = Column(sqlalchemy.BigInteger, primary_key=True, autoincrement=False)
     admin_actions_enabled = Column(sqlalchemy.Boolean, default=False)
     subscribers_enabled = Column(sqlalchemy.Boolean, default=False)
-    subscriber_role_id = Column(sqlalchemy.Integer)
+    subscriber_role_id = Column(sqlalchemy.BigInteger)
     role_management_enabled = Column(sqlalchemy.Boolean, default=False)
 
     channels = relationship("ChannelConfig", back_populates="guild",

@@ -25,8 +25,8 @@ class Subscriber(Base):
     __tablename__ = "subscribers"
 
     id = Column(sqlalchemy.Integer, primary_key=True)
-    guild_id = Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("guilds.id"))
-    subject_id = Column(sqlalchemy.Integer)
+    guild_id = Column(sqlalchemy.BigInteger, sqlalchemy.ForeignKey("guilds.id"))
+    subject_id = Column(sqlalchemy.BigInteger)
     once = Column(sqlalchemy.Boolean, default=False)
 
     guild = relationship("GuildConfig", back_populates="active_subscribers",

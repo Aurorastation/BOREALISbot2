@@ -25,8 +25,8 @@ class ManagedRole(Base):
     __tablename__ = "managed_roles"
 
     id = Column(sqlalchemy.Integer, primary_key=True)
-    guild_id = Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("guilds.id"))
-    role_id = Column(sqlalchemy.Integer)
+    guild_id = Column(sqlalchemy.BigInteger, sqlalchemy.ForeignKey("guilds.id"))
+    role_id = Column(sqlalchemy.BigInteger)
     name = Column(sqlalchemy.String(100))
 
     guild = relationship("GuildConfig", back_populates="managed_roles")

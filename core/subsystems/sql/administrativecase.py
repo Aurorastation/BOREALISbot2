@@ -45,9 +45,9 @@ class AdministrativeCase(Base):
     __tablename__ = "admin_actions"
 
     id = Column(sqlalchemy.Integer, primary_key=True)
-    guild_id = Column(sqlalchemy.Integer)
-    author_id = Column(sqlalchemy.Integer)
-    subject_id = Column(sqlalchemy.Integer)
+    guild_id = Column(sqlalchemy.BigInteger)
+    author_id = Column(sqlalchemy.BigInteger)
+    subject_id = Column(sqlalchemy.BigInteger)
     action_type = Column(sqlalchemy.Enum(AdminAction))
     reason = Column(sqlalchemy.Text)
     is_active = Column(sqlalchemy.Boolean, default=True)

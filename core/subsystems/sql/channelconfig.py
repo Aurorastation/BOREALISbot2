@@ -38,8 +38,8 @@ class ChannelType(enum.Enum):
 class ChannelConfig(Base):
     __tablename__ = "channels"
 
-    id = Column(sqlalchemy.Integer, primary_key=True, autoincrement=False)
-    guild_id = Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("guilds.id"))
+    id = Column(sqlalchemy.BigInteger, primary_key=True, autoincrement=False)
+    guild_id = Column(sqlalchemy.BigInteger, sqlalchemy.ForeignKey("guilds.id"))
     channel_type = Column(sqlalchemy.Enum(ChannelType))
 
     guild = relationship("GuildConfig", back_populates="channels")
