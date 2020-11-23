@@ -35,16 +35,14 @@ def setup_logging(
 
 def initialize_components() -> subsystems.Config:
     config = subsystems.Config.create(logger, "config.yml")
-    sql.bot_sql.configure(config.sql["url"])
+    sql.bot_sql.configure(config.sql["url"], config.sql["connection_timeout"])
 
     if config.sql["game_url"]:
-        gamesql.game_sql.configure(config.sql["game_url"])
+        gamesql.game_sql.configure(config.sql["game_url"], config.sql["connection_timeout"])
 
     return config
 
 def run_bot() -> None:
-    api = None
-
     config = initialize_components()
     config.load_sql()
 

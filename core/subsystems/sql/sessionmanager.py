@@ -45,8 +45,8 @@ class SessionManager:
         """
         self.Session = sessionmaker()
 
-    def configure(self, conn_str: str):
-        self._engine = create_engine(conn_str)
+    def configure(self, conn_str: str, connection_timeout: int):
+        self._engine = create_engine(conn_str, pool_recycle=connection_timeout)
         self.Session.configure(bind=self._engine)
         self.setup = True
 

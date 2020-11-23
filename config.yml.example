@@ -84,3 +84,7 @@ sql:
   url: ""
   # The Game SQL server's connection string. May be left empty.
   game_url: ""
+  # Timeout for the SQL servers: the connection is refreshed after this time.
+  # Put to -1 to disable.
+  # Default is 4 hours, as the default MySQL/MariaDB server timeout is 8 hours.
+  connection_timeout: 14400
