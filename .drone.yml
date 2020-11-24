@@ -1,0 +1,27 @@
+kind: pipeline
+type: docker
+name: default
+
+clone:
+  depth: 10
+
+trigger:
+  branch:
+  - master #avoid double builds on PRs
+
+services:
+  - name: mariadb
+    image: mariadb:10.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: borealis
+      MYSQL_USER: build
+      MYSQL_PASSWORD: build
+
+steps:
+  - name: check mysql migrations
+    image: python:3.9
+    commands:
+      - pip install -r requirements.txt
+      - cp buildconfig/alembic.ini.build alembic.ini
+      - python3 main.py --migrate_only 
