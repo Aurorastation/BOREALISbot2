@@ -1,3 +1,4 @@
+---
 kind: pipeline
 type: docker
 name: default
@@ -25,3 +26,8 @@ steps:
       - pip install -r requirements.txt
       - cp buildconfig/alembic.ini.build alembic.ini
       - python3 main.py --migrate_only 
+---
+kind: signature
+hmac: 333501f29893b798f75437399c55502f2cd79882aa4db56e7cade384a0a35371
+
+...
