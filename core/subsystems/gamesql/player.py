@@ -47,6 +47,6 @@ class Player(GameBase):
 
             player = query.first()
             if player:
-                query.expunge(player)
+                session.expunge(player)
 
             return player

@@ -3,9 +3,7 @@ from typing import Dict, List, Optional
 import discord
 from discord.ext import commands
 
-from core import ApiError, ApiMethods
 from core.subsystems import gamesql
-
 from .utils import AuthPerms, authchecks
 from .utils.byond import get_ckey
 from .utils.paginator import FieldPages
@@ -21,7 +19,7 @@ class PlayerCog(commands.Cog):
         """Display information from the game's database."""
         pass
 
-    @player.command(aliases=["info"])
+    @player.command("info")
     async def player_info(self, ctx, ckey: get_ckey):
         """Information regarding a given player."""
         if not gamesql.game_sql.setup:
@@ -44,14 +42,14 @@ class PlayerCog(commands.Cog):
         }
 
         embed = discord.Embed(title="Player Info",
-                                description="Information on ckey {}".format(ckey))
+                              description="Information on ckey {}".format(ckey))
 
         for key, value in data.items():
             embed.add_field(name=key, value=value)
 
         await ctx.send(embed=embed)
 
-    @player.command(aliases=["notes"])
+    @player.command("notes")
     async def player_notes(self, ctx, ckey: get_ckey):
         """Display notes issued to the specified player."""
         if not gamesql.game_sql.setup:
