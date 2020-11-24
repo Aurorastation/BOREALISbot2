@@ -78,6 +78,13 @@ github:
   wiki_org: null
   wiki_repo: null
   wiki_label: null
+  # These are used by the Drone CI module as well.
+  game_org: null
+  game_repo: null
+
+droneci:
+  token: ""
+  url: ""
 
 sql:
   # The SQLAlchemy URL string for connecting to the bot's database.

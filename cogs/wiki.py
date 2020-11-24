@@ -1,10 +1,10 @@
 import github
-
 from discord.ext import commands
 
-from .utils import authchecks, AuthPerms, AuthType
-from .utils.paginator import FieldPages
 from core import BotError
+from .utils import authchecks, AuthPerms
+from .utils.paginator import FieldPages
+
 
 class WikiCog(commands.Cog):
     """
@@ -44,6 +44,7 @@ class WikiCog(commands.Cog):
         """
         Adds the wiki update tag for the list of PR numbers given.
         """
+        global issue
         repo = self.get_repo()
 
         try:
