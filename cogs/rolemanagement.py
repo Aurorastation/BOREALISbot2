@@ -31,7 +31,7 @@ class RoleManagement(commands.Cog):
         data: List[str] = []
         role: ManagedRole
         for role in guild_conf.managed_roles:
-            discord_role = guild.get_role(role.role_id)
+            discord_role = ctx.guild.get_role(role.role_id)
             data.append(f"{role.name} - `{discord_role.name}`")
 
         if not data:
