@@ -31,6 +31,25 @@ class RoleManagement(commands.Cog):
         data: List[str] = []
         role: ManagedRole
         for role in guild_conf.managed_roles:
+            discord_role = self._find_discord_role(ctx.guild, name)
+            data.append(f"{role.name} - `{discord_role.name}`")
+
+        if not data:
+            await ctx.send("No managed roles configured for this server.")
+        else:
+            p = Pages(ctx, entries=data, per_page=20)
+            p.embed.title = f"Managed roles."
+            p.embed.description = "All roles managed by this bot for this guild."
+            await p.paginate()
+    
+    @roles.command("listid")
+    async def roles_listid(self, ctx: commands.Context):
+        """Lists roles currently set up for management on the server."""
+        guild_conf = self.bot.Config().get_guild(ctx.guild.id)
+
+        data: List[str] = []
+        role: ManagedRole
+        for role in guild_conf.managed_roles:
             data.append(f"{role.role_id} - `{role.name}`")
 
         if not data:
