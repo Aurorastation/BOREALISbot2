@@ -1,7 +1,6 @@
 import github
 from discord.ext import commands
 
-from core import BotError
 from .utils import authchecks, AuthPerms
 from .utils.paginator import FieldPages
 
@@ -19,22 +18,22 @@ class WikiCog(commands.Cog):
         conf = self.bot.Config()
 
         if not conf.github["api_token"]:
-            raise BotError("Github API token not provided.", "get_repo")
+            raise RuntimeError("Github API token not provided.")
 
         try:
             git = github.Github(conf.github["api_token"])
         except github.GithubException:
-            raise BotError("Unable to login to Github.", "get_repo")
+            raise RuntimeError("Unable to login to Github.")
 
         try:
             org = git.get_organization(conf.github["wiki_org"])
         except github.GithubException:
-            raise BotError("Unable to fetch the organization.", "get_repo")
+            raise RuntimeError("Unable to fetch the organization.")
 
         try:
             repo = org.get_repo(conf.github["wiki_repo"])
         except github.GithubException:
-            raise BotError("Unable to acquire the repository.", "get_repo")
+            raise RuntimeError("Unable to acquire the repository.")
 
         return repo
 

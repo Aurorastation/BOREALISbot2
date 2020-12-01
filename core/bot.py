@@ -81,11 +81,18 @@ class Borealis(commands.Bot):
         elif isinstance(error, commands.CommandNotFound):
             pass
         elif isinstance(error, commands.CommandInvokeError):
-            await ctx.send(f"Command execution failed. {error}")
+            if isinstance(error.original, RuntimeError):
+                await ctx.send(f"{error}")
+            else:
+                await ctx.send(f"Command raised an exception of type {type(error.original)}.")
+
+            self._logger.error("CommandInvokeError. %s - %s", type(error.original), error.original)
         elif isinstance(error, commands.BadArgument):
             await ctx.send(f"Bad argument provided. {error}")
         elif isinstance(error, commands.MissingRequiredArgument):
             await ctx.send(f"Argument missing. {error}")
+        elif isinstance(error, commands.ConversionError):
+            await ctx.send(f"Argument given was not of valid type. {error}")
         else:
             await ctx.send(f"Unknown error! Unable to execute command.")
             self._logger.error("Unrecognized error in command. %s - %s", error, type(error))

@@ -63,8 +63,7 @@ class GithubCog(commands.Cog):
                 data = await request.json()
                 if not request.ok:
                     self._logger.error(f"Drone CI API returned error code {request.status}: {data}")
-                    raise BotError(f"Drone CI API error while attempting to restart build: {request.status}.",
-                                   "_restart_build")
+                    raise RuntimeError(f"Drone CI API error while attempting to restart build: {request.status}.")
                 else:
                     return data["link"], data["number"]
 
