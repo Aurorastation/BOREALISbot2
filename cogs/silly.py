@@ -146,6 +146,8 @@ class SillyCog(commands.Cog):
                 await ctx.send(f":mouse: :dagger:")
             elif meme.lower() == "skull":
                 await ctx.send(f":skull: :dagger:")
+            elif meme.lower() == "lore":
+                await ctx.send(f":crayon: :monkey:")
             else:
                 await ctx.send(f":angry: :dagger:")
             return
