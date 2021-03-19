@@ -20,7 +20,7 @@ requests==2.25.0
 six==1.15.0
 smmap==3.0.4
 smmap2==3.0.1
-urllib3==1.26.2
+urllib3==1.26.3
 websockets==8.1
 wrapt==1.12.1
 yarl==1.6.3
