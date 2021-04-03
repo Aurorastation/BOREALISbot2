@@ -32,9 +32,9 @@ from .utils import authchecks, guildchecks
 
 class AdministrativeCaseFactory:
     def __init__(self, session, author: discord.Member, subject: discord.Member):
-        self.case: sql.AdministrativeCase
-        self.reason: str
-        self.action_type: sql.AdminAction
+        self.case: sql.AdministrativeCase = None
+        self.reason: str = ""
+        self.action_type: sql.AdminAction = sql.AdminAction.TEMP_BAN
 
         self.guild: discord.Guild = author.guild
         self.session = session
@@ -128,6 +128,7 @@ class AdministrativeCaseFactory:
 
         return case
 
+
 class AdminCog(commands.Cog):
     def __init__(self, bot: Borealis):
         self.bot = bot
@@ -177,7 +178,7 @@ class AdminCog(commands.Cog):
             return
 
         for guild_id, guild_conf in self.bot.Config().guilds.items():
-            if guild_conf.admin_actions_enabled == True:
+            if guild_conf.admin_actions_enabled:
                 guild: discord.Guild = self.bot.get_guild(guild_id)
 
                 if not guild:
@@ -202,7 +203,7 @@ class AdminCog(commands.Cog):
             return
 
         for guild_id, guild_conf in self.bot.Config().guilds.items():
-            if guild_conf.admin_actions_enabled == True:
+            if guild_conf.admin_actions_enabled:
                 guild: discord.Guild = self.bot.get_guild(guild_id)
 
                 if not guild:
@@ -265,7 +266,11 @@ class AdminCog(commands.Cog):
     @commands.has_permissions(kick_members=True)
     @authchecks.has_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
     async def ban(self, ctx, subject: discord.Member, hours: int, *, reason):
-        """Applies a temporary ban of given length to the subject."""
+        """Applies a temporary ban of given length to the subject. Use perma_ban for a permanent ban."""
+        if hours < 1:
+            await ctx.send(f"Hours must be positive. Use `!perma_ban` to apply a full ban.")
+            return
+
         if not await self._is_valid_target(ctx, subject):
             return
 

@@ -106,7 +106,7 @@ class API:
                     raise ApiError("Exception deserializing JSON from {}: {}.".format(uri, err),
                                    "query_web")
 
-                if resp.status is not 200:
+                if resp.status != 200:
                     self._logger.error("Bad status code given while querying {}: {}. API error: {}"
                                        .format(arg_dict["url"],
                                                data[error_message_key] if error_message_key in data else "none.",

@@ -13,8 +13,10 @@ from .users import UserRepo
 
 class Borealis(commands.Bot):
     def __init__(self, command_prefix, config, api, formatter=None, description=None, **options):
+        intents = discord.Intents.all()
+
         super().__init__(command_prefix, help_command=commands.DefaultHelpCommand(dm_help=True),
-                         formatter=formatter, description=description, **options)
+                         formatter=formatter, description=description, intents=intents, **options)
 
         self._api = api
         self._config = config
