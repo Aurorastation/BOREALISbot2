@@ -241,8 +241,6 @@ class AdminCog(commands.Cog):
                 await self.bot.forward_message(log_msg, sql.ChannelType.LOG)
 
     @commands.command()
-    @guildchecks.guild_is_setup(admin_actions_enabled=True)
-    @commands.has_permissions(kick_members=True)
     @authchecks.has_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
     async def strike(self, ctx, subject: discord.Member, *, reason):
         """Applies a 2 month warning to the tagged user."""
