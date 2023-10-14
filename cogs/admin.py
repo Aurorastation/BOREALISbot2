@@ -241,7 +241,6 @@ class AdminCog(commands.Cog):
                 await self.bot.forward_message(log_msg, sql.ChannelType.LOG)
 
     @commands.command()
-    @commands.guild_only()
     @guildchecks.guild_is_setup(admin_actions_enabled=True)
     @commands.has_permissions(kick_members=True)
     @authchecks.has_auths([AuthPerms.R_ADMIN, AuthPerms.R_MOD])
