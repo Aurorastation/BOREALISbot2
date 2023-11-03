@@ -86,9 +86,9 @@ class AdministrativeCaseFactory:
     def _strike_should_be_escalated(self) -> sql.AdminAction:
         active_strikes = sql.AdministrativeCase.count_active_strikes(self.subject.id, self.session)
 
-        if active_strikes > 3:
+        if active_strikes >= 4:
             return sql.AdminAction.PERMA_BAN
-        elif active_strikes > 2:
+        elif active_strikes >= 3:
             return sql.AdminAction.TEMP_BAN
         else:
             return sql.AdminAction.STRIKE
