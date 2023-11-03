@@ -57,7 +57,7 @@ class AdministrativeCase(Base):
 
     @staticmethod
     def count_active_strikes(subject: int, session) -> int:
-        cut_off = datetime.now() - relativedelta(months=2)
+        cut_off = datetime.now() - relativedelta(months=6)
         return session.query(AdministrativeCase)\
                .filter(AdministrativeCase.subject_id == subject)\
                .filter(AdministrativeCase.created_at >= cut_off)\
